@@ -507,29 +507,34 @@ export default function TitleDetailPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
           {/* Big Play Trailer Button */}
-          {movie.trailerYoutubeKey ? (
-            <div className="relative z-10 flex flex-col items-center gap-3">
-              <button
-                onClick={() => setTrailerOpen(true)}
-                className="w-20 h-20 rounded-full bg-[#f5c518] hover:bg-white text-black flex items-center justify-center shadow-2xl shadow-amber-500/40 hover:scale-110 transition-all cursor-pointer"
-                title="Play Official Trailer"
-              >
-                <Play className="w-8 h-8 fill-current ml-1" />
-              </button>
-              <span className="text-white font-extrabold text-sm drop-shadow-md flex items-center gap-1.5 bg-black/60 px-4 py-1.5 rounded-full border border-white/10">
-                <span>Play Official Trailer</span>
-              </span>
-            </div>
-          ) : (
-            <div className="relative z-10 text-zinc-400 text-xs">Trailer preview unavailable</div>
-          )}
+          <div className="relative z-10 flex flex-col items-center gap-3">
+            <button
+              onClick={() => setTrailerOpen(true)}
+              className="w-20 h-20 rounded-full bg-[#f5c518] hover:bg-white text-black flex items-center justify-center shadow-2xl shadow-amber-500/40 hover:scale-110 transition-all cursor-pointer group"
+              title={`Play ${movie.title} Official Trailer`}
+              aria-label={`Play ${movie.title} Official Trailer`}
+            >
+              <Play className="w-8 h-8 fill-current ml-1 group-hover:scale-105 transition-transform" />
+            </button>
+            <button
+              onClick={() => setTrailerOpen(true)}
+              className="text-white font-extrabold text-sm drop-shadow-md flex items-center gap-1.5 bg-black/60 hover:bg-black/80 px-4 py-1.5 rounded-full border border-white/10 hover:border-[#f5c518]/50 transition-all cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 fill-[#f5c518] text-[#f5c518]" />
+              <span>Play Official Trailer</span>
+            </button>
+          </div>
 
           {/* Media Counters on bottom-right */}
           <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2">
-            <span className="px-3 py-1.5 rounded-xl bg-black/75 backdrop-blur-md border border-white/15 text-white font-bold text-xs flex items-center gap-1.5">
+            <button
+              onClick={() => setTrailerOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-black/75 hover:bg-black/95 backdrop-blur-md border border-white/15 hover:border-[#f5c518]/60 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Watch Official Trailer & Clips"
+            >
               <Film className="w-3.5 h-3.5 text-[#f5c518]" />
               <span>Trailer & Clips</span>
-            </span>
+            </button>
             <span className="px-3 py-1.5 rounded-xl bg-black/75 backdrop-blur-md border border-white/15 text-white font-bold text-xs flex items-center gap-1.5">
               <Camera className="w-3.5 h-3.5 text-[#f5c518]" />
               <span>99+ Photos</span>
@@ -916,15 +921,14 @@ export default function TitleDetailPage() {
         </div>
       </div>
 
-      {/* Trailer Modal */}
-      {movie.trailerYoutubeKey && (
-        <TrailerModal
-          youtubeKey={movie.trailerYoutubeKey}
-          title={movie.title}
-          isOpen={trailerOpen}
-          onClose={() => setTrailerOpen(false)}
-        />
-      )}
+      {/* Trailer Modal (Finds trailer dynamically from YouTube if needed) */}
+      <TrailerModal
+        youtubeKey={movie.trailerYoutubeKey}
+        title={movie.title}
+        year={movie.releaseDate?.slice(0, 4)}
+        isOpen={trailerOpen}
+        onClose={() => setTrailerOpen(false)}
+      />
     </div>
   );
 }

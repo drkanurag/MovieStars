@@ -171,17 +171,20 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
           )}
 
           {/* Central Play Trailer Button */}
-          {movie.trailerYoutubeKey && (
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setTrailerOpen(true)}
-              className="absolute inset-0 m-auto z-10 w-12 h-12 rounded-full bg-[#f5c518]/90 text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-xl shadow-amber-500/30 hover:bg-white"
-              title="Watch Official Trailer"
-            >
-              <Play className="w-5 h-5 fill-current ml-0.5" />
-            </motion.button>
-          )}
+          <motion.button
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setTrailerOpen(true);
+            }}
+            className="absolute inset-0 m-auto z-10 w-12 h-12 rounded-full bg-[#f5c518]/95 text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-xl shadow-amber-500/30 hover:bg-white cursor-pointer"
+            title={`Watch ${movie.title} Trailer`}
+            aria-label={`Watch ${movie.title} Trailer`}
+          >
+            <Play className="w-5 h-5 fill-current ml-0.5" />
+          </motion.button>
 
           {/* Quick Action Floating Dock (Favorites & Watched) */}
           <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 glass-pill p-1 rounded-xl shadow-xl">
@@ -240,10 +243,29 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
             <p className="text-[11px] text-zinc-300/90 line-clamp-2 mt-1.5 leading-relaxed font-normal">
               {movie.overview}
             </p>
+
+            {/* Quick Trailer Watch Trigger */}
+            <div className="mt-2 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setTrailerOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-zinc-400 hover:text-[#f5c518] transition-colors py-0.5 group/btn"
+                title={`Play ${movie.title} Trailer`}
+              >
+                <span className="w-4 h-4 rounded-full bg-[#f5c518]/20 group-hover/btn:bg-[#f5c518] text-[#f5c518] group-hover/btn:text-black flex items-center justify-center transition-colors">
+                  <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
+                </span>
+                <span>Watch Trailer</span>
+              </button>
+            </div>
           </div>
 
           {/* Bottom Streaming Providers or Countdown */}
-          <div className="mt-3 pt-2.5 border-t border-cinema-border/50">
+          <div className="mt-2.5 pt-2 border-t border-cinema-border/50">
             {isUpcoming && countdown ? (
               <div className="flex items-center gap-1.5 text-[11px] font-semibold text-cinema-gold">
                 <span className="relative flex h-2 w-2">
@@ -279,15 +301,14 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
         </div>
       </motion.div>
 
-      {/* Trailer Modal */}
-      {movie.trailerYoutubeKey && (
-        <TrailerModal
-          youtubeKey={movie.trailerYoutubeKey}
-          title={movie.title}
-          isOpen={trailerOpen}
-          onClose={() => setTrailerOpen(false)}
-        />
-      )}
+      {/* Trailer Modal (Finds trailer dynamically if needed) */}
+      <TrailerModal
+        youtubeKey={movie.trailerYoutubeKey}
+        title={movie.title}
+        year={movie.releaseDate ? movie.releaseDate.slice(0, 4) : undefined}
+        isOpen={trailerOpen}
+        onClose={() => setTrailerOpen(false)}
+      />
     </>
   );
 }

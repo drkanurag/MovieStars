@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { MovieImage } from '@/components/MovieImage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTrendingTitles, getUpcomingTitles, getBestOfAllTime } from '@/lib/api/movieStore';
+import { TitleItem } from '@/types/movie';
 import { MovieCard } from '@/components/MovieCard';
 import { RatingBadge } from '@/components/RatingBadge';
 import { TrailerModal } from '@/components/TrailerModal';
@@ -39,10 +40,16 @@ export default function HomePage() {
   // Hero showcase titles
   const heroList = [trending[0], trending[1], trending[2], upcoming[0], trending[3]].filter(Boolean);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [trailerMovie, setTrailerMovie] = useState<TitleItem | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [isHeroHovered, setIsHeroHovered] = useState(false);
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
+
+  const openTrailer = (m: TitleItem) => {
+    setTrailerMovie(m);
+    setTrailerOpen(true);
+  };
 
   useEffect(() => {
     setWatchlistIds(getClientState().watchlist);
@@ -104,19 +111,18 @@ export default function HomePage() {
           </AnimatePresence>
 
           {/* Center Play Trailer Button */}
-          {heroMovie.trailerYoutubeKey && (
-            <div className="absolute inset-0 m-auto w-20 h-20 flex items-center justify-center z-10 pointer-events-none">
-              <motion.button
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setTrailerOpen(true)}
-                className="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#f5c518] hover:bg-white text-black flex items-center justify-center shadow-2xl shadow-amber-500/40 transition-all cursor-pointer"
-                title="Watch Official Trailer"
-              >
-                <Play className="w-8 h-8 fill-current ml-1" />
-              </motion.button>
-            </div>
-          )}
+          <div className="absolute inset-0 m-auto w-20 h-20 flex items-center justify-center z-10 pointer-events-none">
+            <motion.button
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => openTrailer(heroMovie)}
+              className="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#f5c518] hover:bg-white text-black flex items-center justify-center shadow-2xl shadow-amber-500/40 transition-all cursor-pointer group"
+              title={`Watch ${heroMovie.title} Official Trailer`}
+              aria-label={`Watch ${heroMovie.title} Official Trailer`}
+            >
+              <Play className="w-8 h-8 fill-current ml-1 group-hover:scale-105 transition-transform" />
+            </motion.button>
+          </div>
 
           {/* Hero Content Overlay: Poster + Info */}
           <div className="relative z-20 p-6 sm:p-8 flex flex-col sm:flex-row gap-5 items-end sm:items-center">
@@ -237,21 +243,34 @@ export default function HomePage() {
                     className="w-full flex items-center gap-3.5 p-2.5 rounded-2xl bg-zinc-900/60 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all text-left group"
                   >
                     {/* Thumbnail with small play badge */}
-                    <div className="relative w-16 h-20 rounded-xl overflow-hidden bg-black shrink-0 border border-white/10">
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openTrailer(nextMovie);
+                      }}
+                      className="relative w-16 h-20 rounded-xl overflow-hidden bg-black shrink-0 border border-white/10 cursor-pointer"
+                      title={`Play ${nextMovie.title} Trailer`}
+                    >
                       <MovieImage
                         src={getTmdbImageUrl(nextMovie.posterPath, 'w185')}
                         alt={nextMovie.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform"
                       />
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 bg-black/35 flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
                         <Play className="w-5 h-5 fill-[#f5c518] text-[#f5c518]" />
                       </div>
                     </div>
 
                     {/* Movie Info */}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-bold uppercase mb-0.5">
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openTrailer(nextMovie);
+                        }}
+                        className="inline-flex items-center gap-1 text-[10px] text-zinc-400 hover:text-[#f5c518] font-bold uppercase mb-0.5 transition-colors cursor-pointer"
+                      >
                         <Play className="w-2.5 h-2.5 fill-current text-[#f5c518]" />
                         <span>Watch Trailer</span>
                       </div>
@@ -477,11 +496,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trailer Modal */}
-      {heroMovie.trailerYoutubeKey && (
+      {/* Trailer Modal (Finds trailer dynamically from YouTube if needed) */}
+      {trailerMovie && (
         <TrailerModal
-          youtubeKey={heroMovie.trailerYoutubeKey}
-          title={heroMovie.title}
+          youtubeKey={trailerMovie.trailerYoutubeKey}
+          title={trailerMovie.title}
+          year={trailerMovie.releaseDate?.slice(0, 4)}
           isOpen={trailerOpen}
           onClose={() => setTrailerOpen(false)}
         />

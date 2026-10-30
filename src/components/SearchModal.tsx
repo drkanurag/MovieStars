@@ -19,7 +19,9 @@ import {
   Compass,
   Check,
   Plus,
+  Play,
 } from 'lucide-react';
+import { TrailerModal } from './TrailerModal';
 import { searchCatalogAutocomplete } from '@/lib/api/movieStore';
 import { TitleItem } from '@/types/movie';
 import { scoreToStars } from '@/lib/bayesian';
@@ -36,6 +38,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TitleItem[]>([]);
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
+  const [trailerMovie, setTrailerMovie] = useState<TitleItem | null>(null);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -243,6 +247,19 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setTrailerMovie(item);
+                          setTrailerOpen(true);
+                        }}
+                        className="p-1.5 rounded-xl bg-white/10 hover:bg-[#f5c518] text-zinc-300 hover:text-black transition-all cursor-pointer"
+                        title={`Watch ${item.title} Trailer`}
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           toggleListStatus(item.id, 'watchlist', item.title);
                         }}
                         className={cn(
@@ -284,6 +301,17 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             )}
           </motion.div>
         </motion.div>
+      )}
+
+      {/* Trailer Modal (Finds trailer dynamically from YouTube if needed) */}
+      {trailerMovie && (
+        <TrailerModal
+          youtubeKey={trailerMovie.trailerYoutubeKey}
+          title={trailerMovie.title}
+          year={trailerMovie.releaseDate?.slice(0, 4)}
+          isOpen={trailerOpen}
+          onClose={() => setTrailerOpen(false)}
+        />
       )}
     </AnimatePresence>
   );
