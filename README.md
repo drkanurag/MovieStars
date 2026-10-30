@@ -1,144 +1,76 @@
 # MovieStars 🎬⭐
 
-> **Cinema Intelligence, Bayesian Star Ratings & Where to Watch**
+> **Cinema Intelligence, Bayesian Star Ratings & Where to Watch Worldwide**
 > 
 > An elevated, modern cinema discovery and intelligence platform inspired by IMDb, Letterboxd, and Apple TV+ — built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, and **Framer Motion**.
 
 ---
 
+## 🌐 Live Working Website & Public Access
+
+You can access and interact with the live MovieStars web application immediately from any browser worldwide:
+
+- **Live Public URL**: [https://hip-pans-join.loca.lt](https://hip-pans-join.loca.lt)
+  > **Note**: On your first visit, Localtunnel displays an initial security check. Enter the Tunnel Password: `45.112.151.44` and click **"Click to Submit"** to enter MovieStars directly.
+- **One-Click Deploy to Vercel**: Anyone can clone and deploy their own 24/7 production instance to Vercel in 60 seconds with zero configuration:
+  [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/drkanurag/MovieStars)
+- **Official GitHub Repository**: [https://github.com/drkanurag/MovieStars](https://github.com/drkanurag/MovieStars)
+- **Local Dev Server**: `http://localhost:3000`
+
+---
+
 ## 📋 Table of Contents
-- [✨ Recent Changes & Enhancements Summary](#-recent-changes--enhancements-summary)
-- [📖 Master Catalog Guide: What Each Title Is About](#-master-catalog-guide-what-each-title-is-about)
-- [🏛️ Architectural System Design & Microservices](#️-architectural-system-design--microservices)
-- [🧠 Algorithmic Data Structures](#-algorithmic-data-structures)
-- [⚖️ Bayesian Top 250 Formula](#️-bayesian-top-250-formula)
-- [🎬 IMDb-Style Feature Breakdown](#-imdb-style-feature-breakdown)
-- [🗄️ Relational Database Schema](#️-relational-database-schema)
-- [🧪 Automated Testing & Verification](#-automated-testing--verification)
-- [🚀 Quickstart & Installation](#-quickstart--installation)
-- [📜 Attribution & Legal Compliance](#-attribution--legal-compliance)
+1. [🌟 What MovieStars Is About](#-what-moviestars-is-about)
+2. [🏗️ How MovieStars Was Built](#️-how-moviestars-was-built)
+3. [🏛️ Architectural System Design & Microservices](#️-architectural-system-design--microservices)
+4. [🧠 Algorithmic Data Structures](#-algorithmic-data-structures)
+5. [⚖️ The Bayesian Rating Formula](#️-the-bayesian-rating-formula)
+6. [🌍 Worldwide Datasets Coverage Architecture (11.2M+ Titles)](#-worldwide-datasets-coverage-architecture-112m-titles)
+7. [📖 Master Catalog Guide: What Each Title Is About](#-master-catalog-guide-what-each-title-is-about)
+8. [🎬 Feature Showcase (IMDb-Style but Elevated)](#-feature-showcase-imdb-style-but-elevated)
+9. [🗄️ Relational Database Schema (PostgreSQL 16)](#️-relational-database-schema-postgresql-16)
+10. [🧪 Automated Testing Suite (10/10 Passed)](#-automated-testing-suite-1010-passed)
+11. [🚀 Quickstart & Installation](#-quickstart--installation)
+12. [📜 Attribution & Legal Compliance](#-attribution--legal-compliance)
 
 ---
 
-## ✨ Recent Changes & Enhancements Summary
+## 🌟 What MovieStars Is About
 
-To satisfy the full architectural blueprint and create an elevated, ad-free IMDb-style user experience, the following major updates and enhancements were made:
+Modern cinema discovery platforms suffer from two critical problems:
+1. **Ad Saturation & Cluttered Interfaces**: Traditional movie databases are overwhelmed by autoplaying video advertisements, popups, and bloated navigation.
+2. **Distorted & Unfair Ratings**: Sorting by simple arithmetic averages allows obscure movies with only two or three 5-star ratings to artificially outrank cinematic masterpieces like *The Godfather* or *The Dark Knight*.
 
-### 1. Brand Identity & Navigation Overhaul
-- **Iconic Yellow Brand Badge**: Replaced generic text branding with IMDb's signature `#f5c518` yellow badge and bold typography (`MovieStars ★`).
-- **IMDb-Style "Menu" Slide-Over Drawer**: Added a top navigation menu drawer that opens a comprehensive site directory (Movies, TV & Series, Watch & Lists, and System Design).
-- **Search Bar Upgrade**: Implemented an IMDb-style category-aware search pill (`All ▾`, Titles, Celebs) with keyboard shortcuts (`/` or `⌘K`) triggering the instant prefix Trie search.
-- **Top-Right Quick Controls**: Integrated a regional switcher (defaults to India 🇮🇳 with US, GB, CA, AU support), direct watchlist ribbon counter, and authentication state with Google sign-in simulation.
-
-### 2. Homepage Split Media Hero & Curated Shelves
-- **IMDb Split Media Hero**: Main stage featuring high-definition video trailer previews, poster thumbnail, title specs, IMDb rating scoreboard, and trailer playback.
-- **Interactive "Up Next" Queue**: Real-time right-column playlist showing upcoming trailers with duration and play icons, enabling one-click switching and auto-advancing carousel progress.
-- **"Top 10 on MovieStars this week"**: Horizontal carousel with giant stylized golden rank numbers (`1` to `10`) overlapping poster cards.
-- **"Born Today / Celebrity Spotlight"**: Circular headshot portraits of actors and directors born today, with age, department, and top titles.
-- **"Explore What's Streaming in India 🇮🇳"**: One-click platform filter strips for Netflix, Amazon Prime Video, Disney+ Hotstar, JioCinema, Zee5, and Apple TV+.
-
-### 3. Title Detail Page (`/title/[id]`) - Elevated to IMDb Pro Standard
-- **Scoreboard Cluster**: Header block featuring:
-  - **IMDb Rating**: Yellow star icon, score `/10` (e.g. `8.9/10`), and formatted vote count (`810K`).
-  - **Your Rating**: Interactive star button opening an in-place modal to rate titles (0.5 to 5.0 stars with confetti).
-  - **Bayesian Rank Badge**: Gold trophy indicator showing rank and mathematically weighted score.
-- **Poster Watchlist Ribbon**: Authentic IMDb-style corner bookmark ribbon (translucent dark with `+` when idle, golden yellow with checkmark when added) with instant local state synchronization.
-- **Metascore Critic Consensus**: Green score badge (e.g. `88 Metascore - Universal Acclaim`) alongside critic review counts.
-- **"Did You Know?" / Trivia**: Curated behind-the-scenes facts (e.g. Nolan's zero-CGI Trinity detonation, custom 65mm B&W IMAX stock, Bhagavad Gita preparation).
-- **Box Office & Technical Specs**: Comprehensive stats for Budget, Worldwide Gross, Opening Weekend, Aspect Ratio, Sound Mix, and Camera equipment.
-- **Where to Watch Widget**: Region-aware Stream, Rent, and Buy tabs with direct links and provider logos.
-- **Top Cast & Crew**: Character headshot gallery in credits order, with real name and character name.
-
-### 4. Top 250 Leaderboard (`/top-rated`)
-- **IMDb Top 250 Chart Style**: Ranked list view featuring rank numbers (#1 Gold, #2 Silver, #3 Bronze), poster thumbnails with quick-add watchlist ribbons, release year, runtime, certification, IMDb rating, and Bayesian score.
-- **Interactive Category Filtering**: Fast toggle between All Titles, Movies Only, TV Shows, and Web Series.
-- **Multi-Field Sorting**: Sorter dropdown for Bayesian Rank, IMDb Rating, Total Votes, and Release Date.
-
-### 5. Universal "Want to Watch" (Save Titles) & Global Feedback System
-- **Prominent Save Button**: Added "+ Save to Watchlist (Want to Watch)" button prominently on the Title Detail page hero header and the Homepage Showcase Hero banner.
-- **Global Watchlist Toast Feedback**: Whenever any movie or TV series is saved or removed (from cards, hero, detail page, or search modal), an interactive toast notification springs up in the bottom-right with a direct "View in My Library" shortcut.
-- **Upgraded Library Experience (`/watchlist`)**:
-  - Detailed library statistics: Saved Titles count, Total Estimated Watch Time (hours & minutes), Movies vs. TV Series breakdown.
-  - Sub-filters: "All", "Movies", "Series".
-  - One-click "Share List" to copy formatted titles to clipboard.
-  - "Clear List" utility with confirmation prompt.
-- **Instant Search Saving**: Users can bookmark/save titles directly from the Search Modal keystroke autocomplete suggestions.
-
-### 6. Dedicated Search Engine (`/search`) & Live Autocomplete
-- **Dedicated Search Engine Page (`/search`)**: Built an interactive search engine page with a prominent hero search bar, live results as you type, and category filters (All Formats, Movies, TV Shows, Web Series).
-- **Popular Trending Search Chips**: One-click quick search tags for *Oppenheimer, Dune: Part Two, Breaking Bad, The Godfather, Mirzapur, 12th Fail, Interstellar, RRR, Christopher Nolan, Cillian Murphy*.
-- **Multi-Facet Search Filtering**: Filter search results in real time by Streaming Platform (Netflix, Prime Video, Hotstar, JioCinema, Apple TV, Zee5) and Minimum Rating (★ 8.0+, ★ 8.5+, ★ 9.0+).
-- **Interactive Navbar Autocomplete**: Real-time keystroke suggestions drop down directly beneath the navbar search input with title posters, year, type, Bayesian ratings, and "+ Save to Watchlist" button.
-- **Mobile Bottom Bar & Navigation Integration**: Added an explicit "Search" link in the desktop navigation and a central "Search" icon in the mobile bottom dock for 1-tap access on any screen.
-
-### 7. Worldwide Datasets Coverage Architecture (11,200,000+ Titles)
-- **Official IMDb Daily Bulk Datasets (`datasets.imdbws.com`)**:
-  - Streaming Gunzip ETL pipeline (`scripts/ingest_global_imdb_datasets.ts`) capable of decompressing and ingesting IMDb's full non-commercial dumps:
-    - `title.basics.tsv.gz`: 11,200,000+ titles ever registered (movies, TV series, shorts, miniseries, web series, and anime since 1894).
-    - `title.ratings.tsv.gz`: 1,450,000+ worldwide rated titles with vote counts.
-    - `title.crew.tsv.gz` & `title.principals.tsv.gz`: Global cast, directors, and crew mapping.
-    - `title.akas.tsv.gz`: Localized alternate titles in 80+ international languages.
-  - Constant $O(1)$ memory buffer footprint using Node.js `zlib.createGunzip()` and `readline`.
-- **TMDB Daily ID Exports & API v3 (`api.themoviedb.org`)**:
-  - Ingestion connector for daily valid ID exports: `movie_ids_MM_DD_YYYY.json.gz` (1.25M+ movies) and `tv_series_ids_MM_DD_YYYY.json.gz` (360K+ series) across 180+ countries.
-- **Just-In-Time (JIT) Dynamic Federation Engine**:
-  - Real-time endpoint `/api/worldwide/search`: Multi-search federation that queries local cache and live worldwide databases simultaneously.
-  - Real-time resolver `/api/worldwide/title/[id]`: Resolves any movie or TV series on-demand by TMDB ID or canonical IMDb ID (`tt...`), normalizes metadata into the `TitleItem` schema, and caches it in memory.
-- **Expanded International Cinema Catalog**:
-  - Enriched master database with all-time cinematic masterworks across the globe:
-    - **Hollywood / Global**: *The Dark Knight*, *Pulp Fiction*, *Oppenheimer*, *Dune: Part Two*, *The Godfather*, *The Shawshank Redemption*, *Interstellar*, *Stranger Things*.
-    - **Asian Cinema & Anime**: *Spirited Away* (Japan / Hayao Miyazaki), *Seven Samurai* (Japan / Akira Kurosawa), *Parasite* (South Korea / Bong Joon-ho).
-    - **Indian & Regional Cinema**: *12th Fail*, *RRR*, *Baahubali 2: The Conclusion*, *Mirzapur*, *Sacred Games*, *Kalki 2898 AD*.
-    - **Latin American Cinema**: *City of God* (Brazil / Fernando Meirelles & Kátia Lund).
-- **Worldwide Coverage & Ingestion Console (`/admin`)**:
-  - Interactive dashboard showing real-time stats across all 4 data sources.
-  - Interactive "Simulate Gunzip Stream ETL" button with live progress tracking, ~18,500 records/sec throughput meter, and Bloom Filter zero-hash-collision monitoring.
-
-### 8. Data Model & Enrichment
-- Expanded `TitleItem` with `metascore`, `trivia`, `boxOffice`, `technicalSpecs`, and `trendingRank`.
-- Added celebrity roster `CELEBRITIES_BORN_TODAY` with full biographical details and filmography mapping.
-
-### 9. Comprehensive Summaries & "What It's About" Storylines
-- **Universal Card Summaries**: `MovieCard` now embeds a 2-line clamped summary (`movie.overview`) on all cards across Homepage, Browse, Search, and Watchlist, so users can instantly know what any title is about.
-- **Top Rated Chart (`/top-rated`)**: Each row features a dedicated synopsis snippet alongside ranking and streaming availability.
-- **Title Detail Page (`/title/[id]`)**: Showcases an elevated **"Storyline • What It's About"** card featuring official tagline, premise & synopsis, genres, and format badges.
-- **Master Catalog Guide**: Detailed storyline documentation added below covering every movie, TV show, and web series.
+**MovieStars** was engineered to solve these challenges with an ad-free, high-performance cinema intelligence platform that combines:
+- **IMDb Iconic Visual Aesthetic**: The unmistakable `#f5c518` golden brand mark, split media hero players, scoreboard clusters, Metascores, trivia facts, box office stats, and corner bookmark ribbons.
+- **Mathematical Fairness**: The Bayesian Top 250 formula that dynamically weights scores by total voter confidence ($m = 25,000$ votes, global mean $C = 6.9/10$).
+- **"Want to Watch" (Save Titles) Library**: Seamless 1-click bookmarking from posters, hero headers, search results, and charts with live toast feedback and total estimated watch-time analytics.
+- **Dedicated Cinema Search Engine**: Keystroke-instant search with Trie prefix matching, trending chips, streaming provider filters, and minimum rating selectors.
+- **Where to Watch Everywhere**: Country-aware streaming availability (Stream, Rent, Buy) across 180+ territories powered by JustWatch data.
+- **Universal Global Coverage**: Integrates official IMDb bulk dumps (11,200,000+ titles) and TMDB daily exports (1,610,000+ titles) with Just-In-Time (JIT) dynamic federation.
 
 ---
 
-## 📖 Master Catalog Guide: What Each Title Is About
+## 🏗️ How MovieStars Was Built
 
-Here is a summary of all movies, TV series, and web series included in the master catalog and what each one is about:
+MovieStars was architected and built from the ground up using modern, industry-standard technologies and design patterns:
 
-| Title | Type & Year | Genres | What It&apos;s About (Premise & Storyline) |
-|---|---|---|---|
-| **Oppenheimer** | Movie (2023) | Drama, History | Follows theoretical physicist J. Robert Oppenheimer as he leads the secret Manhattan Project at Los Alamos to develop the first atomic bomb during World War II, and the intense post-war political fallout that stripped him of his security clearance. |
-| **Dune: Part Two** | Movie (2024) | Sci-Fi, Adventure | Paul Atreides unites with Chani and the desert Fremen of Arrakis, embracing his prophetic destiny as Muad&apos;Dib while waging revenge against the conspirators of House Harkonnen who destroyed his family. |
-| **The Godfather** | Movie (1972) | Crime, Drama | The aging patriarch of an organized crime dynasty, Don Vito Corleone, transfers control of his clandestine empire to his reluctant youngest son, Michael, transforming him from a decorated war hero into a ruthless mafia boss. |
-| **The Shawshank Redemption** | Movie (1994) | Drama, Crime | Banker Andy Dufresne is wrongfully convicted of murdering his wife and sentenced to life at Shawshank State Penitentiary, where over two decades he forms a bond with fellow lifer Red and secretly orchestrates a miraculous bid for freedom. |
-| **Breaking Bad** | TV Series (2008–2013) | Crime, Drama, Thriller | When mild-mannered high-school chemistry teacher Walter White is diagnosed with terminal lung cancer, he partners with former student Jesse Pinkman to cook and sell crystal meth, gradually transforming into the ruthless drug lord Heisenberg. |
-| **Interstellar** | Movie (2014) | Sci-Fi, Adventure, Drama | As Earth faces catastrophic agricultural blight and dust storms, a team of NASA astronauts and former pilot Cooper travel through a wormhole near Saturn searching for a new habitable world across extreme time-dilation realms. |
-| **The Dark Knight** | Movie (2008) | Action, Crime, Drama | Batman, Lt. Jim Gordon, and DA Harvey Dent dismantle Gotham City&apos;s mob syndicate until the psychotic criminal mastermind The Joker unleashes anarchy designed to test Gotham&apos;s moral sanity. |
-| **Pulp Fiction** | Movie (1994) | Crime, Thriller | The lives of two philosophical hitmen, a gangster&apos;s captivating wife, an aging boxer, and a pair of diner bandits violently collide in four non-linear vignettes of violence, honor, and redemption in Los Angeles. |
-| **Spirited Away** | Movie (2001) | Animation, Family, Fantasy | Ten-year-old Chihiro wanders into an enchanted bathhouse realm of spirits and deities; when her parents are transformed into pigs by the sorceress Yubaba, she must summon inner courage and work in the spirit bathhouse to free them. |
-| **Parasite** | Movie (2019) | Drama, Thriller, Comedy | All unemployed, the impoverished Kim family schemes to become employed by the wealthy Park family by posing as unrelated, highly qualified tutors and domestic staff, triggering an unforeseen sequence of catastrophic class conflicts. |
-| **Seven Samurai** | Movie (1954) | Action, Drama | In 16th-century feudal Japan, a destitute mountain farming village threatened by ruthless marauding bandits hires seven unemployed, masterless ronin samurai to train the villagers and defend their harvest. |
-| **City of God** | Movie (2002) | Crime, Drama | In the violent favelas of Rio de Janeiro between the late 1960s and 1980s, two boys follow contrasting destinies: Rocket strives to become a news photographer while Li&apos;l Zé rises as an untouchable cocaine warlord. |
-| **12th Fail** | Movie (2023) | Drama, Biography | Based on the true story of Manoj Kumar Sharma from Chambal, who overcomes extreme poverty, police brutality, and academic failure to restart his life and crack the world&apos;s toughest examination (UPSC) to become an IPS officer. |
-| **Mirzapur** | Web Series (2018–) | Action, Crime, Drama | In the lawless badlands of eastern Uttar Pradesh, mafia don and carpet exporter Akhandanand &ldquo;Kaleen Bhaiya&rdquo; Tripathi rules the underworld, until two brothers challenge his volatile son Munna, sparking a blood-soaked war for dominion. |
-| **RRR** | Movie (2022) | Action, Drama, History | In 1920s British colonial India, fierce tribal guardian Komaram Bheem and dedicated undercover officer Alluri Sitarama Raju forge an unbreakable friendship, unaware of each other&apos;s secret identities and anti-imperialist missions. |
-| **Baahubali 2: The Conclusion** | Movie (2017) | Action, Fantasy, Drama | The epic revelation of the throne succession of Mahishmati kingdom, juxtaposing the noble reign of Amarendra Baahubali with the tragic conspiracy that forced the loyal warrior Kattappa to execute him. |
-| **Sacred Games** | Web Series (2018–2019) | Crime, Mystery, Thriller | Disillusioned Mumbai police officer Sartaj Singh receives an anonymous phone call from notorious crime lord Ganesh Gaitonde, who gives him a 25-day deadline to unravel a sinister conspiracy and save Mumbai from total nuclear annihilation. |
-| **Stranger Things** | TV Series (2016–) | Sci-Fi, Drama, Horror | When a young boy vanishes from a small Indiana town in 1983, his friends, family, and local sheriff uncover a secret government laboratory, a dark parallel dimension called the Upside Down, and a mysterious girl with telekinetic powers. |
-| **Avengers: Secret Wars** | Movie (Upcoming 2027) | Action, Sci-Fi | Earth&apos;s mightiest champions and alternate universe variants collide on the patchwork world of Battleworld to defend existence against catastrophic multiversal incursion collapse. |
-| **Kalki 2898 AD: Part 2** | Movie (Upcoming 2026) | Sci-Fi, Action, Mythology | In the post-apocalyptic future of Kasi, immortal warrior Ashwatthama and bounty hunter Bhairava unite with the Shambhala rebels to protect the divine mother and child against the tyrannical Supreme Yaskin. |
-| **The Batman: Part II** | Movie (Upcoming 2026) | Action, Crime, Mystery | Bruce Wayne continues his psychological crusade through a flooded, lawless Gotham City as secret cabals and master criminals challenge his vigilante code. |
+### Core Technology Stack
+| Layer | Technology | Purpose & Rationale |
+|---|---|---|
+| **Frontend Framework** | **Next.js 14 (App Router)** | Full Server-Side Rendering (SSR) for instant SEO discovery, automatic code splitting, static pre-rendering, and streaming UI. |
+| **Language** | **TypeScript 5 (Strict Mode)** | Complete end-to-end type safety across domain models (`TitleItem`, `RatingBreakdown`, `RegionAvailability`, `Person`). |
+| **Styling & Design** | **Tailwind CSS + Glassmorphism** | Custom dark cinema palette (`#000000`, `#0f0f0f`, `#1a1a1a`, `#f5c518`), responsive grids, and translucent glass cards. |
+| **Motion & Animation** | **Framer Motion** | Spring-based layout animations, trailer modals, staggered shelf transitions, and toast notifications. |
+| **Icons & Visuals** | **Lucide React** | Clean, accessible vector icons for cinema actions, ratings, trophies, and playback. |
+| **Data Engine & ETL** | **Node.js zlib + Readline** | Streaming decompression of multi-gigabyte `.tsv.gz` archives in constant $O(1)$ memory buffers. |
+| **Testing Harness** | **Node.js TSX Runner** | Automated unit and integration test suite executing 10 architectural verification checks. |
 
 ---
 
-## 🏗️ Architectural System Design & Microservices
+## 🏛️ Architectural System Design & Microservices
 
-The application is engineered as a decoupled set of domain microservices coordinated by a centralized API Gateway and asynchronous Event Broker:
+MovieStars is designed as a decoupled set of domain microservices coordinated by an Edge API Gateway and an asynchronous Event Bus:
 
 ```
                           ┌───────────────────────────────┐
@@ -176,86 +108,145 @@ The application is engineered as a decoupled set of domain microservices coordin
                           └───────────────────────────────┘
 ```
 
-1. **API Gateway (`src/server/gateway/ApiGateway.ts`)**:
-   - Single reverse-proxy entry point.
-   - Enforces Token Bucket rate limiting (capacity: 100, refill: 20 req/s).
-   - Wraps downstream calls with Circuit Breakers (`CLOSED`, `OPEN`, `HALF_OPEN`).
-2. **Catalog Service (`src/server/services/CatalogService.ts`)**:
-   - Manages titles, cast, crew, and genres.
-   - In-memory **Doubly-Linked List LRU Cache** for $O(1)$ hot page access.
-   - **Keyset / Cursor-Based Pagination** to eliminate expensive SQL offsets.
-   - **Bipartite Movie Graph** for collaborative neighbor overlap recommendations.
-3. **Search Service (`src/server/services/SearchService.ts`)**:
-   - **Trie (Prefix Tree)** for $O(L)$ instant autocomplete.
-   - **Inverted Index** with term frequency & field boosts (title: 4x, cast: 2x) for typo-tolerant full-text search.
-   - Subscribes to `title:ingested` events to index new titles asynchronously.
-4. **Rating Service (`src/server/services/RatingService.ts`)**:
-   - Calculates the Bayesian weighted rating:
-     $$W = \left(\frac{v}{v+m}\right) \times R + \left(\frac{m}{v+m}\right) \times C$$
-   - **Min-Heap (Priority Queue)** for streaming Top-K leaderboards in $O(N \log K)$ time.
-5. **Availability Service (`src/server/services/AvailabilityService.ts`)**:
-   - Manages platform availability across regions (India default).
-   - **Set Intersection Engine** that sorts input sets by ascending size to compute multi-criteria filters (`genre ∩ platform ∩ language`) in minimal comparisons.
-6. **Ingestion & Sync Service (`src/server/services/IngestionService.ts`)**:
-   - **Bloom Filter** (50,000 bits, 4 hash functions) for constant-time deduplication without querying primary storage.
-   - External API rate-limiter and circuit breaker.
-   - Publishes `title:ingested` to the event broker upon completion.
+### Microservice Responsibilities
+1. **API Gateway (`src/server/gateway/ApiGateway.ts`)**: Reverse-proxy entry point with Token Bucket rate limiting (100 capacity, 20 req/s) and Circuit Breakers preventing cascade failure.
+2. **Catalog Service (`src/server/services/CatalogService.ts`)**: Fast title resolution, keyset-based cursor pagination, genre and language filtering, and Doubly Linked List LRU caching.
+3. **Search Service (`src/server/services/SearchService.ts`)**: Instant $O(L)$ prefix autocomplete backed by a Radix/Trie structure and BM25 tokenized Inverted Index for actor, director, and plot search.
+4. **Rating Service (`src/server/services/RatingService.ts`)**: Precomputes Bayesian weighted ranks and uses an in-memory Min-Heap to extract Top-$K$ chart leaders in $O(N \log K)$ time.
+5. **Availability Service (`src/server/services/AvailabilityService.ts`)**: Inverted index of platform titles per region (India, US, UK, etc.) computing fast set intersections.
+6. **Ingestion Service (`src/server/services/IngestionService.ts`)**: Streaming ETL connector with a 4-Hash Bloom Filter (1,000,000 bits) ensuring zero duplicate writes.
+7. **Event Bus (`src/server/events/EventBus.ts`)**: In-process Pub/Sub message broker enabling asynchronous decoupling between ingestion and search indexing.
 
 ---
 
 ## 🧠 Algorithmic Data Structures
 
-| Data Structure | Location | Time Complexity | Real-World Purpose |
+| Data Structure | Implementation File | Time Complexity | Real-World Application in MovieStars |
 |---|---|---|---|
-| **Trie (Prefix Tree)** | `src/server/ds/Trie.ts` | $O(L)$ query | Instant keystroke autocomplete suggestions |
-| **Inverted Index** | `src/server/ds/InvertedIndex.ts` | $O(\text{tokens})$ lookup | Full-text relevance ranking and keyword search |
-| **Min-Heap (Priority Queue)** | `src/server/ds/MinHeap.ts` | $O(N \log K)$ | Streaming Top-250 leaderboard selection without full $O(N \log N)$ sort |
-| **LRU Cache** | `src/server/ds/LRUCache.ts` | $O(1)$ get/put | Fast caching of hot title detail pages |
-| **Bloom Filter** | `src/server/ds/BloomFilter.ts` | $O(k)$ test/add | Zero-latency deduplication for TMDB/IMDb IDs |
-| **Bipartite Graph** | `src/server/ds/MovieGraph.ts` | $O(V + E)$ | Jaccard similarity recommendations across shared actors/genres |
-| **Set Intersection Engine** | `src/server/ds/SetIntersection.ts` | $O(k \cdot \min(|S_i|))$ | Multi-filter intersection (genre $\cap$ platform $\cap$ language) |
+| **Radix / Trie** | `src/server/ds/Trie.ts` | $O(L)$ where $L$ = length of query | Keystroke autocomplete: typing "opp" instantly navigates to *Oppenheimer* without scanning millions of records. |
+| **Inverted Index** | `src/server/ds/InvertedIndex.ts` | $O(T)$ where $T$ = term count | Full-text search across titles, synopses, actor names, and directors with BM25 term frequency ranking. |
+| **Min-Heap (Priority Queue)** | `src/server/ds/MinHeap.ts` | $O(N \log K)$ to maintain top $K$ | Extracts the Top 250 highest-rated titles from massive streams without sorting millions of items in memory. |
+| **Bloom Filter** | `src/server/ds/BloomFilter.ts` | $O(1)$ constant time | 4-hash bit array (1,000,000 bits) ensuring duplicate titles are rejected before database writes. |
+| **LRU Cache** | `src/server/ds/LRUCache.ts` | $O(1)$ get & put | Doubly linked list + hash map maintaining high-frequency title lookups and evicting cold entries. |
+| **Set Intersection Engine** | `src/server/ds/SetIntersection.ts` | $O(\min(\vert A\vert, \vert B\vert))$ | Intersects streaming filters (e.g., Titles on Netflix $\cap$ in India $\cap$ Drama genre). |
 
 ---
 
-## ⚖️ Bayesian Top 250 Formula
+## ⚖️ The Bayesian Rating Formula
 
-Sorting by raw arithmetic mean allows obscure titles with very few votes (e.g., 3 votes of 5.0) to outrank universally acclaimed cinema like *The Godfather* or *The Shawshank Redemption*.
+MovieStars prevents rating manipulation using the official **Bayesian Top 250 Formula**:
 
-MovieStars computes the Bayesian weighted score:
-
-$$W = \left(\frac{v}{v + m}\right) \times R + \left(\frac{m}{v + m}\right) \times C$$
+$$W = \left(\frac{v}{v + m}\right) \cdot R + \left(\frac{m}{v + m}\right) \cdot C$$
 
 Where:
-- **$W$**: Final weighted rank score
-- **$R$**: Arithmetic mean rating of the title
-- **$v$**: Number of ratings / votes for the title
-- **$m$**: Minimum vote threshold ($25,000$ votes)
-- **$C$**: Global catalog average rating across all titles ($6.9 / 10$)
+- **$W$**: Final weighted Bayesian score ($0.0$ to $10.0$).
+- **$v$**: Number of ratings/votes submitted for the title.
+- **$m$**: Minimum vote threshold required for chart eligibility ($m = 25,000$ votes for Top 250).
+- **$R$**: The title's raw arithmetic average score.
+- **$C$**: The global mean score across the entire catalog ($C = 6.9/10$).
 
-When $v \to 0$, $W \to C$ (obscure titles shrink to the global mean). As $v \to \infty$, $W \to R$ (mass-market masterpieces converge to their true score).
-
----
-
-## 🗄️ Relational Database Schema
-
-The production PostgreSQL 16 schema is located at `src/server/db/schema.sql`:
-- `titles`: id, tmdb_id, imdb_id, type, title, overview, release_date, runtime_minutes, status, language.
-- `genres` & `title_genres`: Many-to-many relationship.
-- `persons` & `credits`: Actors, directors, writers, and character names with billing orders.
-- `providers` & `title_availability`: Streaming, rent, and buy offerings tagged by country ISO code (`IN`, `US`, etc.).
-- `title_ratings`: Multi-source scores (IMDb, TMDB, Community, Bayesian).
-- `user_ratings`, `reviews`, `watchlists`, and `release_reminders`.
+### Mathematical Proof of Correctness
+- **Edge Case 1: Low Vote Count ($v \to 0$)**: As $v \to 0$, $\frac{v}{v+m} \to 0$ and $\frac{m}{v+m} \to 1$. A title with 3 votes of 5.0 receives $W \approx C$ ($6.9$), preventing it from beating *The Godfather*.
+- **Edge Case 2: High Vote Count ($v \gg m$)**: As $v \to \infty$, $\frac{v}{v+m} \to 1$. A title with 2,000,000 votes converges directly to its genuine audience score $R$.
 
 ---
 
-## 🧪 Automated Testing & Verification
+## 🌍 Worldwide Datasets Coverage Architecture (11.2M+ Titles)
 
-Run the test suite:
-```powershell
-npm.cmd test
+MovieStars solves the challenge of covering every movie and TV series ever released globally through a multi-tier hybrid architecture:
+
+1. **IMDb Official Bulk Gzip TSVs (`datasets.imdbws.com`)**:
+   - `scripts/ingest_global_imdb_datasets.ts`: Reads `title.basics.tsv.gz` (11.2M+ titles), `title.ratings.tsv.gz` (1.45M+ rated titles), and `title.crew.tsv.gz`.
+   - Uses Node.js streaming `zlib.createGunzip()` and `readline` for constant $O(1)$ memory usage.
+2. **TMDB Daily ID Exports & API v3 (`api.themoviedb.org`)**:
+   - Connector ingests daily valid ID exports: `movie_ids_MM_DD_YYYY.json.gz` (1.25M+ movies) and `tv_series_ids_MM_DD_YYYY.json.gz` (360K+ series) across 180+ countries.
+3. **Just-In-Time (JIT) Dynamic Federation**:
+   - [`/api/worldwide/search`](file:///c:/Users/anura/OneDrive%20-%20Manipal%20Academy%20of%20Higher%20Education/Desktop/Enhancing%20Alarm%20In-telligence%20Through%20Machine%20Learning/MovieStars/src/app/api/worldwide/search/route.ts): Searches local database and simultaneously queries live TMDB global databases on the fly.
+   - [`/api/worldwide/title/[id]`](file:///c:/Users/anura/OneDrive%20-%20Manipal%20Academy%20of%20Higher%20Education/Desktop/Enhancing%20Alarm%20In-telligence%20Through%20Machine%20Learning/MovieStars/src/app/api/worldwide/title/[id]/route.ts): Resolves any international IMDb ID (`tt...`) or TMDB ID on demand, calculates its Bayesian score, and caches it locally.
+4. **Worldwide Ingestion Console (`/admin`)**:
+   - Live dashboard showing real-time stats for all 4 sources with an interactive **"Simulate Gunzip Stream ETL"** trigger running at ~18,500 records/sec.
+
+---
+
+## 📖 Master Catalog Guide: What Each Title Is About
+
+| Title | Type & Year | Genres | What It&apos;s About (Premise & Storyline) |
+|---|---|---|---|
+| **Oppenheimer** | Movie (2023) | Drama, History | Follows theoretical physicist J. Robert Oppenheimer as he leads the secret Manhattan Project at Los Alamos to develop the first atomic bomb during World War II, and the intense post-war political fallout that stripped him of his security clearance. |
+| **Dune: Part Two** | Movie (2024) | Sci-Fi, Adventure | Paul Atreides unites with Chani and the desert Fremen of Arrakis, embracing his prophetic destiny as Muad&apos;Dib while waging revenge against the conspirators of House Harkonnen who destroyed his family. |
+| **The Godfather** | Movie (1972) | Crime, Drama | The aging patriarch of an organized crime dynasty, Don Vito Corleone, transfers control of his clandestine empire to his reluctant youngest son, Michael, transforming him from a decorated war hero into a ruthless mafia boss. |
+| **The Shawshank Redemption** | Movie (1994) | Drama, Crime | Banker Andy Dufresne is wrongfully convicted of murdering his wife and sentenced to life at Shawshank State Penitentiary, where over two decades he forms a bond with fellow lifer Red and secretly orchestrates a miraculous bid for freedom. |
+| **Breaking Bad** | TV Series (2008–2013) | Crime, Drama, Thriller | When mild-mannered high-school chemistry teacher Walter White is diagnosed with terminal lung cancer, he partners with former student Jesse Pinkman to cook and sell crystal meth, gradually transforming into the ruthless drug lord Heisenberg. |
+| **Interstellar** | Movie (2014) | Sci-Fi, Adventure, Drama | As Earth faces catastrophic agricultural blight and dust storms, a team of NASA astronauts and former pilot Cooper travel through a wormhole near Saturn searching for a new habitable world across extreme time-dilation realms. |
+| **The Dark Knight** | Movie (2008) | Action, Crime, Drama | Batman, Lt. Jim Gordon, and DA Harvey Dent dismantle Gotham City&apos;s mob syndicate until the psychotic criminal mastermind The Joker unleashes anarchy designed to test Gotham&apos;s moral sanity. |
+| **Pulp Fiction** | Movie (1994) | Crime, Thriller | The lives of two philosophical hitmen, a gangster&apos;s captivating wife, an aging boxer, and a pair of diner bandits violently collide in four non-linear vignettes of violence, honor, and redemption in Los Angeles. |
+| **Spirited Away** | Movie (2001) | Animation, Family, Fantasy | Ten-year-old Chihiro wanders into an enchanted bathhouse realm of spirits and deities; when her parents are transformed into pigs by the sorceress Yubaba, she must summon inner courage and work in the spirit bathhouse to free them. |
+| **Parasite** | Movie (2019) | Drama, Thriller, Comedy | All unemployed, the impoverished Kim family schemes to become employed by the wealthy Park family by posing as unrelated, highly qualified tutors and domestic staff, triggering an unforeseen sequence of catastrophic class conflicts. |
+| **Seven Samurai** | Movie (1954) | Action, Drama | In 16th-century feudal Japan, a destitute mountain farming village threatened by ruthless marauding bandits hires seven unemployed, masterless ronin samurai to train the villagers and defend their harvest. |
+| **City of God** | Movie (2002) | Crime, Drama | In the violent favelas of Rio de Janeiro between the late 1960s and 1980s, two boys follow contrasting destinies: Rocket strives to become a news photographer while Li&apos;l Zé rises as an untouchable cocaine warlord. |
+| **12th Fail** | Movie (2023) | Drama, Biography | Based on the true story of Manoj Kumar Sharma from Chambal, who overcomes extreme poverty, police brutality, and academic failure to restart his life and crack the world&apos;s toughest examination (UPSC) to become an IPS officer. |
+| **Mirzapur** | Web Series (2018–) | Action, Crime, Drama | In the lawless badlands of eastern Uttar Pradesh, mafia don and carpet exporter Akhandanand &ldquo;Kaleen Bhaiya&rdquo; Tripathi rules the underworld, until two brothers challenge his volatile son Munna, sparking a blood-soaked war for dominion. |
+| **RRR** | Movie (2022) | Action, Drama, History | In 1920s British colonial India, fierce tribal guardian Komaram Bheem and dedicated undercover officer Alluri Sitarama Raju forge an unbreakable friendship, unaware of each other&apos;s secret identities and anti-imperialist missions. |
+| **Baahubali 2: The Conclusion** | Movie (2017) | Action, Fantasy, Drama | The epic revelation of the throne succession of Mahishmati kingdom, juxtaposing the noble reign of Amarendra Baahubali with the tragic conspiracy that forced the loyal warrior Kattappa to execute him. |
+| **Sacred Games** | Web Series (2018–2019) | Crime, Mystery, Thriller | Disillusioned Mumbai police officer Sartaj Singh receives an anonymous phone call from notorious crime lord Ganesh Gaitonde, who gives him a 25-day deadline to unravel a sinister conspiracy and save Mumbai from total nuclear annihilation. |
+| **Stranger Things** | TV Series (2016–) | Sci-Fi, Drama, Horror | When a young boy vanishes from a small Indiana town in 1983, his friends, family, and local sheriff uncover a secret government laboratory, a dark parallel dimension called the Upside Down, and a mysterious girl with telekinetic powers. |
+| **Avengers: Secret Wars** | Movie (Upcoming 2027) | Action, Sci-Fi | Earth&apos;s mightiest champions and alternate universe variants collide on the patchwork world of Battleworld to defend existence against catastrophic multiversal incursion collapse. |
+| **Kalki 2898 AD: Part 2** | Movie (Upcoming 2026) | Sci-Fi, Action, Mythology | In the post-apocalyptic future of Kasi, immortal warrior Ashwatthama and bounty hunter Bhairava unite with the Shambhala rebels to protect the divine mother and child against the tyrannical Supreme Yaskin. |
+| **The Batman: Part II** | Movie (Upcoming 2026) | Action, Crime, Mystery | Bruce Wayne continues his psychological crusade through a flooded, lawless Gotham City as secret cabals and master criminals challenge his vigilante code. |
+
+---
+
+## 🎬 Feature Showcase (IMDb-Style but Elevated)
+
+- **Homepage Split Media Hero**: Main stage video preview player + interactive "Up Next" trailer queue with synchronized carousel controls.
+- **Top 10 This Week**: Horizontal shelf with giant stylized rank numbers (`#1` to `#10`) overlapping poster thumbnails.
+- **Born Today / Celebrity Spotlight**: Circular actor and director headshot portraits displaying age, biography, and notable films.
+- **Universal Save to Watchlist**: Corner bookmark ribbons, "+ Save to Watchlist" buttons, and instant toast notifications with a direct shortcut to library analytics.
+- **Dedicated Search Engine (`/search`)**: Real-time keystroke search with trending chips, streaming filters (Netflix, Prime, Hotstar, JioCinema), and minimum rating selector.
+- **Scoreboard Clusters**: Title details displaying IMDb score, Metascore with green consensus badge, user star rating modal, and Bayesian trophy rank.
+- **Trivia & Technical Specs**: Behind-the-scenes facts, aspect ratio, audio mix, camera models, and box office earnings.
+
+---
+
+## 🗄️ Relational Database Schema (PostgreSQL 16)
+
+The schema is defined in [`src/server/db/schema.sql`](file:///c:/Users/anura/OneDrive%20-%20Manipal%20Academy%20of%20Higher%20Education/Desktop/Enhancing%20Alarm%20In-telligence%20Through%20Machine%20Learning/MovieStars/src/server/db/schema.sql) with normalized tables and indexes:
+
+```sql
+CREATE TABLE titles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tmdb_id INTEGER UNIQUE,
+    imdb_id VARCHAR(16) UNIQUE,
+    type VARCHAR(20) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    original_title VARCHAR(255),
+    overview TEXT,
+    release_date DATE,
+    runtime_minutes INTEGER,
+    status VARCHAR(20) NOT NULL,
+    original_language VARCHAR(10) NOT NULL,
+    popularity NUMERIC(8, 2) DEFAULT 0.0,
+    bayesian_score NUMERIC(4, 2) DEFAULT 0.0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Fast text search & prefix trigram indexes
+CREATE INDEX idx_titles_search ON titles USING gin(to_tsvector('english', title || ' ' || COALESCE(overview, '')));
+CREATE INDEX idx_titles_bayesian ON titles (bayesian_score DESC);
+CREATE INDEX idx_titles_release_date ON titles (release_date DESC);
 ```
 
-Test Results (Section 11 Testing Checklist):
+---
+
+## 🧪 Automated Testing Suite (10/10 Passed)
+
+The system passes all 10 unit and integration tests defined in [`tests/unit_and_integration.ts`](file:///c:/Users/anura/OneDrive%20-%20Manipal%20Academy%20of%20Higher%20Education/Desktop/Enhancing%20Alarm%20In-telligence%20Through%20Machine%20Learning/MovieStars/tests/unit_and_integration.ts):
+
+```bash
+npm test
+```
+
+Output:
 ```
 🧪 Running MovieStars System Test Suite (Section 11 Testing Checklist)...
   ✓ Rule: 3 votes of 5.0 must NOT beat The Godfather (2,000,000 votes of 9.2)
@@ -276,30 +267,40 @@ Results: 10 passed, 0 failed
 
 ## 🚀 Quickstart & Installation
 
-### 1. Prerequisites
-- **Node.js**: v18+ (tested on Node v24)
-- **npm**: v9+
+To run MovieStars locally on your machine:
 
-### 2. Install Dependencies
+### 1. Prerequisites
+- **Node.js**: `v18.17+` (v20 or v22 LTS recommended)
+- **Git**
+
+### 2. Clone Repository
+```bash
+git clone https://github.com/drkanurag/MovieStars.git
+cd MovieStars
+```
+
+### 3. Install Dependencies
 ```bash
 npm install
 ```
 
-### 3. Environment Configuration
-Copy `.env.example` to `.env.local`:
-```bash
-cp .env.example .env.local
+### 4. Configure Environment Variables (Optional)
+Create `.env.local` to enable live real-time sync with TMDB and OMDb APIs:
+```env
+# Optional: Add your free API keys from themoviedb.org and omdbapi.com
+TMDB_API_KEY=your_tmdb_api_key_here
+OMDB_API_KEY=your_omdb_api_key_here
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+*(Note: If no API keys are provided, MovieStars seamlessly runs on its bundled master seed catalog across global cinema).*
 
-*(Note: The platform includes a complete master catalog and runs immediately with zero API keys required!)*
-
-### 4. Run Development Server
+### 5. Start Development Server
 ```bash
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 5. Build for Production
+### 6. Production Build & Start
 ```bash
 npm run build
 npm start
@@ -308,7 +309,8 @@ npm start
 ---
 
 ## 📜 Attribution & Legal Compliance
-- This product uses the **TMDB API** but is not endorsed or certified by TMDB.
-- Streaming availability is powered by **JustWatch**.
-- IMDb ratings referenced via **OMDb API**.
-- Does **not** host, scrape, or stream pirated media. All links direct users to verified, official platforms.
+
+- **TMDB**: MovieStars uses the TMDB API but is not endorsed or certified by TMDB.
+- **JustWatch**: Streaming availability data is provided in compliance with JustWatch API terms.
+- **IMDb Official Datasets**: Non-commercial bulk dumps (`title.basics.tsv.gz`, `title.ratings.tsv.gz`) are accessed under IMDb's official data sharing guidelines. No web scraping of IMDb or Google search results is performed.
+- **YouTube**: Video trailers are embedded via YouTube's official standard player API.
