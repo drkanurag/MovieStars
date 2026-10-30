@@ -1,6 +1,7 @@
 import { TitleItem, Genre, Person } from '@/types/movie';
 import { appendOrUpdateTitle, getTitleById } from './movieStore';
 import { calculateBayesianScore } from '../bayesian';
+import { searchWorldwideTitles, fetchTmdbTitleDetails, findTmdbByImdbId } from './tmdb';
 
 // In-memory cache for worldwide resolved titles
 const worldwideCache = new Map<string, TitleItem>();
@@ -157,6 +158,13 @@ export async function searchWorldwideCatalog(query: string, typeFilter: string =
   try {
     const fetchPromises: Promise<any>[] = [];
 
+    // 0. Official TMDB Worldwide Search (Multi: Movie + TV)
+    fetchPromises.push(
+      searchWorldwideTitles(q)
+        .then((tmdbItems) => ({ tmdbItems }))
+        .catch(() => ({ tmdbItems: [] }))
+    );
+
     // 1. Cinemeta Movies
     if (typeFilter === 'all' || typeFilter === 'movie') {
       fetchPromises.push(
@@ -196,7 +204,16 @@ export async function searchWorldwideCatalog(query: string, typeFilter: string =
     const settled = await Promise.all(fetchPromises);
 
     for (const data of settled) {
-      if (Array.isArray(data)) {
+      if (data?.tmdbItems && Array.isArray(data.tmdbItems)) {
+        for (const t of data.tmdbItems) {
+          if (typeFilter !== 'all' && t.type !== typeFilter) continue;
+          if (seenIds.has(t.id) || (t.imdbId && seenIds.has(t.imdbId))) continue;
+          seenIds.add(t.id);
+          if (t.imdbId) seenIds.add(t.imdbId);
+          appendOrUpdateTitle(t);
+          results.push(t);
+        }
+      } else if (Array.isArray(data)) {
         // TVMaze array of { show: ... }
         for (const item of data) {
           const s = item.show;
@@ -295,8 +312,39 @@ export async function resolveWorldwideTitle(id: string): Promise<TitleItem | nul
     return worldwideCache.get(id)!;
   }
 
-  // 3. Resolve from Cinemeta Open Meta API (Supports all 11.2M+ IMDb IDs)
+  // 3. Resolve from TMDB directly if it's a TMDB ID
+  if (id.startsWith('tmdb-')) {
+    const parts = id.split('-');
+    const type = parts[1] === 'tv' ? 'tv' : 'movie';
+    const tmdbId = parts[2];
+    if (tmdbId) {
+      try {
+        const tmdbTitle = await fetchTmdbTitleDetails(tmdbId, type);
+        if (tmdbTitle) {
+          appendOrUpdateTitle(tmdbTitle);
+          worldwideCache.set(id, tmdbTitle);
+          return tmdbTitle;
+        }
+      } catch (err) {
+        console.warn(`TMDB direct lookup error for ${id}:`, err);
+      }
+    }
+  }
+
+  // 4. Resolve from TMDB or Cinemeta Open Meta API (Supports all 11.2M+ IMDb IDs)
   if (id.startsWith('tt')) {
+    // Attempt TMDB find first (for official credits, high-res posters, and trailers)
+    try {
+      const tmdbMatch = await findTmdbByImdbId(id);
+      if (tmdbMatch) {
+        appendOrUpdateTitle(tmdbMatch);
+        worldwideCache.set(id, tmdbMatch);
+        return tmdbMatch;
+      }
+    } catch {
+      // Fallback to Cinemeta
+    }
+
     try {
       const [movieRes, seriesRes] = await Promise.allSettled([
         fetch(`https://v3-cinemeta.strem.io/meta/movie/${id}.json`, {
