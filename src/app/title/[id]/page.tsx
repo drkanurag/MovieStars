@@ -102,7 +102,7 @@ export default function TitleDetailPage() {
   }
 
   const handleAction = (type: 'watchlist' | 'favorites' | 'watched') => {
-    const active = toggleListStatus(movie.id, type);
+    const active = toggleListStatus(movie.id, type, movie.title);
     if (type === 'watchlist') setInWatchlist(active);
     if (type === 'favorites') setInFavorites(active);
     if (type === 'watched') setInWatched(active);
@@ -213,6 +213,57 @@ export default function TitleDetailPage() {
             <span className="px-2 py-0.5 rounded-md bg-[#f5c518]/20 text-[#f5c518] uppercase text-[10px] font-black">
               {movie.type.replace('_', ' ')}
             </span>
+          </div>
+
+          {/* Quick Action Ribbon & Save Button */}
+          <div className="flex flex-wrap items-center gap-2.5 pt-2">
+            <button
+              onClick={() => handleAction('watchlist')}
+              className={cn(
+                'flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs transition-all shadow-lg active:scale-95 cursor-pointer',
+                inWatchlist
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                  : 'bg-[#f5c518] hover:bg-amber-400 text-black shadow-amber-500/30'
+              )}
+            >
+              {inWatchlist ? (
+                <>
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>In Watchlist (Saved to Watch)</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>+ Save to Watchlist (Want to Watch)</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleAction('watched')}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all active:scale-95',
+                inWatched
+                  ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                  : 'bg-zinc-900 hover:bg-zinc-800 border-white/10 text-zinc-300 hover:text-white'
+              )}
+            >
+              <CheckCircle2 className={cn('w-4 h-4', inWatched && 'fill-emerald-400 text-black')} />
+              <span>{inWatched ? 'Watched' : 'Mark Watched'}</span>
+            </button>
+
+            <button
+              onClick={() => handleAction('favorites')}
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all active:scale-95',
+                inFavorites
+                  ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                  : 'bg-zinc-900 hover:bg-zinc-800 border-white/10 text-zinc-300 hover:text-white'
+              )}
+            >
+              <Heart className={cn('w-4 h-4', inFavorites && 'fill-rose-500 text-rose-500')} />
+              <span>{inFavorites ? 'Favorited' : 'Favorite'}</span>
+            </button>
           </div>
         </div>
 

@@ -59,7 +59,7 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
   ) => {
     e.preventDefault();
     e.stopPropagation();
-    const active = toggleListStatus(movie.id, type);
+    const active = toggleListStatus(movie.id, type, movie.title);
     if (type === 'watchlist') setInWatchlist(active);
     if (type === 'favorites') setInFavorites(active);
     if (type === 'watched') setInWatched(active);

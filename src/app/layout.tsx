@@ -4,6 +4,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { BackToTop } from '@/components/BackToTop';
+import { WatchlistToast } from '@/components/WatchlistToast';
 
 export const metadata: Metadata = {
   title: 'MovieStars — Ratings, Upcoming Releases & Where to Watch',
@@ -26,6 +27,7 @@ export default function RootLayout({
         <Footer />
         <MobileBottomNav />
         <BackToTop />
+        <WatchlistToast />
       </body>
     </html>
   );

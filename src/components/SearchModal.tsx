@@ -17,12 +17,15 @@ import {
   Bookmark,
   Cpu,
   Compass,
+  Check,
+  Plus,
 } from 'lucide-react';
 import { searchCatalogAutocomplete } from '@/lib/api/movieStore';
 import { TitleItem } from '@/types/movie';
 import { scoreToStars } from '@/lib/bayesian';
-import { getTmdbImageUrl } from '@/lib/utils';
+import { getTmdbImageUrl, cn } from '@/lib/utils';
 import { modalBackdrop, modalScale } from '@/lib/animations';
+import { toggleListStatus, getClientState } from '@/lib/storage';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -32,8 +35,16 @@ interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TitleItem[]>([]);
+  const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setWatchlistIds(getClientState().watchlist);
+    const handleUpdate = () => setWatchlistIds(getClientState().watchlist);
+    window.addEventListener('moviestars_state_updated', handleUpdate);
+    return () => window.removeEventListener('moviestars_state_updated', handleUpdate);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -222,9 +233,36 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl glass-pill border border-amber-400/30 text-cinema-gold text-xs font-black shrink-0">
-                      <Star className="w-3.5 h-3.5 fill-cinema-gold drop-shadow-[0_0_6px_rgba(245,197,24,0.6)]" />
-                      <span>{stars.toFixed(1)}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl glass-pill border border-amber-400/30 text-cinema-gold text-xs font-black">
+                        <Star className="w-3.5 h-3.5 fill-cinema-gold drop-shadow-[0_0_6px_rgba(245,197,24,0.6)]" />
+                        <span>{stars.toFixed(1)}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleListStatus(item.id, 'watchlist', item.title);
+                        }}
+                        className={cn(
+                          'p-1.5 rounded-xl transition-all cursor-pointer',
+                          watchlistIds.includes(item.id)
+                            ? 'bg-[#f5c518] text-black shadow-md'
+                            : 'bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white'
+                        )}
+                        title={
+                          watchlistIds.includes(item.id)
+                            ? 'Saved in Watchlist (Click to remove)'
+                            : 'Save to Watchlist (Want to Watch)'
+                        }
+                      >
+                        {watchlistIds.includes(item.id) ? (
+                          <Check className="w-3.5 h-3.5 stroke-[3.5]" />
+                        ) : (
+                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        )}
+                      </button>
                     </div>
                   </motion.div>
                 );

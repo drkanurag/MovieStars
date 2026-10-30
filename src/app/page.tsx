@@ -23,8 +23,10 @@ import {
   Clock,
   ChevronRight,
   Tv,
+  Plus,
+  Check,
 } from 'lucide-react';
-import { getTmdbImageUrl, formatRuntime } from '@/lib/utils';
+import { getTmdbImageUrl, formatRuntime, cn } from '@/lib/utils';
 import { staggerContainer, fadeInUp, heroSlide } from '@/lib/animations';
 import { toggleListStatus, getClientState } from '@/lib/storage';
 
@@ -39,6 +41,16 @@ export default function HomePage() {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [isHeroHovered, setIsHeroHovered] = useState(false);
+  const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setWatchlistIds(getClientState().watchlist);
+    const updateHandler = () => {
+      setWatchlistIds(getClientState().watchlist);
+    };
+    window.addEventListener('moviestars_state_updated', updateHandler);
+    return () => window.removeEventListener('moviestars_state_updated', updateHandler);
+  }, []);
 
   // Auto-advance hero carousel unless hovered
   useEffect(() => {
@@ -173,6 +185,29 @@ export default function HomePage() {
                   <Info className="w-3.5 h-3.5 text-[#f5c518]" />
                   <span>Where to Watch</span>
                 </Link>
+
+                {/* Save to Watchlist / Want to Watch Button */}
+                <button
+                  onClick={() => toggleListStatus(heroMovie.id, 'watchlist', heroMovie.title)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-4 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer shadow-md active:scale-95',
+                    watchlistIds.includes(heroMovie.id)
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                      : 'bg-[#f5c518] hover:bg-amber-400 text-black shadow-amber-500/30'
+                  )}
+                >
+                  {watchlistIds.includes(heroMovie.id) ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>Saved in Watchlist</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>+ Want to Watch</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

@@ -53,7 +53,17 @@ To satisfy the full architectural blueprint and create an elevated, ad-free IMDb
 - **Interactive Category Filtering**: Fast toggle between All Titles, Movies Only, TV Shows, and Web Series.
 - **Multi-Field Sorting**: Sorter dropdown for Bayesian Rank, IMDb Rating, Total Votes, and Release Date.
 
-### 5. Data Model & Enrichment
+### 5. Universal "Want to Watch" (Save Titles) & Global Feedback System
+- **Prominent Save Button**: Added "+ Save to Watchlist (Want to Watch)" button prominently on the Title Detail page hero header and the Homepage Showcase Hero banner.
+- **Global Watchlist Toast Feedback**: Whenever any movie or TV series is saved or removed (from cards, hero, detail page, or search modal), an interactive toast notification springs up in the bottom-right with a direct "View in My Library" shortcut.
+- **Upgraded Library Experience (`/watchlist`)**:
+  - Detailed library statistics: Saved Titles count, Total Estimated Watch Time (hours & minutes), Movies vs. TV Series breakdown.
+  - Sub-filters: "All", "Movies", "Series".
+  - One-click "Share List" to copy formatted titles to clipboard.
+  - "Clear List" utility with confirmation prompt.
+- **Instant Search Saving**: Users can bookmark/save titles directly from the Search Modal keystroke autocomplete suggestions.
+
+### 6. Data Model & Enrichment
 - Expanded `TitleItem` with `metascore`, `trivia`, `boxOffice`, `technicalSpecs`, and `trendingRank`.
 - Added celebrity roster `CELEBRITIES_BORN_TODAY` with full biographical details and filmography mapping.
 
