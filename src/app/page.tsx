@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { MovieImage } from '@/components/MovieImage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTrendingTitles, getUpcomingTitles, getBestOfAllTime } from '@/lib/api/movieStore';
 import { MovieCard } from '@/components/MovieCard';
@@ -89,7 +90,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               className="absolute inset-0 w-full h-full"
             >
-              <Image
+              <MovieImage
                 src={getTmdbImageUrl(heroMovie.backdropPath, 'original')}
                 alt={heroMovie.title}
                 fill
@@ -121,7 +122,7 @@ export default function HomePage() {
           <div className="relative z-20 p-6 sm:p-8 flex flex-col sm:flex-row gap-5 items-end sm:items-center">
             {/* Poster Thumbnail */}
             <div className="relative w-24 sm:w-32 aspect-[2/3] rounded-2xl overflow-hidden shrink-0 border-2 border-white/20 shadow-2xl bg-zinc-900 hidden sm:block">
-              <Image
+              <MovieImage
                 src={getTmdbImageUrl(heroMovie.posterPath, 'w500')}
                 alt={heroMovie.title}
                 fill
@@ -237,7 +238,7 @@ export default function HomePage() {
                   >
                     {/* Thumbnail with small play badge */}
                     <div className="relative w-16 h-20 rounded-xl overflow-hidden bg-black shrink-0 border border-white/10">
-                      <Image
+                      <MovieImage
                         src={getTmdbImageUrl(nextMovie.posterPath, 'w185')}
                         alt={nextMovie.title}
                         fill
@@ -397,7 +398,7 @@ export default function HomePage() {
               className="flex flex-col items-center text-center p-4 rounded-2xl bg-[#1a1a1a] hover:bg-zinc-800 border border-white/10 hover:border-[#f5c518]/60 transition-all group shadow-md"
             >
               <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-white/20 group-hover:border-[#f5c518] transition-colors shadow-lg bg-zinc-900 mb-3">
-                <Image
+                <MovieImage
                   src={celeb.profilePath}
                   alt={celeb.name}
                   fill

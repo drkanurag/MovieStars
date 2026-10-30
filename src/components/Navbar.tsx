@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { MovieImage } from './MovieImage';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Star,
@@ -233,7 +234,7 @@ export function Navbar() {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="relative w-9 h-12 rounded-lg overflow-hidden bg-black shrink-0 border border-white/10">
-                          <Image
+                          <MovieImage
                             src={getTmdbImageUrl(item.posterPath, 'w185')}
                             alt={item.title}
                             fill

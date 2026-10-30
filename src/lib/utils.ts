@@ -66,7 +66,9 @@ export function getTmdbImageUrl(
   path?: string,
   size: 'w92' | 'w185' | 'w300' | 'w500' | 'w780' | 'w1280' | 'original' = 'w500'
 ): string {
-  if (!path) return "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80";
-  if (path.startsWith("http")) return path;
+  if (!path || path.trim() === '' || path === 'N/A') {
+    return 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg';
+  }
+  if (path.startsWith('http')) return path;
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }

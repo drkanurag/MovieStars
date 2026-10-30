@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { MovieImage } from '@/components/MovieImage';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { TitleItem } from '@/types/movie';
@@ -458,7 +459,7 @@ export default function TitleDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6 items-stretch">
         {/* Left: Poster with Watchlist Ribbon (4 cols) */}
         <div className="md:col-span-4 relative rounded-3xl overflow-hidden bg-black border border-white/15 shadow-2xl group aspect-[2/3] max-w-sm mx-auto md:max-w-none w-full">
-          <Image
+          <MovieImage
             src={getTmdbImageUrl(movie.posterPath, 'w780')}
             alt={movie.title}
             fill
@@ -496,7 +497,7 @@ export default function TitleDetailPage() {
 
         {/* Center / Right: Video Trailer Stage (8 cols) */}
         <div className="md:col-span-8 relative rounded-3xl overflow-hidden bg-black border border-white/15 shadow-2xl flex items-center justify-center min-h-[340px] sm:min-h-[460px]">
-          <Image
+          <MovieImage
             src={getTmdbImageUrl(movie.backdropPath, 'original')}
             alt={movie.title}
             fill
@@ -689,7 +690,7 @@ export default function TitleDetailPage() {
                 >
                   <div className="relative w-12 h-12 rounded-full overflow-hidden bg-zinc-900 shrink-0 border border-white/15">
                     {actor.profilePath ? (
-                      <Image
+                      <MovieImage
                         src={actor.profilePath}
                         alt={actor.name}
                         fill
@@ -893,7 +894,7 @@ export default function TitleDetailPage() {
                   className="flex items-center gap-3 p-2 rounded-xl hover:bg-zinc-800 transition-colors group"
                 >
                   <div className="relative w-12 h-16 rounded-lg overflow-hidden bg-black shrink-0 border border-white/10">
-                    <Image
+                    <MovieImage
                       src={getTmdbImageUrl(sim.posterPath, 'w185')}
                       alt={sim.title}
                       fill

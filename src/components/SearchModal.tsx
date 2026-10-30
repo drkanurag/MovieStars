@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { MovieImage } from './MovieImage';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -202,7 +203,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/10 cursor-pointer transition-all group"
                   >
                     <div className="relative w-12 h-16 rounded-xl overflow-hidden bg-zinc-950 shrink-0 border border-white/10 group-hover:scale-105 transition-transform">
-                      <Image
+                      <MovieImage
                         src={getTmdbImageUrl(item.posterPath, 'w300')}
                         alt={item.title}
                         fill

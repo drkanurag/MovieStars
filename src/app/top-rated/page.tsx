@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { MovieImage } from '@/components/MovieImage';
 import { getBestOfAllTime } from '@/lib/api/movieStore';
 import { scoreToStars, DEFAULT_MIN_VOTES, DEFAULT_GLOBAL_MEAN } from '@/lib/bayesian';
 import { Trophy, Award, Star, Info, ExternalLink, Sparkles, Medal, Plus, Check, Filter } from 'lucide-react';
@@ -179,7 +180,7 @@ export default function BestOfAllTimePage() {
 
                 {/* Poster Thumbnail with Watchlist Bookmark Ribbon */}
                 <div className="relative w-16 h-24 sm:w-20 sm:h-28 rounded-2xl overflow-hidden bg-black shrink-0 border border-white/10 shadow-md group-hover:scale-105 transition-transform">
-                  <Image
+                  <MovieImage
                     src={getTmdbImageUrl(title.posterPath, 'w300')}
                     alt={title.title}
                     fill

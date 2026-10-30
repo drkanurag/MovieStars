@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Image from 'next/image';
+import { MovieImage } from '@/components/MovieImage';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getCatalog } from '@/lib/api/movieStore';
@@ -90,7 +91,7 @@ export default function PersonPage() {
       <div className="p-6 sm:p-8 rounded-3xl bg-[#1a1a1a] border border-white/10 flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 shadow-xl">
         <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden bg-black border-2 border-white/15 shadow-xl shrink-0">
           {profilePath ? (
-            <Image
+            <MovieImage
               src={getTmdbImageUrl(profilePath, 'w500')}
               alt={personName}
               fill

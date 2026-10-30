@@ -94,7 +94,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     status: 'released',
     originalLanguage: 'en',
     posterPath: 'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/xOMo8BRK7PfcJv9JCnx7s5hj0x2.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/uhUO7vQQKvCTfQWubOt5MAKokbL.jpg',
     genres: [
       { id: 878, name: 'Science Fiction' },
       { id: 12, name: 'Adventure' },
@@ -425,8 +425,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 147,
     status: 'released',
     originalLanguage: 'hi',
-    posterPath: 'https://image.tmdb.org/t/p/w500/z6c9f6y1p7s2.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/12th_fail_bd.jpg',
+    posterPath: 'https://m.media-amazon.com/images/M/MV5BNTE3OTIxZDYtNjA0NC00N2YxLTg1NGQtOTYxNmZkMDkwOWNjXkEyXkFqcGc@._V1_.jpg',
+    backdropPath: 'https://m.media-amazon.com/images/M/MV5BNTE3OTIxZDYtNjA0NC00N2YxLTg1NGQtOTYxNmZkMDkwOWNjXkEyXkFqcGc@._V1_.jpg',
     genres: [
       { id: 18, name: 'Drama' },
       { id: 36, name: 'History' }
@@ -490,8 +490,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     episodesCount: 29,
     status: 'released',
     originalLanguage: 'hi',
-    posterPath: 'https://image.tmdb.org/t/p/w500/1X6GzE1uY8M7nU.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/mzp_bd.jpg',
+    posterPath: 'https://m.media-amazon.com/images/M/MV5BZTFjMzMxZTUtYTMyNy00OWNhLTk4ODQtNGI1NjI1NjJhMzc3XkEyXkFqcGc@._V1_.jpg',
+    backdropPath: 'https://m.media-amazon.com/images/M/MV5BZTFjMzMxZTUtYTMyNy00OWNhLTk4ODQtNGI1NjI1NjJhMzc3XkEyXkFqcGc@._V1_.jpg',
     genres: [
       { id: 80, name: 'Crime' },
       { id: 18, name: 'Drama' },
@@ -555,8 +555,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 187,
     status: 'released',
     originalLanguage: 'te',
-    posterPath: 'https://image.tmdb.org/t/p/w500/wE0noFUe4KEr4f128eXFw.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/rrr_bd.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/u0XUBNQWlOvrh0Gd97ARGpIkL0.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/i0Y0wP8H6SRgjr6QmuwbtQbS24D.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 18, name: 'Drama' },
@@ -621,8 +621,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 195,
     status: 'upcoming',
     originalLanguage: 'en',
-    posterPath: 'https://image.tmdb.org/t/p/w500/mY0mJ01nS8e9yT6lKq.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/8Z8Jw4UvJgq91v.jpg',
+    posterPath: 'https://m.media-amazon.com/images/M/MV5BYTQyZTQ5MWQtN2M4NC00YWQwLTg3ZTctM2JiZDE4NDBkZDJkXkEyXkFqcGc@._V1_.jpg',
+    backdropPath: 'https://m.media-amazon.com/images/M/MV5BYTQyZTQ5MWQtN2M4NC00YWQwLTg3ZTctM2JiZDE4NDBkZDJkXkEyXkFqcGc@._V1_.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 878, name: 'Science Fiction' },
@@ -677,8 +677,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 185,
     status: 'upcoming',
     originalLanguage: 'te',
-    posterPath: 'https://image.tmdb.org/t/p/w500/j67Xp10u7t.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/kalki_bd.jpg',
+    posterPath: 'https://m.media-amazon.com/images/M/MV5BMTM3ZGUwYTEtZTI5NS00ZmMyLTk2YmQtMWU4YjlhZTI3NjRjXkEyXkFqcGc@._V1_.jpg',
+    backdropPath: 'https://m.media-amazon.com/images/M/MV5BMTM3ZGUwYTEtZTI5NS00ZmMyLTk2YmQtMWU4YjlhZTI3NjRjXkEyXkFqcGc@._V1_.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 878, name: 'Science Fiction' },
@@ -727,8 +727,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 170,
     status: 'upcoming',
     originalLanguage: 'en',
-    posterPath: 'https://image.tmdb.org/t/p/w500/batman_pt2.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/batman_bd.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/nWFGTPx7tcHc7IC6lZF7tuM7Nst.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/rvtdN5XkWAfGX6xDuPL6yYS2seK.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 80, name: 'Crime' },
@@ -910,7 +910,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     status: 'released',
     originalLanguage: 'ja',
     posterPath: 'https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/mSDmv7oYx7409wB9a7M2oK46.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/Ab8mkHmkYADjU7wQiOkia9BzGvS.jpg',
     genres: [
       { id: 16, name: 'Animation' },
       { id: 10751, name: 'Family' },
@@ -1033,8 +1033,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 207,
     status: 'released',
     originalLanguage: 'ja',
-    posterPath: 'https://image.tmdb.org/t/p/w500/iAqBhhGzD3MbmXqC94k99r1K1eX.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/8Z02y0qH70k4v57h9q.jpg',
+    posterPath: 'https://m.media-amazon.com/images/M/MV5BZjliMWExOTMtZDQ3ZS00NWU3LWIyN2EtMjllNzk3ZTNlYzg4XkEyXkFqcGc@._V1_.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/qvZ91FwMq6O47VViAr8vZNQz3WI.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 18, name: 'Drama' },
@@ -1092,8 +1092,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 130,
     status: 'released',
     originalLanguage: 'pt',
-    posterPath: 'https://image.tmdb.org/t/p/w500/k7eYdWvhYQZRFsnWgmPr5g6GM49.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/mQ9m8K7gq6v7L0.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/k7eYdWvhYQyRQoU2TB2A2Xu2TfD.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/iNh3BivHyg5sQRPP1KOkzguEX0H.jpg',
     genres: [
       { id: 18, name: 'Drama' },
       { id: 80, name: 'Crime' },
@@ -1153,8 +1153,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 167,
     status: 'released',
     originalLanguage: 'te',
-    posterPath: 'https://image.tmdb.org/t/p/w500/4096Wn9x27p4hL0.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/9K4w1L0.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/21sC2assImQIYCEDA84Qh9d1RsK.jpg',
+    backdropPath: 'https://m.media-amazon.com/images/M/MV5BNTRhYTlhZTgtYmMyYy00NWI4LTk4MzItOWM2YjBmYTg2OTI2XkEyXkFqcGc@._V1_.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 12, name: 'Adventure' },
@@ -1216,8 +1216,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     episodesCount: 16,
     status: 'released',
     originalLanguage: 'hi',
-    posterPath: 'https://image.tmdb.org/t/p/w500/6yK2vH6m0Qo.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/4f6k2.jpg',
+    posterPath: 'https://m.media-amazon.com/images/M/MV5BN2EyODc1MDAtNTg0ZC00MjRhLTg1NzctM2NjYTlmOGMwYWNiXkEyXkFqcGc@._V1_.jpg',
+    backdropPath: 'https://m.media-amazon.com/images/M/MV5BN2EyODc1MDAtNTg0ZC00MjRhLTg1NzctM2NjYTlmOGMwYWNiXkEyXkFqcGc@._V1_.jpg',
     genres: [
       { id: 80, name: 'Crime' },
       { id: 18, name: 'Drama' },
@@ -1273,7 +1273,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     status: 'released',
     originalLanguage: 'en',
     posterPath: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/56v2KjUmULeSTUmKuKiLSCIm328.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
     genres: [
       { id: 18, name: 'Drama' },
       { id: 14, name: 'Fantasy' },
@@ -1333,7 +1333,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 54,
     knownFor: 'Oppenheimer, Inception, Interstellar',
     role: 'Director',
-    profilePath: 'https://image.tmdb.org/t/p/w185/xuAIuYSmsUzKlUMBFGVZaWsY3Z5.jpg',
+    profilePath: 'https://m.media-amazon.com/images/M/MV5BNjE3NDQyOTYyMV5BMl5BanBnXkFtZTcwODcyODU2Mw@@._V1_.jpg',
     topTitles: ['Oppenheimer', 'Interstellar', 'The Dark Knight']
   },
   {
@@ -1343,7 +1343,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 48,
     knownFor: 'Oppenheimer, Peaky Blinders',
     role: 'Actor',
-    profilePath: 'https://image.tmdb.org/t/p/w185/i81d2JbW3e1w7qFvQ3c0qC6b6cT.jpg',
+    profilePath: 'https://m.media-amazon.com/images/M/MV5BNWM3NTg0NGYtNTFmYS00OWY1LTlkNTgtNzZlMWY4OGRmMmEzXkEyXkFqcGc@._V1_CR1542,983,1114,1670_.jpg',
     topTitles: ['Oppenheimer', 'Dunkirk', 'Inception']
   },
   {
@@ -1353,7 +1353,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 28,
     knownFor: 'Dune: Part Two, Wonka, Interstellar',
     role: 'Actor',
-    profilePath: 'https://image.tmdb.org/t/p/w185/BE2sdjpgsa2rNTFa66f7ikNVXp.jpg',
+    profilePath: 'https://m.media-amazon.com/images/M/MV5BZTIyZWY4ZjktOGJiZi00NGFkLTllMjctZjJjMmNiMjIxOTY2XkEyXkFqcGc@._V1_.jpg',
     topTitles: ['Dune: Part Two', 'Interstellar']
   },
   {
@@ -1363,7 +1363,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 48,
     knownFor: 'Mirzapur, Gangs of Wasseypur, Stree',
     role: 'Actor',
-    profilePath: 'https://image.tmdb.org/t/p/w185/v3B5v3f5.jpg',
+    profilePath: 'https://m.media-amazon.com/images/M/MV5BYjU5NGViZTMtM2QwMy00MmFkLTg5MjAtYzdhZWJlNDM3YjA0XkEyXkFqcGc@._V1_.jpg',
     topTitles: ['Mirzapur', 'Sacred Games', 'Stree']
   },
   {
@@ -1373,7 +1373,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 28,
     knownFor: 'Dune: Part Two, Euphoria, Spider-Man',
     role: 'Actor',
-    profilePath: 'https://image.tmdb.org/t/p/w185/r3A7ev7QkjvEeVw1v2g.jpg',
+    profilePath: 'https://m.media-amazon.com/images/M/MV5BZjM5N2U3MzQtZWU5My00YzE0LThmZTgtYjE1NDJjNmIzZmIxXkEyXkFqcGc@._V1_.jpg',
     topTitles: ['Dune: Part Two', 'Challengers']
   },
   {
@@ -1383,7 +1383,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 37,
     knownFor: '12th Fail, Mirzapur, Sector 36',
     role: 'Actor',
-    profilePath: 'https://image.tmdb.org/t/p/w185/z6c9f.jpg',
+    profilePath: 'https://m.media-amazon.com/images/M/MV5BNWFiNzExM2YtYjgwYy00YjQ1LWJjYjgtY2JkOTA1ZjllNDMwXkEyXkFqcGc@._V1_.jpg',
     topTitles: ['12th Fail', 'Mirzapur']
   }
 ];

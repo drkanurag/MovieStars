@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { MovieImage } from './MovieImage';
 import { motion } from 'framer-motion';
 import { TitleItem } from '@/types/movie';
 import { Star, Bookmark, Play, Heart, CheckCircle2, Plus, Check } from 'lucide-react';
@@ -82,7 +83,7 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
         {/* Poster Container */}
         <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
           <Link href={`/title/${movie.id}`}>
-            <Image
+            <MovieImage
               src={getTmdbImageUrl(movie.posterPath, 'w500')}
               alt={movie.title}
               fill
