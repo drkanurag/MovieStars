@@ -41,6 +41,7 @@ export default function SystemDesignPage() {
   };
 
   useEffect(() => {
+    document.title = 'System Architecture, Data Structures & Microservices | MovieStars';
     fetchHealth();
     handleTrieSearch('Opp');
   }, []);

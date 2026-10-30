@@ -95,6 +95,9 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
           <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-cinema-card via-cinema-card/75 to-transparent pointer-events-none" />
 
+          {/* Open-Source Metallic Sheen Reflection Sweep on Hover */}
+          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none z-10" />
+
           {/* IMDb-Style Bookmark Ribbon on Top-Left */}
           <button
             onClick={(e) => handleAction(e, 'watchlist')}

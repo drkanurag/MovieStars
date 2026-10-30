@@ -29,6 +29,7 @@ export default function WatchlistPage() {
   const [copiedShare, setCopiedShare] = useState(false);
 
   useEffect(() => {
+    document.title = 'Saved Movies & Series — Want to Watch Library | MovieStars';
     setState(getClientState());
 
     const handleUpdate = () => {

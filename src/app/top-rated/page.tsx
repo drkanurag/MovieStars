@@ -18,6 +18,7 @@ export default function BestOfAllTimePage() {
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
 
   useEffect(() => {
+    document.title = 'IMDb Top 250 & Best of All Time Movies — Bayesian Rankings | MovieStars';
     const s = getClientState();
     setWatchlistIds(s.watchlist);
 

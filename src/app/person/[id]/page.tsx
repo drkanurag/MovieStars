@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -59,8 +59,25 @@ export default function PersonPage() {
     }
   }
 
+  useEffect(() => {
+    document.title = `${personName} — Filmography, Bio & Top Ratings | MovieStars`;
+  }, [personName]);
+
+  const personSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: personName,
+    jobTitle: department,
+    image: profilePath,
+  };
+
   return (
     <div className="space-y-8">
+      {/* Schema.org Person JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+      />
       {/* Breadcrumb Navigation */}
       <Breadcrumb
         items={[

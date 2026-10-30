@@ -29,6 +29,7 @@ function BrowseContent() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
+    document.title = 'Explore Movies & TV Series — Streaming Availability Worldwide | MovieStars';
     setCountry(getSelectedCountry());
     const q = searchParams.get('q');
     if (q) setSearchQuery(q);

@@ -10,7 +10,7 @@
 
 You can access and interact with the live MovieStars web application immediately from any browser worldwide:
 
-- **Live Public URL**: [https://hip-pans-join.loca.lt](https://hip-pans-join.loca.lt)
+- **Live Public URL**: [https://spotty-goats-lose.loca.lt](https://spotty-goats-lose.loca.lt)
   > **Note**: On your first visit, Localtunnel displays an initial security check. Enter the Tunnel Password: `45.112.151.44` and click **"Click to Submit"** to enter MovieStars directly.
 - **One-Click Deploy to Vercel**: Anyone can clone and deploy their own 24/7 production instance to Vercel in 60 seconds with zero configuration:
   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/drkanurag/MovieStars)
@@ -28,10 +28,11 @@ You can access and interact with the live MovieStars web application immediately
 6. [🌍 Worldwide Datasets Coverage Architecture (11.2M+ Titles)](#-worldwide-datasets-coverage-architecture-112m-titles)
 7. [📖 Master Catalog Guide: What Each Title Is About](#-master-catalog-guide-what-each-title-is-about)
 8. [🎬 Feature Showcase (IMDb-Style but Elevated)](#-feature-showcase-imdb-style-but-elevated)
-9. [🗄️ Relational Database Schema (PostgreSQL 16)](#️-relational-database-schema-postgresql-16)
-10. [🧪 Automated Testing Suite (10/10 Passed)](#-automated-testing-suite-1010-passed)
-11. [🚀 Quickstart & Installation](#-quickstart--installation)
-12. [📜 Attribution & Legal Compliance](#-attribution--legal-compliance)
+9. [🔍 Search Engine Optimization (SEO) & Open-Source Animations](#-search-engine-optimization-seo--open-source-animations)
+10. [🗄️ Relational Database Schema (PostgreSQL 16)](#️-relational-database-schema-postgresql-16)
+11. [🧪 Automated Testing Suite (10/10 Passed)](#-automated-testing-suite-1010-passed)
+12. [🚀 Quickstart & Installation](#-quickstart--installation)
+13. [📜 Attribution & Legal Compliance](#-attribution--legal-compliance)
 
 ---
 
@@ -205,6 +206,28 @@ MovieStars solves the challenge of covering every movie and TV series ever relea
 - **Dedicated Search Engine (`/search`)**: Real-time keystroke search with trending chips, streaming filters (Netflix, Prime, Hotstar, JioCinema), and minimum rating selector.
 - **Scoreboard Clusters**: Title details displaying IMDb score, Metascore with green consensus badge, user star rating modal, and Bayesian trophy rank.
 - **Trivia & Technical Specs**: Behind-the-scenes facts, aspect ratio, audio mix, camera models, and box office earnings.
+
+---
+
+## 🔍 Search Engine Optimization (SEO) & Open-Source Animations
+
+### 1. Comprehensive SEO Architecture
+MovieStars implements enterprise-grade SEO practices to ensure high search ranking on Google, Bing, and other crawlers:
+- **Dynamic XML Sitemap (`/sitemap.xml`)**: Built via `src/app/sitemap.ts`, generating canonical, priority-weighted indexing entries for all core pages, dynamic titles, and celebrity profiles.
+- **Crawler Directives (`/robots.txt`)**: Built via `src/app/robots.ts`, controlling crawler access and pointing search engine bots directly to the sitemap.
+- **Schema.org Structured Data (JSON-LD)**:
+  - **`WebSite` with Sitelinks Searchbox (`schema.org/SearchAction`)**: Enables Google to display a dedicated search box in search results.
+  - **`Movie` & `TVSeries` Rich Snippets**: Deeply structured schemas in `src/app/title/[id]/page.tsx` including `aggregateRating` (1–10 star score and vote counts), actors, directors, release dates, and streaming provider offers.
+  - **`BreadcrumbList`**: Structured breadcrumb paths helping crawlers understand site hierarchy.
+  - **`Person`**: Structured data for actor and director profiles.
+- **Dynamic Document Titles**: Keystroke-reactive and page-aware titles across Search, Browse, Top 250, Watchlist, and Title Details.
+
+### 2. Open-Source Animation Design System
+Powered by Framer Motion, modern CSS keyframes, and glassmorphic micro-interactions:
+- **Infinite Filmstrip Marquee (`TrendingMarquee.tsx`)**: Fluid, continuous scrolling marquee ticker featuring trending Bayesian ranks, cinema news, and streaming availability.
+- **Metallic Sheen Reflection Sweep (`MovieCard.tsx`)**: Open-source specular reflection sweep that glides across posters on hover.
+- **Glow Pulse & Ambient Mesh (`@keyframes glow-pulse`)**: Subtle radiant amber illumination for ratings and trophy badges.
+- **Smooth Spring Layout Transitions**: Framer Motion spring physics on button taps, card lifts, and trailer playback modals.
 
 ---
 

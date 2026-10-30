@@ -118,6 +118,7 @@ export default function TitleDetailPage() {
 
   useEffect(() => {
     if (!movie) return;
+    document.title = `${movie.title} (${movie.releaseDate?.slice(0, 4) || 'TBA'}) - Ratings, Trailer & Where to Watch | MovieStars`;
     const state = getClientState();
     setInWatchlist(state.watchlist.includes(movie.id));
     setInFavorites(state.favorites.includes(movie.id));
@@ -209,8 +210,69 @@ export default function TitleDetailPage() {
   const prevMovie = currentIndex > 0 ? catalog[currentIndex - 1] : catalog[catalog.length - 1];
   const nextMovie = currentIndex < catalog.length - 1 ? catalog[currentIndex + 1] : catalog[0];
 
+  // Schema.org Movie / TVSeries Structured Data for Rich Google Snippets
+  const movieSchema = {
+    '@context': 'https://schema.org',
+    '@type': movie.type === 'movie' ? 'Movie' : 'TVSeries',
+    name: movie.title,
+    alternateName: movie.originalTitle,
+    image: movie.posterPath,
+    description: movie.overview,
+    datePublished: movie.releaseDate,
+    genre: movie.genres.map((g) => g.name),
+    director: movie.directors.map((d) => ({
+      '@type': 'Person',
+      name: d.name,
+    })),
+    actor: movie.cast.map((c) => ({
+      '@type': 'Person',
+      name: c.name,
+    })),
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: movie.ratings.imdb.score,
+      bestRating: '10',
+      worstRating: '1',
+      ratingCount: movie.ratings.imdb.votes,
+    },
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://moviestars.vercel.app',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: movie.type === 'web_series' ? 'Web Series' : movie.type === 'tv' ? 'TV Shows' : 'Movies',
+        item: `https://moviestars.vercel.app/browse?type=${movie.type}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: movie.title,
+        item: `https://moviestars.vercel.app/title/${movie.id}`,
+      },
+    ],
+  };
+
   return (
     <div className="space-y-8">
+      {/* Schema.org SEO Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(movieSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       {/* 1. Top Bar: Breadcrumbs & Next/Prev Navigator */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
         <Breadcrumb

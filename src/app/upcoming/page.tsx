@@ -1,8 +1,14 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { getUpcomingTitles } from '@/lib/api/movieStore';
 import { MovieCard } from '@/components/MovieCard';
 import { UpcomingCountdown } from '@/components/UpcomingCountdown';
 import { Sparkles, Bell, Calendar, Video } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Upcoming Movies & Release Countdowns | MovieStars',
+  description: 'Live countdown timers, release dates, official trailers, and release reminders for upcoming movies and streaming series worldwide.',
+};
 
 export default function UpcomingPage() {
   const upcomingTitles = getUpcomingTitles();

@@ -61,6 +61,12 @@ function SearchPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
+    document.title = query.trim()
+      ? `Search "${query.trim()}" — Cinema Intelligence | MovieStars`
+      : 'Search Movies, TV Series & Celebrities Worldwide | MovieStars';
+  }, [query]);
+
+  useEffect(() => {
     setWatchlistIds(getClientState().watchlist);
     const updateHandler = () => setWatchlistIds(getClientState().watchlist);
     window.addEventListener('moviestars_state_updated', updateHandler);
