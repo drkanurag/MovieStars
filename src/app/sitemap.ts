@@ -38,12 +38,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 0.85,
     },
-    {
-      url: `${baseUrl}/system-design`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
   ];
 
   // 2. Dynamic Title Routes (All Movies, TV Shows, Web Series)

@@ -171,7 +171,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-2">
               <Globe2 className="w-5 h-5 text-[#f5c518]" />
               <h2 className="text-base sm:text-lg font-black text-white">
-                Worldwide Cinema Coverage Architecture
+                Worldwide Cinema Coverage Engine
               </h2>
             </div>
             <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
