@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # 1. Primary PostgreSQL 16 Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: moviestars-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: moviestars
+      POSTGRES_USER: moviestars_admin
+      POSTGRES_PASSWORD: cinema_secure_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./src/server/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moviestars_admin -d moviestars"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis In-Memory Cache & Leaderboards
+  redis:
+    image: redis:7-alpine
+    container_name: moviestars-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. MovieStars Application & API Gateway
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moviestars-app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://moviestars_admin:cinema_secure_password_2026@postgres:5432/moviestars?schema=public
+      - REDIS_URL=redis://redis:6379
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - OMDB_API_KEY=${OMDB_API_KEY}
+      - NODE_ENV=production
+
+volumes:
+  pgdata:
+  redisdata:
+
