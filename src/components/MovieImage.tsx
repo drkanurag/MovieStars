@@ -60,6 +60,8 @@ export function MovieImage({
       alt={alt}
       className={className}
       onError={handleError}
+      unoptimized={true}
     />
   );
 }
+

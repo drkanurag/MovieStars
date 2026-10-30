@@ -135,6 +135,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <head>
+        {/* Preconnect & DNS Prefetch to Edge Media CDNs for Sub-Millisecond Asset Delivery */}
+        <link rel="preconnect" href="https://image.tmdb.org" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://image.tmdb.org" />
+        <link rel="preconnect" href="https://m.media-amazon.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://m.media-amazon.com" />
+        <link rel="preconnect" href="https://img.youtube.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://img.youtube.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

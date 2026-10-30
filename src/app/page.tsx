@@ -91,7 +91,7 @@ export default function HomePage() {
               className="absolute inset-0 w-full h-full"
             >
               <MovieImage
-                src={getTmdbImageUrl(heroMovie.backdropPath, 'original')}
+                src={getTmdbImageUrl(heroMovie.backdropPath, 'w1280')}
                 alt={heroMovie.title}
                 fill
                 priority

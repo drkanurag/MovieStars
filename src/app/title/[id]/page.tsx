@@ -498,7 +498,7 @@ export default function TitleDetailPage() {
         {/* Center / Right: Video Trailer Stage (8 cols) */}
         <div className="md:col-span-8 relative rounded-3xl overflow-hidden bg-black border border-white/15 shadow-2xl flex items-center justify-center min-h-[340px] sm:min-h-[460px]">
           <MovieImage
-            src={getTmdbImageUrl(movie.backdropPath, 'original')}
+            src={getTmdbImageUrl(movie.backdropPath, 'w1280')}
             alt={movie.title}
             fill
             priority
