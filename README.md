@@ -6,16 +6,11 @@
 
 ---
 
-## 🌐 Live Working Website & Public Access
+## 🌐 Live Working Website
 
-You can access and interact with the live MovieStars web application immediately from any browser worldwide:
+Anyone can access and use the live MovieStars web application immediately from any browser:
 
-- **Live Public URL**: [https://spotty-goats-lose.loca.lt](https://spotty-goats-lose.loca.lt)
-  > **Note**: On your first visit, Localtunnel displays an initial security check. Enter the Tunnel Password: `45.112.151.44` and click **"Click to Submit"** to enter MovieStars directly.
-- **One-Click Deploy to Vercel**: Anyone can clone and deploy their own 24/7 production instance to Vercel in 60 seconds with zero configuration:
-  [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/drkanurag/MovieStars)
-- **Official GitHub Repository**: [https://github.com/drkanurag/MovieStars](https://github.com/drkanurag/MovieStars)
-- **Local Dev Server**: `http://localhost:3000`
+🔗 **[https://movie-stars-kappa.vercel.app/](https://movie-stars-kappa.vercel.app/)**
 
 ---
 
