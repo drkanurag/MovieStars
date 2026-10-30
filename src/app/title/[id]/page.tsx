@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
+import { TitleItem } from '@/types/movie';
 import { getTitleById, getTrendingTitles, getCatalog } from '@/lib/api/movieStore';
 import { StarRating } from '@/components/StarRating';
 import { RatingBadge } from '@/components/RatingBadge';
@@ -46,7 +47,10 @@ import { cn } from '@/lib/utils';
 export default function TitleDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const movie = getTitleById(id);
+  const initialLocal = getTitleById(id);
+  const [movie, setMovie] = useState<TitleItem | undefined>(initialLocal);
+  const [loadingWorldwide, setLoadingWorldwide] = useState(!initialLocal);
+  const [notFoundState, setNotFoundState] = useState(false);
 
   const [inWatchlist, setInWatchlist] = useState(false);
   const [inFavorites, setInFavorites] = useState(false);
@@ -76,6 +80,42 @@ export default function TitleDetailPage() {
   ]);
 
   useEffect(() => {
+    if (initialLocal) {
+      setMovie(initialLocal);
+      setLoadingWorldwide(false);
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingWorldwide(true);
+
+    fetch(`/api/worldwide/title/${encodeURIComponent(id)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Not found in worldwide catalog');
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted && data.title) {
+          setMovie(data.title);
+          setLoadingWorldwide(false);
+        } else if (isMounted) {
+          setNotFoundState(true);
+          setLoadingWorldwide(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setNotFoundState(true);
+          setLoadingWorldwide(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, initialLocal]);
+
+  useEffect(() => {
     if (!movie) return;
     const state = getClientState();
     setInWatchlist(state.watchlist.includes(movie.id));
@@ -84,19 +124,44 @@ export default function TitleDetailPage() {
     setUserStars(state.userRatings[movie.id] || null);
   }, [movie]);
 
-  if (!movie) {
+  if (loadingWorldwide) {
     return (
-      <div className="py-24 text-center">
-        <h2 className="text-2xl font-bold text-white">Title not found</h2>
-        <p className="text-zinc-400 mt-2 text-sm">
-          The requested movie or series does not exist in our catalog.
+      <div className="py-28 text-center space-y-4 max-w-lg mx-auto">
+        <div className="w-12 h-12 rounded-full border-4 border-[#f5c518] border-t-transparent animate-spin mx-auto" />
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold text-white">Searching Worldwide Datasets...</h3>
+          <p className="text-xs text-zinc-400">
+            Querying IMDb 11.2M+ global archives & TMDB dynamic federation for &ldquo;{id}&rdquo;
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!movie || notFoundState) {
+    return (
+      <div className="py-24 text-center max-w-lg mx-auto space-y-4">
+        <div className="w-16 h-16 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center mx-auto text-[#f5c518]">
+          <Film className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-bold text-white">Title not found in worldwide datasets</h2>
+        <p className="text-zinc-400 text-xs leading-relaxed">
+          The requested title &ldquo;{id}&rdquo; could not be resolved from our local database or TMDB/IMDb worldwide federation.
         </p>
-        <Link
-          href="/browse"
-          className="mt-4 inline-block px-5 py-2.5 rounded-xl bg-[#f5c518] text-black font-bold text-xs"
-        >
-          Back to Browse
-        </Link>
+        <div className="flex justify-center gap-3 pt-2">
+          <Link
+            href="/search"
+            className="px-5 py-2.5 rounded-xl bg-[#f5c518] text-black font-black text-xs hover:bg-amber-400 transition-colors shadow-lg"
+          >
+            Search Worldwide Catalog
+          </Link>
+          <Link
+            href="/browse"
+            className="px-5 py-2.5 rounded-xl bg-zinc-900 border border-white/10 text-white font-bold text-xs hover:bg-zinc-800 transition-colors"
+          >
+            Back to Browse
+          </Link>
+        </div>
       </div>
     );
   }

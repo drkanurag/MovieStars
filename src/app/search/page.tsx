@@ -52,6 +52,8 @@ function SearchPageContent() {
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
   const [minRating, setMinRating] = useState<number>(0);
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
+  const [federatedTitles, setFederatedTitles] = useState<TitleItem[]>([]);
+  const [isFederating, setIsFederating] = useState<boolean>(false);
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -65,13 +67,46 @@ function SearchPageContent() {
     return () => window.removeEventListener('moviestars_state_updated', updateHandler);
   }, []);
 
+  // Worldwide live federation search effect
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setFederatedTitles([]);
+      setIsFederating(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setIsFederating(true);
+      fetch(`/api/worldwide/search?q=${encodeURIComponent(trimmed)}&type=${selectedType}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && Array.isArray(data.results)) {
+            setFederatedTitles(data.results);
+          }
+        })
+        .catch((err) => console.error('Worldwide search error:', err))
+        .finally(() => setIsFederating(false));
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [query, selectedType]);
+
   const catalog = getCatalog();
 
   // Search and filter logic
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    return catalog.filter((movie) => {
+    // Base pool combines local master catalog and dynamic worldwide results
+    const combinedPool = [...catalog];
+    for (const fed of federatedTitles) {
+      if (!combinedPool.some((m) => m.id === fed.id || m.tmdbId === fed.tmdbId || m.imdbId === fed.imdbId)) {
+        combinedPool.push(fed);
+      }
+    }
+
+    return combinedPool.filter((movie) => {
       // 1. Text Search matching title, overview, cast, director, character
       if (q) {
         const titleMatch = movie.title.toLowerCase().includes(q);
@@ -115,7 +150,7 @@ function SearchPageContent() {
 
       return true;
     });
-  }, [catalog, query, selectedType, selectedGenre, selectedPlatform, minRating]);
+  }, [catalog, federatedTitles, query, selectedType, selectedGenre, selectedPlatform, minRating]);
 
   const handleQueryChange = (text: string) => {
     setQuery(text);
@@ -134,16 +169,22 @@ function SearchPageContent() {
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* 1. Header & Giant Search Hero Box */}
       <div className="text-center space-y-4 pt-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f5c518]/20 border border-[#f5c518]/40 text-[#f5c518] text-xs font-black uppercase tracking-wider">
-          <Search className="w-3.5 h-3.5" />
-          <span>Cinema Intelligence Search</span>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f5c518]/20 border border-[#f5c518]/40 text-[#f5c518] text-xs font-black uppercase tracking-wider">
+            <Search className="w-3.5 h-3.5" />
+            <span>Cinema Intelligence Search</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>11,200,000+ Worldwide Titles (IMDb & TMDB JIT Federation)</span>
+          </div>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
           Find Any <span className="text-[#f5c518]">Movie, TV Show</span> or Celebrity
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
-          Search across thousands of titles, actors, directors, genres, and streaming catalogs with instant keystroke suggestions
+        <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+          Comprehensive global cinema intelligence covering every movie, TV series, web series, and anime released worldwide across Hollywood, Asian cinema, European classics, Indian blockbusters, and Latin American gems
         </p>
 
         {/* Live Search Input Box */}
@@ -271,8 +312,8 @@ function SearchPageContent() {
       </div>
 
       {/* 3. Search Results Count Header */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-3">
-        <div className="text-sm font-bold text-white flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+        <div className="text-sm font-bold text-white flex flex-wrap items-center gap-2">
           <span>Found</span>
           <span className="text-[#f5c518] font-black">{results.length}</span>
           <span>{results.length === 1 ? 'title' : 'titles'}</span>
@@ -281,8 +322,14 @@ function SearchPageContent() {
               for &ldquo;<strong className="text-white">{query}</strong>&rdquo;
             </span>
           )}
+          {isFederating && (
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#f5c518]/20 text-[#f5c518] text-[10px] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#f5c518] animate-ping" />
+              Federating worldwide archives...
+            </span>
+          )}
         </div>
-        <span className="text-xs text-zinc-400">Sorted by relevance and Bayesian rating</span>
+        <span className="text-xs text-zinc-400">Bayesian-weighted rank • Official global IDs</span>
       </div>
 
       {/* 4. Results Grid or No Matches State */}
@@ -301,7 +348,7 @@ function SearchPageContent() {
             No titles matched &ldquo;{query}&rdquo;
           </h3>
           <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
-            Try checking for spelling errors, searching by actor name (e.g., Cillian Murphy, Timothée Chalamet), or browsing our curated master catalog.
+            We searched local master cinema databases and federated TMDB/IMDb catalogs. Check spelling, search by celebrity or director name, or browse our all-time master catalog.
           </p>
           <div className="pt-2 flex flex-wrap justify-center gap-2">
             <button
