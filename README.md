@@ -63,7 +63,14 @@ To satisfy the full architectural blueprint and create an elevated, ad-free IMDb
   - "Clear List" utility with confirmation prompt.
 - **Instant Search Saving**: Users can bookmark/save titles directly from the Search Modal keystroke autocomplete suggestions.
 
-### 6. Data Model & Enrichment
+### 6. Dedicated Search Engine (`/search`) & Live Autocomplete
+- **Dedicated Search Engine Page (`/search`)**: Built an interactive search engine page with a prominent hero search bar, live results as you type, and category filters (All Formats, Movies, TV Shows, Web Series).
+- **Popular Trending Search Chips**: One-click quick search tags for *Oppenheimer, Dune: Part Two, Breaking Bad, The Godfather, Mirzapur, 12th Fail, Interstellar, RRR, Christopher Nolan, Cillian Murphy*.
+- **Multi-Facet Search Filtering**: Filter search results in real time by Streaming Platform (Netflix, Prime Video, Hotstar, JioCinema, Apple TV, Zee5) and Minimum Rating (★ 8.0+, ★ 8.5+, ★ 9.0+).
+- **Interactive Navbar Autocomplete**: Real-time keystroke suggestions drop down directly beneath the navbar search input with title posters, year, type, Bayesian ratings, and "+ Save to Watchlist" button.
+- **Mobile Bottom Bar & Navigation Integration**: Added an explicit "Search" link in the desktop navigation and a central "Search" icon in the mobile bottom dock for 1-tap access on any screen.
+
+### 7. Data Model & Enrichment
 - Expanded `TitleItem` with `metascore`, `trivia`, `boxOffice`, `technicalSpecs`, and `trendingRank`.
 - Added celebrity roster `CELEBRITIES_BORN_TODAY` with full biographical details and filmography mapping.
 

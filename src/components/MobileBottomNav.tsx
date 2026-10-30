@@ -28,6 +28,7 @@ export function MobileBottomNav() {
 
   const items = [
     { label: 'Home', href: '/', icon: Home },
+    { label: 'Search', href: '/search', icon: Search },
     { label: 'Browse', href: '/browse', icon: Film },
     { label: 'Upcoming', href: '/upcoming', icon: Sparkles, badge: 'Live' },
     { label: 'Watchlist', href: '/watchlist', icon: Bookmark, count: watchlistCount },

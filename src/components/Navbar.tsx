@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Star,
@@ -22,12 +23,18 @@ import {
   Compass,
   PlaySquare,
   ChevronDown,
+  ArrowRight,
+  Plus,
+  Check,
 } from 'lucide-react';
 import { COUNTRIES } from '@/lib/data/mockMovies';
-import { getSelectedCountry, setSelectedCountry, getClientState } from '@/lib/storage';
+import { getSelectedCountry, setSelectedCountry, getClientState, toggleListStatus } from '@/lib/storage';
 import { SearchModal } from './SearchModal';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { searchCatalogAutocomplete } from '@/lib/api/movieStore';
+import { TitleItem } from '@/types/movie';
+import { getTmdbImageUrl } from '@/lib/utils';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -36,12 +43,20 @@ export function Navbar() {
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   const [activeCountry, setActiveCountry] = useState('IN');
   const [watchlistCount, setWatchlistCount] = useState(0);
+  const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const [authUser, setAuthUser] = useState<any>(null);
+
+  // Live Inline Search State in Navbar
+  const [navQuery, setNavQuery] = useState('');
+  const [navSuggestions, setNavSuggestions] = useState<TitleItem[]>([]);
+  const [isNavDropdownOpen, setIsNavDropdownOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setActiveCountry(getSelectedCountry());
     const s = getClientState();
     setWatchlistCount(s.watchlist.length);
+    setWatchlistIds(s.watchlist);
 
     const checkAuth = () => {
       try {
@@ -59,6 +74,7 @@ export function Navbar() {
       setActiveCountry(getSelectedCountry());
       const state = getClientState();
       setWatchlistCount(state.watchlist.length);
+      setWatchlistIds(state.watchlist);
       checkAuth();
     };
 
@@ -74,13 +90,40 @@ export function Navbar() {
     };
     window.addEventListener('keydown', handleKeyDown);
 
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsNavDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
     return () => {
       window.removeEventListener('moviestars_country_updated', handleUpdate);
       window.removeEventListener('moviestars_state_updated', handleUpdate);
       window.removeEventListener('moviestars_auth_updated', handleUpdate);
       window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Update suggestions on keystroke
+  useEffect(() => {
+    if (!navQuery.trim()) {
+      setNavSuggestions([]);
+      setIsNavDropdownOpen(false);
+      return;
+    }
+    const matches = searchCatalogAutocomplete(navQuery, 5);
+    setNavSuggestions(matches);
+    setIsNavDropdownOpen(true);
+  }, [navQuery]);
+
+  const handleNavSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!navQuery.trim()) return;
+    setIsNavDropdownOpen(false);
+    router.push(`/search?q=${encodeURIComponent(navQuery.trim())}`);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('moviestars_auth_token');
@@ -92,8 +135,9 @@ export function Navbar() {
 
   const navLinks = [
     { label: 'Browse', href: '/browse', icon: Film },
+    { label: 'Search', href: '/search', icon: Search, highlight: true },
     { label: 'Upcoming', href: '/upcoming', icon: Sparkles, badge: 'Live' },
-    { label: 'Top 250', href: '/top-rated', icon: Trophy, highlight: true },
+    { label: 'Top 250', href: '/top-rated', icon: Trophy },
     { label: 'Watchlist', href: '/watchlist', icon: Bookmark, count: watchlistCount },
     { label: 'System Design', href: '/system-design', icon: Cpu, badge: 'Architecture' },
   ];
@@ -116,7 +160,7 @@ export function Navbar() {
             {/* IMDb-Style "Menu" Drawer Trigger */}
             <button
               onClick={() => setMenuDrawerOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white/10 text-white font-bold text-xs transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white/10 text-white font-bold text-xs transition-colors cursor-pointer"
               title="Open Navigation Menu"
             >
               <Menu className="w-4 h-4 text-[#f5c518]" />
@@ -124,26 +168,133 @@ export function Navbar() {
             </button>
           </div>
 
-          {/* Center: IMDb-Style Search Input Bar */}
-          <div className="flex-1 max-w-xl mx-2">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-zinc-900/90 border border-white/15 text-zinc-300 hover:text-white hover:border-[#f5c518]/60 text-xs font-medium transition-all shadow-inner group"
-              title="Search movies, TV shows, actors, and directors (Press / or ⌘K)"
+          {/* Center: Live Interactive Search Input Bar with Instant Dropdown */}
+          <div ref={searchContainerRef} className="relative flex-1 max-w-xl mx-2">
+            <form
+              onSubmit={handleNavSearchSubmit}
+              className="relative flex items-center bg-zinc-900/90 border border-white/15 focus-within:border-[#f5c518] rounded-xl px-3 py-1.5 transition-all shadow-inner"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-zinc-400 border-r border-white/10 pr-2.5">
-                  All <ChevronDown className="w-3 h-3 text-zinc-500" />
-                </span>
-                <Search className="w-4 h-4 text-zinc-400 group-hover:text-[#f5c518] transition-colors shrink-0" />
-                <span className="truncate text-zinc-400 group-hover:text-zinc-200">
-                  Search MovieStars (titles, actors, directors)...
-                </span>
-              </div>
-              <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-black/60 border border-white/15 text-[10px] font-mono text-zinc-400">
+              <Link
+                href="/search"
+                className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-zinc-400 hover:text-white border-r border-white/10 pr-2.5 mr-2 shrink-0"
+                title="Go to Full Search Page"
+              >
+                <span>All</span>
+                <ChevronDown className="w-3 h-3 text-zinc-500" />
+              </Link>
+              <Search className="w-4 h-4 text-zinc-400 mr-2 shrink-0" />
+              <input
+                type="text"
+                value={navQuery}
+                onChange={(e) => setNavQuery(e.target.value)}
+                onFocus={() => {
+                  if (navQuery.trim()) setIsNavDropdownOpen(true);
+                }}
+                placeholder="Search movies, TV shows, actors, directors..."
+                className="w-full bg-transparent text-white placeholder-zinc-500 text-xs font-semibold outline-none"
+              />
+              {navQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNavQuery('');
+                    setIsNavDropdownOpen(false);
+                  }}
+                  className="p-1 text-zinc-500 hover:text-white mr-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <kbd
+                onClick={() => setSearchOpen(true)}
+                className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 border border-white/15 text-[10px] font-mono text-zinc-400 cursor-pointer hover:border-white/30"
+                title="Press / or ⌘K for command palette"
+              >
                 /
               </kbd>
-            </button>
+            </form>
+
+            {/* Instant Keystroke Autocomplete Dropdown */}
+            <AnimatePresence>
+              {isNavDropdownOpen && navSuggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 5 }}
+                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl bg-[#1a1a1a] border border-white/15 shadow-2xl overflow-hidden z-50 divide-y divide-white/5"
+                >
+                  {navSuggestions.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setIsNavDropdownOpen(false);
+                        router.push(`/title/${item.id}`);
+                      }}
+                      className="p-2.5 flex items-center justify-between hover:bg-white/10 cursor-pointer transition-colors group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative w-9 h-12 rounded-lg overflow-hidden bg-black shrink-0 border border-white/10">
+                          <Image
+                            src={getTmdbImageUrl(item.posterPath, 'w185')}
+                            alt={item.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-white group-hover:text-[#f5c518] truncate transition-colors">
+                            {item.title}
+                          </div>
+                          <div className="text-[11px] text-zinc-400 flex items-center gap-1.5">
+                            <span>{item.releaseDate?.slice(0, 4)}</span>
+                            <span>•</span>
+                            <span className="capitalize">{item.type.replace('_', ' ')}</span>
+                            <span>•</span>
+                            <span className="text-[#f5c518] font-bold">★ {item.ratings.imdb.score.toFixed(1)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Save to Watchlist Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleListStatus(item.id, 'watchlist', item.title);
+                        }}
+                        className={cn(
+                          'p-1.5 rounded-lg transition-colors ml-2 shrink-0',
+                          watchlistIds.includes(item.id)
+                            ? 'bg-[#f5c518] text-black'
+                            : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+                        )}
+                        title={
+                          watchlistIds.includes(item.id)
+                            ? 'In Watchlist'
+                            : 'Add to Watchlist (Want to Watch)'
+                        }
+                      >
+                        {watchlistIds.includes(item.id) ? (
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        ) : (
+                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Dropdown Footer: See all results */}
+                  <Link
+                    href={`/search?q=${encodeURIComponent(navQuery)}`}
+                    onClick={() => setIsNavDropdownOpen(false)}
+                    className="p-2.5 flex items-center justify-between text-xs font-black text-[#f5c518] hover:text-amber-300 bg-black/40 hover:bg-black/60 transition-colors"
+                  >
+                    <span>See all results for &ldquo;{navQuery}&rdquo;</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Right Controls: Navigation Links, Watchlist, Country & Auth */}
@@ -296,6 +447,15 @@ export function Navbar() {
                   <ul className="space-y-2 text-xs font-semibold text-zinc-300">
                     <li>
                       <Link
+                        href="/search?type=movie"
+                        onClick={() => setMenuDrawerOpen(false)}
+                        className="hover:text-[#f5c518] transition-colors"
+                      >
+                        Search Movies
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
                         href="/upcoming"
                         onClick={() => setMenuDrawerOpen(false)}
                         className="hover:text-[#f5c518] transition-colors"
@@ -321,15 +481,6 @@ export function Navbar() {
                         Most Popular Movies
                       </Link>
                     </li>
-                    <li>
-                      <Link
-                        href="/browse?genre=Action"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Browse by Genre
-                      </Link>
-                    </li>
                   </ul>
                 </div>
 
@@ -340,6 +491,15 @@ export function Navbar() {
                     <span>TV & Series</span>
                   </div>
                   <ul className="space-y-2 text-xs font-semibold text-zinc-300">
+                    <li>
+                      <Link
+                        href="/search?type=series"
+                        onClick={() => setMenuDrawerOpen(false)}
+                        className="hover:text-[#f5c518] transition-colors"
+                      >
+                        Search TV & Web Series
+                      </Link>
+                    </li>
                     <li>
                       <Link
                         href="/browse?type=web_series"
@@ -367,15 +527,6 @@ export function Navbar() {
                         What&apos;s on Netflix
                       </Link>
                     </li>
-                    <li>
-                      <Link
-                        href="/browse?provider=Amazon+Prime+Video"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        What&apos;s on Prime Video
-                      </Link>
-                    </li>
                   </ul>
                 </div>
 
@@ -392,7 +543,7 @@ export function Navbar() {
                         onClick={() => setMenuDrawerOpen(false)}
                         className="hover:text-[#f5c518] transition-colors flex items-center justify-between"
                       >
-                        <span>Your Watchlist</span>
+                        <span>Want to Watch (Watchlist)</span>
                         {watchlistCount > 0 && (
                           <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#f5c518] text-black font-black">
                             {watchlistCount}
@@ -402,11 +553,11 @@ export function Navbar() {
                     </li>
                     <li>
                       <Link
-                        href="/watchlist"
+                        href="/search"
                         onClick={() => setMenuDrawerOpen(false)}
                         className="hover:text-[#f5c518] transition-colors"
                       >
-                        Your Ratings & Reviews
+                        Search Engine
                       </Link>
                     </li>
                     <li>
