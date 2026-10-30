@@ -8,8 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(dateString?: string): string {
   if (!dateString) return "TBA";
   try {
+    // Keep series year ranges like "2011–2019" or "2026–" intact
+    if (dateString.includes("–") || (dateString.length <= 9 && /^\d{4}/.test(dateString))) {
+      return dateString;
+    }
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
+    if (isNaN(date.getTime())) {
+      const match = dateString.match(/\d{4}/);
+      return match ? match[0] : dateString;
+    }
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -20,6 +27,13 @@ export function formatDate(dateString?: string): string {
   }
 }
 
+export function formatReleaseYear(dateString?: string): string {
+  if (!dateString) return "TBA";
+  if (dateString.includes("–")) return dateString;
+  const match = dateString.match(/\d{4}/);
+  return match ? match[0] : "TBA";
+}
+
 export function formatRuntime(minutes?: number): string {
   if (!minutes || minutes <= 0) return "N/A";
   const hours = Math.floor(minutes / 60);
@@ -28,13 +42,25 @@ export function formatRuntime(minutes?: number): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
-export function getDaysUntil(dateString: string): {
+export function getDaysUntil(dateString?: string): {
   days: number;
   hours: number;
   isReleased: boolean;
   text: string;
 } {
-  const target = new Date(dateString).getTime();
+  if (!dateString) {
+    return { days: 0, hours: 0, isReleased: true, text: "Released" };
+  }
+  let target = new Date(dateString).getTime();
+  if (isNaN(target)) {
+    const match = dateString.match(/\d{4}/);
+    if (match) {
+      target = new Date(`${match[0]}-01-01`).getTime();
+    }
+  }
+  if (isNaN(target)) {
+    return { days: 0, hours: 0, isReleased: true, text: "Released" };
+  }
   const now = new Date().getTime();
   const diffMs = target - now;
 

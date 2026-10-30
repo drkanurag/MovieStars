@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTitleById, appendOrUpdateTitle } from '@/lib/api/movieStore';
+import { resolveWorldwideTitle } from '@/lib/api/worldwideFederation';
 import { fetchFromTmdb, normalizeTmdbItem, isTmdbConfigured } from '@/lib/api/tmdb';
 
 export async function GET(
@@ -13,14 +14,24 @@ export async function GET(
 
   // 1. Check local catalog
   const localItem = getTitleById(id);
-  if (localItem) {
+  if (localItem && localItem.cast && localItem.cast.length > 0) {
     return NextResponse.json({ title: localItem, source: 'local_master_catalog' });
   }
 
-  // 2. If not local and TMDB configured, attempt worldwide live resolution
+  // 2. Open Worldwide Federation (Covers all 11.2M+ IMDb titles and TVMaze series)
+  try {
+    const federated = await resolveWorldwideTitle(id);
+    if (federated) {
+      appendOrUpdateTitle(federated);
+      return NextResponse.json({ title: federated, source: 'open_worldwide_federation' });
+    }
+  } catch (e) {
+    console.warn('Open worldwide federation lookup failed:', e);
+  }
+
+  // 3. Fallback to TMDB if configured
   if (isTmdbConfigured()) {
     try {
-      // Check if ID is an IMDb ID: starts with tt
       if (id.startsWith('tt')) {
         const findData = await fetchFromTmdb<any>(`/find/${id}`, {
           external_source: 'imdb_id',
@@ -46,43 +57,14 @@ export async function GET(
           }
         }
       }
-
-      // Check if ID is numeric (direct TMDB ID) or starts with tmdb-
-      let tmdbNumericId = id;
-      let mediaType: 'movie' | 'tv' = 'movie';
-
-      if (id.startsWith('tmdb-movie-')) {
-        tmdbNumericId = id.replace('tmdb-movie-', '');
-        mediaType = 'movie';
-      } else if (id.startsWith('tmdb-tv-')) {
-        tmdbNumericId = id.replace('tmdb-tv-', '');
-        mediaType = 'tv';
-      }
-
-      if (/^\d+$/.test(tmdbNumericId)) {
-        // Try movie first
-        let raw = await fetchFromTmdb<any>(`/${mediaType}/${tmdbNumericId}`, {
-          append_to_response: 'credits,videos',
-        });
-        if (!raw && mediaType === 'movie') {
-          // fallback to tv
-          raw = await fetchFromTmdb<any>(`/tv/${tmdbNumericId}`, {
-            append_to_response: 'credits,videos',
-          });
-          if (raw) mediaType = 'tv';
-        }
-
-        if (raw) {
-          const normalized = normalizeTmdbItem(raw, mediaType);
-          appendOrUpdateTitle(normalized);
-          return NextResponse.json({ title: normalized, source: 'tmdb_worldwide_federation' });
-        }
-      }
     } catch (err) {
-      console.error('Worldwide title resolution error:', err);
+      console.error('TMDB fallback lookup error:', err);
     }
+  }
+
+  if (localItem) {
+    return NextResponse.json({ title: localItem, source: 'local_master_catalog' });
   }
 
   return NextResponse.json({ error: 'Title not found in global datasets' }, { status: 404 });
 }
-

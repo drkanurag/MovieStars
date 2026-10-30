@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCatalog, appendOrUpdateTitle } from '@/lib/api/movieStore';
+import { searchWorldwideCatalog } from '@/lib/api/worldwideFederation';
 import { searchWorldwideTitles, GLOBAL_DATASET_SPEC, isTmdbConfigured } from '@/lib/api/tmdb';
 import { TitleItem } from '@/types/movie';
 
@@ -25,9 +26,9 @@ export async function GET(req: NextRequest) {
     const titleMatch = item.title.toLowerCase().includes(query);
     const origMatch = item.originalTitle?.toLowerCase().includes(query);
     const overviewMatch = item.overview.toLowerCase().includes(query);
-    const castMatch = item.cast.some((c) => c.name.toLowerCase().includes(query));
-    const dirMatch = item.directors.some((d) => d.name.toLowerCase().includes(query));
-    const genreMatch = item.genres.some((g) => g.name.toLowerCase().includes(query));
+    const castMatch = (item.cast || []).some((c) => c.name.toLowerCase().includes(query));
+    const dirMatch = (item.directors || []).some((d) => d.name.toLowerCase().includes(query));
+    const genreMatch = (item.genres || []).some((g) => g.name.toLowerCase().includes(query));
 
     return titleMatch || origMatch || overviewMatch || castMatch || dirMatch || genreMatch;
   });
@@ -36,23 +37,39 @@ export async function GET(req: NextRequest) {
     matchedLocal = matchedLocal.filter((item) => item.type === type);
   }
 
-  // 2. Just-In-Time (JIT) Dynamic Federation across Worldwide Datasets
+  // 2. Just-In-Time (JIT) Dynamic Open Federation (Cinemeta + TVMaze)
   let federatedResults: TitleItem[] = [];
-  let isFederated = false;
+  try {
+    const openMatches = await searchWorldwideCatalog(query, type);
+    for (const item of openMatches) {
+      if (
+        !matchedLocal.some(
+          (m) => m.id === item.id || m.imdbId === item.imdbId || m.title.toLowerCase() === item.title.toLowerCase()
+        )
+      ) {
+        appendOrUpdateTitle(item);
+        federatedResults.push(item);
+      }
+    }
+  } catch (e) {
+    console.warn('Open federation search error:', e);
+  }
 
+  // 3. Optional TMDB if configured
   if (isTmdbConfigured()) {
     try {
-      const remoteTitles = await searchWorldwideTitles(query);
-      for (const item of remoteTitles) {
-        // Prevent duplicating items already present in local catalog
-        if (!matchedLocal.some((m) => m.id === item.id || m.tmdbId === item.tmdbId || m.imdbId === item.imdbId)) {
+      const tmdbTitles = await searchWorldwideTitles(query);
+      for (const item of tmdbTitles) {
+        if (
+          !matchedLocal.some((m) => m.id === item.id || m.imdbId === item.imdbId) &&
+          !federatedResults.some((f) => f.id === item.id || f.imdbId === item.imdbId)
+        ) {
           appendOrUpdateTitle(item);
           federatedResults.push(item);
         }
       }
-      isFederated = remoteTitles.length > 0;
     } catch (err) {
-      console.error('Worldwide dynamic search federation error:', err);
+      console.warn('TMDB search error:', err);
     }
   }
 
@@ -63,8 +80,7 @@ export async function GET(req: NextRequest) {
     total: combined.length,
     localMatches: matchedLocal.length,
     federatedMatches: federatedResults.length,
-    isTmdbConnected: isTmdbConfigured(),
+    federated: true,
     datasetsInfo: GLOBAL_DATASET_SPEC,
   });
 }
-

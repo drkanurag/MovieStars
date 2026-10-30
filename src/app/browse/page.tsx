@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { filterAndSortTitles } from '@/lib/api/movieStore';
 import { ALL_GENRES, COUNTRIES, STREAMING_PLATFORMS } from '@/lib/data/mockMovies';
 import { MovieCard } from '@/components/MovieCard';
-import { FilterOptions, TitleType } from '@/types/movie';
+import { FilterOptions, TitleType, TitleItem } from '@/types/movie';
 import { Filter, SlidersHorizontal, RefreshCcw, Film, Tv, Clapperboard, Star, LayoutGrid, List, Sparkles } from 'lucide-react';
 import { getSelectedCountry, setSelectedCountry } from '@/lib/storage';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,8 @@ function BrowseContent() {
   );
   const [searchQuery, setSearchQuery] = useState<string>(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [worldwideResults, setWorldwideResults] = useState<TitleItem[]>([]);
+  const [isSearchingWorldwide, setIsSearchingWorldwide] = useState<boolean>(false);
 
   useEffect(() => {
     document.title = 'Explore Movies & TV Series — Streaming Availability Worldwide | MovieStars';
@@ -35,7 +37,35 @@ function BrowseContent() {
     if (q) setSearchQuery(q);
     const prov = searchParams.get('provider');
     if (prov) setProvider(prov);
+
+    // Initial background sync
+    fetch('/api/sync').catch(() => {});
   }, [searchParams]);
+
+  // Worldwide live federation effect when searching
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setWorldwideResults([]);
+      setIsSearchingWorldwide(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setIsSearchingWorldwide(true);
+      fetch(`/api/worldwide/search?q=${encodeURIComponent(q)}&type=${type}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && Array.isArray(data.results)) {
+            setWorldwideResults(data.results);
+          }
+        })
+        .catch((e) => console.warn('Worldwide browse search error:', e))
+        .finally(() => setIsSearchingWorldwide(false));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, type]);
 
   const filterOptions: Partial<FilterOptions> = useMemo(
     () => ({
@@ -55,6 +85,15 @@ function BrowseContent() {
   const { items, total } = useMemo(() => {
     return filterAndSortTitles(filterOptions);
   }, [filterOptions]);
+
+  const displayItems = useMemo(() => {
+    if (searchQuery.trim().length > 1 && worldwideResults.length > 0) {
+      const existingIds = new Set(items.map((i) => i.id));
+      const newItems = worldwideResults.filter((w) => !existingIds.has(w.id));
+      return [...items, ...newItems];
+    }
+    return items;
+  }, [items, searchQuery, worldwideResults]);
 
   const handleReset = () => {
     setType('all');
@@ -261,10 +300,17 @@ function BrowseContent() {
       </div>
 
       {/* Results Header */}
-      <div className="flex items-center justify-between text-xs text-zinc-400 font-semibold">
-        <span>
-          Showing <strong className="text-white">{items.length}</strong> {items.length === 1 ? 'title' : 'titles'}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400 font-semibold">
+        <div className="flex items-center gap-2">
+          <span>
+            Showing <strong className="text-white">{displayItems.length}</strong> {displayItems.length === 1 ? 'title' : 'titles'}
+          </span>
+          {isSearchingWorldwide && (
+            <span className="text-[11px] text-[#f5c518] flex items-center gap-1 animate-pulse">
+              • Searching 11.2M+ global cinema database...
+            </span>
+          )}
+        </div>
         {sortBy === 'bayesian' && (
           <span className="flex items-center gap-1.5 text-cinema-gold">
             <Sparkles className="w-3.5 h-3.5" />
@@ -274,9 +320,9 @@ function BrowseContent() {
       </div>
 
       {/* Grid View */}
-      {items.length > 0 ? (
+      {displayItems.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
-          {items.map((movie, idx) => (
+          {displayItems.map((movie, idx) => (
             <MovieCard
               key={movie.id}
               movie={movie}
@@ -285,18 +331,28 @@ function BrowseContent() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 glass-panel rounded-3xl border border-white/10">
-          <Film className="w-14 h-14 text-zinc-600 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-white">No titles match your filter criteria</h3>
-          <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
-            Try resetting your filters or changing the streaming platform.
+        <div className="text-center py-20 glass-panel rounded-3xl border border-white/10 space-y-3">
+          <Film className="w-14 h-14 text-zinc-600 mx-auto" />
+          <h3 className="text-lg font-bold text-white">No local titles match your filter criteria</h3>
+          <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+            Try searching across the complete worldwide catalog of 11.2M+ titles on our global search engine.
           </p>
-          <button
-            onClick={handleReset}
-            className="mt-4 px-5 py-2.5 bg-cinema-gold text-black rounded-xl text-xs font-black shadow-md"
-          >
-            Reset Filters
-          </button>
+          <div className="pt-2 flex items-center justify-center gap-3">
+            <button
+              onClick={handleReset}
+              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition-colors"
+            >
+              Reset Filters
+            </button>
+            {searchQuery && (
+              <a
+                href={`/search?q=${encodeURIComponent(searchQuery)}`}
+                className="px-5 py-2 bg-[#f5c518] hover:bg-amber-400 text-black rounded-xl text-xs font-black shadow-md transition-colors"
+              >
+                Search Global Database ↗
+              </a>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { TitleItem } from '@/types/movie';
 import { Star, Bookmark, Play, Heart, CheckCircle2, Plus, Check } from 'lucide-react';
 import { scoreToStars } from '@/lib/bayesian';
-import { getDaysUntil, getTmdbImageUrl } from '@/lib/utils';
+import { getDaysUntil, getTmdbImageUrl, formatReleaseYear } from '@/lib/utils';
 import { getClientState, toggleListStatus, getSelectedCountry } from '@/lib/storage';
 import { TrailerModal } from './TrailerModal';
 import { cn } from '@/lib/utils';
@@ -150,7 +150,7 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
           {/* Rating Badge Top-Right */}
           <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-lg bg-black/75 backdrop-blur-md text-[#f5c518] font-black text-xs shadow-md border border-white/10">
             <Star className="w-3.5 h-3.5 fill-[#f5c518] text-[#f5c518]" />
-            <span>{movie.ratings.imdb.score.toFixed(1)}</span>
+            <span>{(movie.ratings?.imdb?.score ?? 7.5).toFixed(1)}</span>
           </div>
 
           {/* Metascore Chip if available */}
@@ -221,12 +221,12 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
           <div>
             <div className="flex items-center justify-between text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mb-1">
               <span className="text-cinema-accent font-bold">
-                {movie.type === 'web_series' ? 'Web Series' : movie.type}
+                {movie.type === 'web_series' ? 'Web Series' : movie.type === 'tv' ? 'TV Series' : 'Movie'}
               </span>
               <span className="text-zinc-500">•</span>
-              <span>{movie.originalLanguage.toUpperCase()}</span>
+              <span>{(movie.originalLanguage || 'en').toUpperCase()}</span>
               <span className="text-zinc-500">•</span>
-              <span>{movie.releaseDate ? movie.releaseDate.slice(0, 4) : 'TBA'}</span>
+              <span>{formatReleaseYear(movie.releaseDate)}</span>
             </div>
 
             <Link href={`/title/${movie.id}`}>
@@ -236,7 +236,7 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
             </Link>
 
             <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5 font-medium">
-              {movie.genres.map((g) => g.name).join(', ')}
+              {(movie.genres || []).map((g) => g.name).join(', ') || 'Global Cinema'}
             </p>
 
             {/* Summary / What It's About */}

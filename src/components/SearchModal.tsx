@@ -60,12 +60,36 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   }, [isOpen]);
 
   useEffect(() => {
-    if (!query.trim()) {
+    const q = query.trim();
+    if (!q) {
       setResults([]);
       return;
     }
-    const matches = searchCatalogAutocomplete(query, 6);
-    setResults(matches);
+    // Instant local results
+    const localMatches = searchCatalogAutocomplete(q, 6);
+    setResults(localMatches);
+
+    // Live Worldwide Federation (fetches any movie, series or web series globally)
+    const timer = setTimeout(() => {
+      fetch(`/api/worldwide/search?q=${encodeURIComponent(q)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && Array.isArray(data.results)) {
+            const seen = new Set<string>();
+            const combined: TitleItem[] = [];
+            for (const item of [...localMatches, ...data.results]) {
+              if (!seen.has(item.id)) {
+                seen.add(item.id);
+                combined.push(item);
+              }
+            }
+            setResults(combined.slice(0, 8));
+          }
+        })
+        .catch(() => {});
+    }, 250);
+
+    return () => clearTimeout(timer);
   }, [query]);
 
   const handleSelect = (url: string) => {

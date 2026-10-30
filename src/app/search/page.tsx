@@ -118,11 +118,11 @@ function SearchPageContent() {
         const titleMatch = movie.title.toLowerCase().includes(q);
         const originalTitleMatch = movie.originalTitle?.toLowerCase().includes(q);
         const overviewMatch = movie.overview.toLowerCase().includes(q);
-        const castMatch = movie.cast.some(
+        const castMatch = (movie.cast || []).some(
           (c) => c.name.toLowerCase().includes(q) || c.character?.toLowerCase().includes(q)
         );
-        const dirMatch = movie.directors.some((d) => d.name.toLowerCase().includes(q));
-        const genreMatch = movie.genres.some((g) => g.name.toLowerCase().includes(q));
+        const dirMatch = (movie.directors || []).some((d) => d.name.toLowerCase().includes(q));
+        const genreMatch = (movie.genres || []).some((g) => g.name.toLowerCase().includes(q));
 
         if (!titleMatch && !originalTitleMatch && !overviewMatch && !castMatch && !dirMatch && !genreMatch) {
           return false;
@@ -135,7 +135,7 @@ function SearchPageContent() {
       }
 
       // 3. Genre Filter
-      if (selectedGenre !== 'all' && !movie.genres.some((g) => g.name.toLowerCase() === selectedGenre.toLowerCase())) {
+      if (selectedGenre !== 'all' && !(movie.genres || []).some((g) => g.name.toLowerCase() === selectedGenre.toLowerCase())) {
         return false;
       }
 
