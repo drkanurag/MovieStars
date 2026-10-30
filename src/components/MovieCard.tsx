@@ -228,8 +228,13 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
               </h3>
             </Link>
 
-            <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
+            <p className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5 font-medium">
               {movie.genres.map((g) => g.name).join(', ')}
+            </p>
+
+            {/* Summary / What It's About */}
+            <p className="text-[11px] text-zinc-300/90 line-clamp-2 mt-1.5 leading-relaxed font-normal">
+              {movie.overview}
             </p>
           </div>
 

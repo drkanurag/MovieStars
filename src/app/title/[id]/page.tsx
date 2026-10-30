@@ -41,6 +41,7 @@ import {
   Clapperboard,
   HelpCircle,
   Camera,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -520,16 +521,52 @@ export default function TitleDetailPage() {
             ))}
           </div>
 
-          {/* Tagline & Overview */}
-          <div className="space-y-3">
+          {/* Storyline & What It's About Section */}
+          <div className="p-6 rounded-3xl bg-[#1a1a1a] border border-white/10 shadow-xl space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+              <div className="w-1.5 h-5 rounded-full bg-[#f5c518]" />
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#f5c518]" />
+                <span>Storyline &bull; What It&apos;s About</span>
+              </h3>
+            </div>
+
             {movie.tagline && (
-              <p className="text-zinc-200 text-base sm:text-lg font-serif italic">
-                &ldquo;{movie.tagline}&rdquo;
-              </p>
+              <div className="p-3.5 rounded-2xl bg-black/60 border border-white/5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#f5c518] block mb-1">
+                  Official Tagline
+                </span>
+                <p className="text-white text-sm sm:text-base font-serif italic">
+                  &ldquo;{movie.tagline}&rdquo;
+                </p>
+              </div>
             )}
-            <p className="text-zinc-300 text-sm sm:text-base leading-relaxed">
-              {movie.overview}
-            </p>
+
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-1.5">
+                Synopsis & Premise
+              </span>
+              <p className="text-zinc-200 text-sm sm:text-base leading-relaxed font-normal">
+                {movie.overview}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/10 text-xs">
+              <span className="font-bold text-white text-[11px] uppercase tracking-wider">Genres:</span>
+              {movie.genres.map((g) => (
+                <span
+                  key={g.id}
+                  className="px-2.5 py-1 rounded-xl bg-zinc-900 border border-white/10 text-zinc-300 font-semibold text-[11px]"
+                >
+                  {g.name}
+                </span>
+              ))}
+              <span className="text-zinc-600">•</span>
+              <span className="font-bold text-white text-[11px] uppercase tracking-wider">Format:</span>
+              <span className="px-2.5 py-1 rounded-xl bg-[#f5c518]/15 border border-[#f5c518]/30 text-[#f5c518] font-bold text-[11px] capitalize">
+                {movie.type.replace('_', ' ')}
+              </span>
+            </div>
           </div>
 
           {/* Directors & Writers Row (IMDb Style) */}

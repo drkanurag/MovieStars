@@ -8,6 +8,7 @@
 
 ## 📋 Table of Contents
 - [✨ Recent Changes & Enhancements Summary](#-recent-changes--enhancements-summary)
+- [📖 Master Catalog Guide: What Each Title Is About](#-master-catalog-guide-what-each-title-is-about)
 - [🏛️ Architectural System Design & Microservices](#️-architectural-system-design--microservices)
 - [🧠 Algorithmic Data Structures](#-algorithmic-data-structures)
 - [⚖️ Bayesian Top 250 Formula](#️-bayesian-top-250-formula)
@@ -96,6 +97,42 @@ To satisfy the full architectural blueprint and create an elevated, ad-free IMDb
 ### 8. Data Model & Enrichment
 - Expanded `TitleItem` with `metascore`, `trivia`, `boxOffice`, `technicalSpecs`, and `trendingRank`.
 - Added celebrity roster `CELEBRITIES_BORN_TODAY` with full biographical details and filmography mapping.
+
+### 9. Comprehensive Summaries & "What It's About" Storylines
+- **Universal Card Summaries**: `MovieCard` now embeds a 2-line clamped summary (`movie.overview`) on all cards across Homepage, Browse, Search, and Watchlist, so users can instantly know what any title is about.
+- **Top Rated Chart (`/top-rated`)**: Each row features a dedicated synopsis snippet alongside ranking and streaming availability.
+- **Title Detail Page (`/title/[id]`)**: Showcases an elevated **"Storyline • What It's About"** card featuring official tagline, premise & synopsis, genres, and format badges.
+- **Master Catalog Guide**: Detailed storyline documentation added below covering every movie, TV show, and web series.
+
+---
+
+## 📖 Master Catalog Guide: What Each Title Is About
+
+Here is a summary of all movies, TV series, and web series included in the master catalog and what each one is about:
+
+| Title | Type & Year | Genres | What It&apos;s About (Premise & Storyline) |
+|---|---|---|---|
+| **Oppenheimer** | Movie (2023) | Drama, History | Follows theoretical physicist J. Robert Oppenheimer as he leads the secret Manhattan Project at Los Alamos to develop the first atomic bomb during World War II, and the intense post-war political fallout that stripped him of his security clearance. |
+| **Dune: Part Two** | Movie (2024) | Sci-Fi, Adventure | Paul Atreides unites with Chani and the desert Fremen of Arrakis, embracing his prophetic destiny as Muad&apos;Dib while waging revenge against the conspirators of House Harkonnen who destroyed his family. |
+| **The Godfather** | Movie (1972) | Crime, Drama | The aging patriarch of an organized crime dynasty, Don Vito Corleone, transfers control of his clandestine empire to his reluctant youngest son, Michael, transforming him from a decorated war hero into a ruthless mafia boss. |
+| **The Shawshank Redemption** | Movie (1994) | Drama, Crime | Banker Andy Dufresne is wrongfully convicted of murdering his wife and sentenced to life at Shawshank State Penitentiary, where over two decades he forms a bond with fellow lifer Red and secretly orchestrates a miraculous bid for freedom. |
+| **Breaking Bad** | TV Series (2008–2013) | Crime, Drama, Thriller | When mild-mannered high-school chemistry teacher Walter White is diagnosed with terminal lung cancer, he partners with former student Jesse Pinkman to cook and sell crystal meth, gradually transforming into the ruthless drug lord Heisenberg. |
+| **Interstellar** | Movie (2014) | Sci-Fi, Adventure, Drama | As Earth faces catastrophic agricultural blight and dust storms, a team of NASA astronauts and former pilot Cooper travel through a wormhole near Saturn searching for a new habitable world across extreme time-dilation realms. |
+| **The Dark Knight** | Movie (2008) | Action, Crime, Drama | Batman, Lt. Jim Gordon, and DA Harvey Dent dismantle Gotham City&apos;s mob syndicate until the psychotic criminal mastermind The Joker unleashes anarchy designed to test Gotham&apos;s moral sanity. |
+| **Pulp Fiction** | Movie (1994) | Crime, Thriller | The lives of two philosophical hitmen, a gangster&apos;s captivating wife, an aging boxer, and a pair of diner bandits violently collide in four non-linear vignettes of violence, honor, and redemption in Los Angeles. |
+| **Spirited Away** | Movie (2001) | Animation, Family, Fantasy | Ten-year-old Chihiro wanders into an enchanted bathhouse realm of spirits and deities; when her parents are transformed into pigs by the sorceress Yubaba, she must summon inner courage and work in the spirit bathhouse to free them. |
+| **Parasite** | Movie (2019) | Drama, Thriller, Comedy | All unemployed, the impoverished Kim family schemes to become employed by the wealthy Park family by posing as unrelated, highly qualified tutors and domestic staff, triggering an unforeseen sequence of catastrophic class conflicts. |
+| **Seven Samurai** | Movie (1954) | Action, Drama | In 16th-century feudal Japan, a destitute mountain farming village threatened by ruthless marauding bandits hires seven unemployed, masterless ronin samurai to train the villagers and defend their harvest. |
+| **City of God** | Movie (2002) | Crime, Drama | In the violent favelas of Rio de Janeiro between the late 1960s and 1980s, two boys follow contrasting destinies: Rocket strives to become a news photographer while Li&apos;l Zé rises as an untouchable cocaine warlord. |
+| **12th Fail** | Movie (2023) | Drama, Biography | Based on the true story of Manoj Kumar Sharma from Chambal, who overcomes extreme poverty, police brutality, and academic failure to restart his life and crack the world&apos;s toughest examination (UPSC) to become an IPS officer. |
+| **Mirzapur** | Web Series (2018–) | Action, Crime, Drama | In the lawless badlands of eastern Uttar Pradesh, mafia don and carpet exporter Akhandanand &ldquo;Kaleen Bhaiya&rdquo; Tripathi rules the underworld, until two brothers challenge his volatile son Munna, sparking a blood-soaked war for dominion. |
+| **RRR** | Movie (2022) | Action, Drama, History | In 1920s British colonial India, fierce tribal guardian Komaram Bheem and dedicated undercover officer Alluri Sitarama Raju forge an unbreakable friendship, unaware of each other&apos;s secret identities and anti-imperialist missions. |
+| **Baahubali 2: The Conclusion** | Movie (2017) | Action, Fantasy, Drama | The epic revelation of the throne succession of Mahishmati kingdom, juxtaposing the noble reign of Amarendra Baahubali with the tragic conspiracy that forced the loyal warrior Kattappa to execute him. |
+| **Sacred Games** | Web Series (2018–2019) | Crime, Mystery, Thriller | Disillusioned Mumbai police officer Sartaj Singh receives an anonymous phone call from notorious crime lord Ganesh Gaitonde, who gives him a 25-day deadline to unravel a sinister conspiracy and save Mumbai from total nuclear annihilation. |
+| **Stranger Things** | TV Series (2016–) | Sci-Fi, Drama, Horror | When a young boy vanishes from a small Indiana town in 1983, his friends, family, and local sheriff uncover a secret government laboratory, a dark parallel dimension called the Upside Down, and a mysterious girl with telekinetic powers. |
+| **Avengers: Secret Wars** | Movie (Upcoming 2027) | Action, Sci-Fi | Earth&apos;s mightiest champions and alternate universe variants collide on the patchwork world of Battleworld to defend existence against catastrophic multiversal incursion collapse. |
+| **Kalki 2898 AD: Part 2** | Movie (Upcoming 2026) | Sci-Fi, Action, Mythology | In the post-apocalyptic future of Kasi, immortal warrior Ashwatthama and bounty hunter Bhairava unite with the Shambhala rebels to protect the divine mother and child against the tyrannical Supreme Yaskin. |
+| **The Batman: Part II** | Movie (Upcoming 2026) | Action, Crime, Mystery | Bruce Wayne continues his psychological crusade through a flooded, lawless Gotham City as secret cabals and master criminals challenge his vigilante code. |
 
 ---
 

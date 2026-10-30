@@ -245,6 +245,11 @@ export default function BestOfAllTimePage() {
                     <span className="text-zinc-400">{title.genres.map((g) => g.name).join(', ')}</span>
                   </div>
 
+                  {/* Summary / What It's About */}
+                  <p className="text-xs text-zinc-300/90 line-clamp-2 mt-1.5 leading-relaxed max-w-2xl font-normal">
+                    {title.overview}
+                  </p>
+
                   {/* Streaming Availability Badges */}
                   <div className="flex items-center gap-1.5 mt-2.5 overflow-hidden">
                     <span className="text-[10px] text-zinc-400 font-black uppercase tracking-wider">
