@@ -48,22 +48,32 @@ export default function AdminPage() {
     'TMDB daily ID exports connector active across 180+ country territories.',
   ]);
 
-  const handleTriggerSync = () => {
+  const handleTriggerSync = async () => {
     setSyncing(true);
     setSyncLog((prev) => [
-      `[${new Date().toLocaleTimeString()}] Triggering scheduled ingestion worker...`,
+      `[${new Date().toLocaleTimeString()}] Connecting to Open-Source Cinema APIs & Google Release Feeds...`,
       ...prev,
     ]);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/sync?force=true');
+      const data = await res.json();
+      if (data.success) {
+        setSyncLog((prev) => [
+          `[${new Date().toLocaleTimeString()}] ✓ Live Open Sync complete. Active sources: ${data.sources?.join(', ')}.`,
+          `[${new Date().toLocaleTimeString()}] Catalog updated: ${data.totalSynced} titles tracked (${data.upcomingCount} upcoming releases).`,
+          `[${new Date().toLocaleTimeString()}] Discovered releases: ${data.newTitles?.slice(0, 4).join(', ') || 'All catalog releases synchronized'}.`,
+          ...prev,
+        ]);
+      }
+    } catch (e: any) {
       setSyncLog((prev) => [
-        `[${new Date().toLocaleTimeString()}] Fetched delta updates from TMDB API & JustWatch watch providers.`,
-        `[${new Date().toLocaleTimeString()}] Bayesian weighted ranks recalculated (m = ${DEFAULT_MIN_VOTES.toLocaleString()}, C = ${DEFAULT_GLOBAL_MEAN}).`,
-        `[${new Date().toLocaleTimeString()}] Sync completed successfully. Redis cache warmed.`,
+        `[${new Date().toLocaleTimeString()}] ⚠ Live sync: ${e.message}`,
         ...prev,
       ]);
+    } finally {
       setSyncing(false);
-    }, 1200);
+    }
   };
 
   const handleSimulateStreamingEtl = () => {

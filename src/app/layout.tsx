@@ -142,6 +142,8 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://m.media-amazon.com" />
         <link rel="preconnect" href="https://img.youtube.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://img.youtube.com" />
+        <link rel="preconnect" href="https://images.metahub.space" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.metahub.space" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

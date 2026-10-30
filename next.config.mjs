@@ -35,6 +35,11 @@ const nextConfig = {
         hostname: 'upload.wikimedia.org',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.metahub.space',
+        pathname: '/**',
+      },
     ],
   },
   // Performance headers: DNS prefetch and static asset caching
