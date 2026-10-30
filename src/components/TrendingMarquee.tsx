@@ -8,7 +8,7 @@ const MARQUEE_ITEMS = [
   { icon: Flame, text: 'NOW TRENDING', highlight: 'Dune: Part Two & Oppenheimer', href: '/browse' },
   { icon: Trophy, text: 'BAYESIAN TOP 250', highlight: 'The Godfather • The Dark Knight • Pulp Fiction', href: '/top-rated' },
   { icon: Tv, text: 'WHERE TO WATCH', highlight: 'Streaming availability across 180+ countries', href: '/browse' },
-  { icon: Film, text: 'GLOBAL CATALOG', highlight: '11,200,000+ Worldwide IMDb & TMDB Titles', href: '/admin' },
+  { icon: Film, text: 'GLOBAL CATALOG', highlight: '11,200,000+ Worldwide IMDb & TMDB Titles', href: '/search' },
   { icon: Sparkles, text: 'WANT TO WATCH', highlight: 'Save movies & TV shows with instant watch-time tracking', href: '/watchlist' },
 ];
 

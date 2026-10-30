@@ -49,8 +49,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/system-design" className="hover:text-cinema-gold transition-colors flex items-center gap-1.5">
-                  <span>System Architecture</span>
+                <Link href="/search" className="hover:text-cinema-gold transition-colors flex items-center gap-1.5">
+                  <span>Worldwide Catalog Search</span>
                 </Link>
               </li>
             </ul>

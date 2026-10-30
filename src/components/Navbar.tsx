@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   Globe,
-  Cpu,
   User,
   LogOut,
   Trophy,
@@ -26,6 +25,7 @@ import {
   ArrowRight,
   Plus,
   Check,
+  Award,
 } from 'lucide-react';
 import { COUNTRIES } from '@/lib/data/mockMovies';
 import { getSelectedCountry, setSelectedCountry, getClientState, toggleListStatus } from '@/lib/storage';
@@ -139,7 +139,6 @@ export function Navbar() {
     { label: 'Upcoming', href: '/upcoming', icon: Sparkles, badge: 'Live' },
     { label: 'Top 250', href: '/top-rated', icon: Trophy },
     { label: 'Watchlist', href: '/watchlist', icon: Bookmark, count: watchlistCount },
-    { label: 'System Design', href: '/system-design', icon: Cpu, badge: 'Architecture' },
   ];
 
   return (
@@ -572,38 +571,47 @@ export function Navbar() {
                   </ul>
                 </div>
 
-                {/* Column 4: System Architecture & Admin */}
+                {/* Column 4: Awards & Events */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-[#f5c518] font-black text-sm uppercase tracking-wider">
-                    <Cpu className="w-4 h-4" />
-                    <span>System Design</span>
+                    <Award className="w-4 h-4" />
+                    <span>Awards & Events</span>
                   </div>
                   <ul className="space-y-2 text-xs font-semibold text-zinc-300">
                     <li>
                       <Link
-                        href="/system-design"
+                        href="/top-rated"
                         onClick={() => setMenuDrawerOpen(false)}
                         className="hover:text-[#f5c518] transition-colors"
                       >
-                        Microservices Architecture
+                        Oscars & Best Picture Winners
                       </Link>
                     </li>
                     <li>
                       <Link
-                        href="/system-design"
+                        href="/#born-today"
                         onClick={() => setMenuDrawerOpen(false)}
                         className="hover:text-[#f5c518] transition-colors"
                       >
-                        Trie, Min-Heap & Bloom Filter
+                        Born Today • Celebrities
                       </Link>
                     </li>
                     <li>
                       <Link
-                        href="/admin"
+                        href="/top-rated"
                         onClick={() => setMenuDrawerOpen(false)}
                         className="hover:text-[#f5c518] transition-colors"
                       >
-                        Admin Sync & Moderation
+                        Cannes & Film Festival Gems
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/upcoming"
+                        onClick={() => setMenuDrawerOpen(false)}
+                        className="hover:text-[#f5c518] transition-colors"
+                      >
+                        Most Anticipated Drops
                       </Link>
                     </li>
                   </ul>

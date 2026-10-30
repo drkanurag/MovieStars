@@ -15,7 +15,6 @@ import {
   Sparkles,
   Trophy,
   Bookmark,
-  Cpu,
   Compass,
   Check,
   Plus,
@@ -81,7 +80,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     { label: 'Upcoming Countdowns', href: '/upcoming', icon: Sparkles, desc: 'Release dates, trailers & reminders' },
     { label: 'Top 250 Best of All Time', href: '/top-rated', icon: Trophy, desc: 'Bayesian weighted leaderboard' },
     { label: 'My Cinema Library', href: '/watchlist', icon: Bookmark, desc: 'Watchlists, favorites & watched' },
-    { label: 'System Design & Architecture', href: '/system-design', icon: Cpu, desc: 'Inspect microservices & data structures' },
+    { label: 'Worldwide Catalog Search', href: '/search', icon: Compass, desc: 'Search 11.2M+ global movies and web series' },
   ];
 
   return (
