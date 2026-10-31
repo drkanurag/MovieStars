@@ -111,55 +111,6 @@ export default function HomePage() {
 
   return (
     <div className="space-y-12">
-      {/* 0. Country-First Experience: Active Region Banner & Rapid Flag Switcher */}
-      <div className="rounded-xl p-4 sm:p-5 bg-surface-card border border-surface-border shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-amber-gold/15 border border-amber-gold/30 text-amber-gold flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-xl">public</span>
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-sm sm:text-base font-extrabold text-text-primary flex items-center gap-2">
-                <span className="text-xl">{countryConfig.flag}</span>
-                <span>{countryConfig.name} Regional Cinema &amp; Streaming</span>
-              </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-gold text-surface-void uppercase tracking-wider font-label-sm">
-                Live Catalog
-              </span>
-            </div>
-            <p className="text-xs text-text-muted mt-0.5">
-              {countryConfig.tagline} • Regional currency: {countryConfig.currency}
-            </p>
-          </div>
-        </div>
-
-        {/* 12-Country Selector Pill Track */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
-          {COUNTRIES.map((c) => {
-            const isSelected = c.code === activeCountry;
-            return (
-              <button
-                key={c.code}
-                onClick={() => {
-                  setActiveCountry(c.code);
-                  setSelectedCountry(c.code);
-                }}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-all whitespace-nowrap shrink-0',
-                  isSelected
-                    ? 'bg-amber-gold text-surface-void glow-gold scale-105'
-                    : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:bg-surface-border border border-surface-border'
-                )}
-                title={`${c.name} (${c.region})`}
-              >
-                <span>{c.flag}</span>
-                <span className="font-label-sm">{c.code}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* ========================================== */}
       {/* 3. HERO SPOTLIGHT CAROUSEL & AMBIENT GLOW  */}
       {/* ========================================== */}
