@@ -11,6 +11,7 @@ import { searchCatalogAutocomplete } from '@/lib/api/movieStore';
 import { TitleItem } from '@/types/movie';
 import { MovieImage } from './MovieImage';
 import { getTmdbImageUrl } from '@/lib/utils';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -112,6 +113,7 @@ export function Navbar() {
   const navLinks = [
     { label: 'Browse', href: '/browse' },
     { label: 'Search', href: '/search' },
+    { label: 'Celebs', href: '/celebs' },
     { label: 'Upcoming', href: '/upcoming', beacon: true },
     { label: 'Top 250', href: '/top-rated' },
     { label: 'Categories', href: '/categories' },
@@ -286,6 +288,9 @@ export function Navbar() {
 
           {/* Trailing Action Cluster */}
           <div className="flex items-center gap-3">
+            {/* Theme Toggle (Dark / Light Mode) */}
+            <ThemeToggle />
+
             {/* Region Selector Badge */}
             <div ref={countryMenuRef} className="relative">
               <button

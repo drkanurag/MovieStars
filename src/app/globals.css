@@ -10,12 +10,90 @@
   --foreground: #F8FAFC;
 }
 
+html.light {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  color-scheme: light;
+}
+
 body {
   color: var(--foreground);
   background-color: var(--background);
   font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   letter-spacing: -0.01em;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Light Mode Overrides for High-Contrast Cinematic Theme */
+html.light body {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+
+html.light .bg-surface-void,
+html.light [class*="bg-surface-void"] {
+  background-color: #F1F5F9 !important;
+}
+
+html.light .bg-surface-card,
+html.light [class*="bg-surface-card"] {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
+html.light .bg-surface-elevated,
+html.light [class*="bg-surface-elevated"] {
+  background-color: #F8FAFC !important;
+}
+
+html.light .border-surface-border,
+html.light [class*="border-surface-border"] {
+  border-color: #E2E8F0 !important;
+}
+
+html.light .text-text-primary,
+html.light [class*="text-text-primary"] {
+  color: #0F172A !important;
+}
+
+html.light .text-text-secondary,
+html.light [class*="text-text-secondary"] {
+  color: #475569 !important;
+}
+
+html.light .text-text-muted,
+html.light [class*="text-text-muted"] {
+  color: #64748B !important;
+}
+
+html.light .glass-panel,
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+html.light .glass-panel-elevated {
+  background: rgba(248, 250, 252, 0.95) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html.light .glass-pill {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border: 2px solid #F1F5F9;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 /* Material Symbols sizing helper */

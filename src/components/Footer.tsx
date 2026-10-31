@@ -43,6 +43,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/celebs"
+                  className="text-text-muted hover:text-text-secondary transition-colors duration-150"
+                >
+                  Celebrities &amp; Stars
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/upcoming"
                   className="text-text-muted hover:text-text-secondary transition-colors duration-150"
                 >

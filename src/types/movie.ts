@@ -111,11 +111,11 @@ export interface TitleItem {
 }
 
 export interface Celebrity {
-  id: number;
+  id: number | string;
   name: string;
   birthDate: string;
   age: number;
-  knownFor: string;
+  knownFor?: string;
   role: string;
   profilePath: string;
   topTitles: string[];

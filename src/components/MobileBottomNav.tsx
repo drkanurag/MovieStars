@@ -25,8 +25,8 @@ export function MobileBottomNav() {
 
   const items = [
     { label: 'Home', href: '/', icon: 'home' },
-    { label: 'Search', href: '/search', icon: 'search' },
     { label: 'Browse', href: '/browse', icon: 'grid_view' },
+    { label: 'Celebs', href: '/celebs', icon: 'person' },
     { label: 'Upcoming', href: '/upcoming', icon: 'calendar_month' },
     { label: 'Watchlist', href: '/watchlist', icon: 'bookmark', count: watchlistCount },
   ];
