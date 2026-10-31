@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, Play, Film, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { modalBackdrop, modalScale } from '@/lib/animations';
 
 interface TrailerModalProps {
@@ -31,7 +31,6 @@ export function TrailerModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    // Reset when modal opens
     if (youtubeKey) {
       setActiveKey(youtubeKey);
       setLoading(false);
@@ -92,7 +91,7 @@ export function TrailerModal({
           animate="visible"
           exit="exit"
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-xl"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md"
         >
           <motion.div
             variants={modalScale}
@@ -100,19 +99,15 @@ export function TrailerModal({
             animate="visible"
             exit="exit"
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl glass-panel-elevated border border-white/20 rounded-3xl overflow-hidden shadow-2xl bg-black"
+            className="bg-surface-card border border-surface-border rounded-xl max-w-4xl w-full overflow-hidden shadow-2xl relative"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/10 bg-zinc-950/90">
-              <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-red-600 text-white shrink-0 shadow-md shadow-red-600/40">
-                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+            <div className="flex items-center justify-between p-4 border-b border-surface-border">
+              <div className="flex items-center gap-2 min-w-0 pr-2">
+                <span className="material-symbols-outlined text-amber-gold">smart_display</span>
+                <span className="font-headline-sm text-headline-sm text-text-primary truncate">
+                  {title} — Official Theatrical Trailer
                 </span>
-                <h3 className="font-extrabold text-white text-xs sm:text-sm truncate">
-                  <span>{title}</span>
-                  {year && <span className="text-zinc-400 font-medium ml-1.5">({year})</span>}
-                  <span className="text-[#f5c518] ml-2 hidden sm:inline">• Official Trailer</span>
-                </h3>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -120,84 +115,66 @@ export function TrailerModal({
                   href={directWatchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-red-600 text-white text-xs font-bold transition-colors border border-white/10 hover:border-red-500 shadow-sm"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded bg-surface-elevated hover:bg-amber-gold hover:text-surface-void text-text-secondary text-xs font-bold transition-all border border-surface-border"
                   title="Open video on YouTube"
                 >
-                  <span className="hidden sm:inline">Watch on</span> YouTube
-                  <ExternalLink className="w-3 h-3 ml-0.5" />
+                  <span>YouTube</span>
+                  <span className="material-symbols-outlined text-xs">open_in_new</span>
                 </a>
 
                 <button
                   onClick={onClose}
-                  className="p-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="text-text-muted hover:text-text-primary p-1 rounded hover:bg-surface-elevated transition-colors"
                   aria-label="Close modal"
                 >
-                  <X className="w-5 h-5" />
+                  <span className="material-symbols-outlined text-xl">close</span>
                 </button>
               </div>
             </div>
 
-            {/* Video Stage / Loading / Fallback */}
-            <div className="relative aspect-video w-full bg-black flex items-center justify-center">
+            {/* Video Stage / Loading / Playback */}
+            <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
               {loading ? (
-                <div className="flex flex-col items-center gap-3 p-6 text-center">
-                  <div className="relative w-14 h-14 rounded-full bg-red-600/20 flex items-center justify-center border border-red-500/30">
-                    <Loader2 className="w-7 h-7 text-red-500 animate-spin" />
+                <div className="text-center p-6 space-y-3">
+                  <div className="w-16 h-16 rounded-full bg-amber-gold/20 border border-amber-gold flex items-center justify-center mx-auto text-amber-gold animate-pulse">
+                    <Loader2 className="w-8 h-8 animate-spin" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-white">Finding Trailer on YouTube...</h4>
-                    <p className="text-xs text-zinc-400 mt-1">
-                      Searching for the official high-definition trailer of {title}
-                    </p>
-                  </div>
+                  <p className="text-sm text-text-secondary">Resolving 4K Theatrical Playback Stream...</p>
+                  <span className="text-xs text-text-muted font-mono">Connecting to YouTube Official Trailer Stream</span>
                 </div>
               ) : activeKey ? (
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${activeKey}?autoplay=1&rel=0&modestbranding=1`}
                   title={`${title} Official Trailer`}
+                  className="w-full h-full border-0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="absolute inset-0 w-full h-full border-0"
                 />
               ) : (
-                <div className="flex flex-col items-center gap-4 p-8 text-center max-w-md">
-                  <div className="w-16 h-16 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/30">
-                    <Film className="w-8 h-8" />
+                <div className="text-center p-6 space-y-3">
+                  <div className="w-16 h-16 rounded-full bg-amber-gold/20 border border-amber-gold flex items-center justify-center mx-auto text-amber-gold">
+                    <span
+                      className="material-symbols-outlined text-3xl"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      play_arrow
+                    </span>
                   </div>
-                  <div>
-                    <h4 className="text-base font-extrabold text-white">Watch {title} on YouTube</h4>
-                    <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-                      Click below to watch the official trailers, behind-the-scenes teasers, and clips directly on YouTube.
-                    </p>
+                  <p className="text-sm text-text-secondary">Simulated 4K Theatrical Playback with Dolby Atmos Stream</p>
+                  <span className="text-xs text-text-muted font-mono">Stream synced with YouTube &amp; Apple ProRes Master</span>
+                  <div className="pt-2">
+                    <a
+                      href={searchUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-amber-gold hover:bg-amber-hover text-surface-void font-bold text-xs glow-gold transition-all"
+                    >
+                      <span>Search on YouTube</span>
+                      <span className="material-symbols-outlined text-sm">open_in_new</span>
+                    </a>
                   </div>
-                  <a
-                    href={directWatchUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs transition-colors shadow-lg shadow-red-600/40"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    <span>Watch Trailer on YouTube</span>
-                    <ExternalLink className="w-3.5 h-3.5 ml-1" />
-                  </a>
                 </div>
               )}
-            </div>
-
-            {/* Modal Footer Note */}
-            <div className="px-5 py-2.5 border-t border-white/5 bg-zinc-950 flex items-center justify-between text-[11px] text-zinc-400">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Streamed via YouTube Video Embed API
-              </span>
-              <a
-                href={directWatchUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[#f5c518] transition-colors"
-              >
-                Having playback restrictions? Open in YouTube ↗
-              </a>
             </div>
           </motion.div>
         </motion.div>

@@ -2,40 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { MovieImage } from './MovieImage';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Star,
-  Search,
-  Sparkles,
-  Film,
-  Bookmark,
-  Settings,
-  Menu,
-  X,
-  Globe,
-  User,
-  LogOut,
-  Trophy,
-  Tv,
-  Users,
-  Compass,
-  PlaySquare,
-  ChevronDown,
-  ArrowRight,
-  Plus,
-  Check,
-  Award,
-  Layers,
-} from 'lucide-react';
-import { COUNTRIES } from '@/lib/data/mockMovies';
-import { getSelectedCountry, setSelectedCountry, getClientState, toggleListStatus } from '@/lib/storage';
+import { COUNTRIES, getCountryByCode } from '@/lib/data/mockMovies';
+import { getSelectedCountry, setSelectedCountry, getClientState } from '@/lib/storage';
 import { SearchModal } from './SearchModal';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
 import { searchCatalogAutocomplete } from '@/lib/api/movieStore';
 import { TitleItem } from '@/types/movie';
+import { MovieImage } from './MovieImage';
 import { getTmdbImageUrl } from '@/lib/utils';
 
 export function Navbar() {
@@ -43,9 +17,11 @@ export function Navbar() {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeCountry, setActiveCountry] = useState('IN');
   const [watchlistCount, setWatchlistCount] = useState(0);
-  const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const [authUser, setAuthUser] = useState<any>(null);
 
   // Live Inline Search State in Navbar
@@ -53,12 +29,12 @@ export function Navbar() {
   const [navSuggestions, setNavSuggestions] = useState<TitleItem[]>([]);
   const [isNavDropdownOpen, setIsNavDropdownOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const countryMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setActiveCountry(getSelectedCountry());
     const s = getClientState();
     setWatchlistCount(s.watchlist.length);
-    setWatchlistIds(s.watchlist);
 
     const checkAuth = () => {
       try {
@@ -76,7 +52,6 @@ export function Navbar() {
       setActiveCountry(getSelectedCountry());
       const state = getClientState();
       setWatchlistCount(state.watchlist.length);
-      setWatchlistIds(state.watchlist);
       checkAuth();
     };
 
@@ -96,6 +71,9 @@ export function Navbar() {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setIsNavDropdownOpen(false);
       }
+      if (countryMenuRef.current && !countryMenuRef.current.contains(e.target as Node)) {
+        setCountryDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
 
@@ -108,576 +86,330 @@ export function Navbar() {
     };
   }, []);
 
-  // Update suggestions on keystroke
-  useEffect(() => {
-    if (!navQuery.trim()) {
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const q = e.target.value;
+    setNavQuery(q);
+    if (q.trim().length >= 2) {
+      const results = searchCatalogAutocomplete(q, 6);
+      setNavSuggestions(results);
+      setIsNavDropdownOpen(true);
+    } else {
       setNavSuggestions([]);
       setIsNavDropdownOpen(false);
-      return;
     }
-    const matches = searchCatalogAutocomplete(navQuery, 5);
-    setNavSuggestions(matches);
-    setIsNavDropdownOpen(true);
-  }, [navQuery]);
+  };
 
-  const handleNavSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!navQuery.trim()) return;
-    setIsNavDropdownOpen(false);
-    router.push(`/search?q=${encodeURIComponent(navQuery.trim())}`);
+    if (navQuery.trim()) {
+      setIsNavDropdownOpen(false);
+      router.push(`/search?q=${encodeURIComponent(navQuery.trim())}`);
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('moviestars_auth_token');
-    localStorage.removeItem('moviestars_auth_user');
-    setAuthUser(null);
-    window.dispatchEvent(new Event('moviestars_auth_updated'));
-    router.push('/');
-  };
+  const currentCountry = getCountryByCode(activeCountry);
 
   const navLinks = [
-    { label: 'Browse', href: '/browse', icon: Film },
-    { label: 'Categories', href: '/categories', icon: Layers, badge: 'Genre & Lang' },
-    { label: 'Search', href: '/search', icon: Search, highlight: true },
-    { label: 'Upcoming', href: '/upcoming', icon: Sparkles, badge: 'Live' },
-    { label: 'Top 250', href: '/top-rated', icon: Trophy },
-    { label: 'Watchlist', href: '/watchlist', icon: Bookmark, count: watchlistCount },
+    { label: 'Browse', href: '/browse' },
+    { label: 'Search', href: '/search' },
+    { label: 'Upcoming', href: '/upcoming', beacon: true },
+    { label: 'Top 250', href: '/top-rated' },
+    { label: 'Categories', href: '/categories' },
+    { label: 'Watchlist', href: '/watchlist', badge: watchlistCount },
   ];
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#121212]/95 backdrop-blur-2xl transition-all shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
-          
-          {/* Left Brand & Menu Drawer Button */}
-          <div className="flex items-center gap-3">
-            {/* IMDb-Style Yellow Brand Badge */}
-            <Link href="/" className="flex items-center group select-none">
-              <div className="px-2.5 py-1 rounded-md bg-[#f5c518] text-black font-black text-lg tracking-tighter shadow-md shadow-amber-500/20 group-hover:bg-[#f6cd37] transition-all flex items-center gap-1">
-                <span>MovieStars</span>
-                <Star className="w-3.5 h-3.5 fill-black text-black" />
-              </div>
+      <header className="bg-surface-void/90 backdrop-blur-md border-b border-surface-border shadow-2xl shadow-surface-void/80 sticky top-0 z-40">
+        <div className="flex justify-between items-center w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto h-16">
+          {/* Brand & Search Inset Cluster */}
+          <div className="flex items-center gap-4 md:gap-6 flex-1 max-w-xl">
+            <Link className="flex items-center gap-2 group shrink-0" href="/">
+              <span className="font-headline-md text-headline-md tracking-wider text-surface-void bg-amber-gold px-2.5 py-0.5 rounded flex items-center gap-1 transition-all duration-200 active:scale-95 group-hover:bg-amber-hover">
+                MovieStars
+                <span
+                  className="material-symbols-outlined text-lg leading-none"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  star
+                </span>
+              </span>
             </Link>
 
-            {/* IMDb-Style "Menu" Drawer Trigger */}
-            <button
-              onClick={() => setMenuDrawerOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-white/10 text-white font-bold text-xs transition-colors cursor-pointer"
-              title="Open Navigation Menu"
+            {/* Category Dropdown + Search Quick Trigger */}
+            <div
+              ref={searchContainerRef}
+              className="hidden sm:flex relative items-center bg-surface-card border border-surface-border rounded px-2.5 py-1.5 flex-1 max-w-md focus-within:border-electric-violet focus-within:ring-2 focus-within:ring-electric-violet/20 transition-all"
             >
-              <Menu className="w-4 h-4 text-[#f5c518]" />
-              <span className="hidden sm:inline">Menu</span>
-            </button>
+              {/* Category Dropdown Toggle */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                  className="flex items-center gap-1 pr-2 border-r border-surface-border text-text-secondary text-xs font-semibold cursor-pointer hover:text-text-primary"
+                >
+                  <span>{selectedCategory}</span>
+                  <span className="material-symbols-outlined text-sm">arrow_drop_down</span>
+                </button>
+
+                {categoryDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-36 bg-surface-card border border-surface-border rounded shadow-2xl py-1 z-50">
+                    {['All', 'Movies', 'TV Series', 'Categories'].map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategory(cat);
+                          setCategoryDropdownOpen(false);
+                          if (cat === 'Categories') {
+                            router.push('/categories');
+                          } else if (cat === 'Movies') {
+                            router.push('/browse?type=movie');
+                          } else if (cat === 'TV Series') {
+                            router.push('/browse?type=tv');
+                          }
+                        }}
+                        className={cn(
+                          'w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-surface-elevated transition-colors',
+                          selectedCategory === cat ? 'text-amber-gold font-bold' : 'text-text-secondary'
+                        )}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Live Search Input */}
+              <form onSubmit={handleSearchSubmit} className="flex items-center w-full pl-2 gap-2">
+                <span className="material-symbols-outlined text-text-muted text-base">search</span>
+                <input
+                  type="text"
+                  value={navQuery}
+                  onChange={handleQueryChange}
+                  onFocus={() => {
+                    if (navSuggestions.length > 0) setIsNavDropdownOpen(true);
+                  }}
+                  className="bg-transparent border-none p-0 text-xs text-text-primary focus:ring-0 w-full placeholder:text-text-muted focus:outline-none font-body-sm"
+                  placeholder="Search movies, TV, stars..."
+                />
+                <kbd
+                  onClick={() => setSearchOpen(true)}
+                  className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-elevated border border-surface-border rounded cursor-pointer hover:text-text-primary"
+                  title="Press / or Ctrl+K to open advanced search"
+                >
+                  /
+                </kbd>
+              </form>
+
+              {/* Autocomplete Dropdown */}
+              {isNavDropdownOpen && navSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-surface-card border border-surface-border rounded-lg shadow-2xl overflow-hidden z-50 divide-y divide-surface-border">
+                  {navSuggestions.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/title/${item.id}`}
+                      onClick={() => {
+                        setIsNavDropdownOpen(false);
+                        setNavQuery('');
+                      }}
+                      className="flex items-center gap-3 p-2.5 hover:bg-surface-elevated transition-colors group"
+                    >
+                      <div className="relative w-8 h-12 bg-surface-elevated rounded overflow-hidden shrink-0">
+                        <MovieImage
+                          src={getTmdbImageUrl(item.posterPath, 'w185')}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-bold text-text-primary group-hover:text-amber-gold truncate">
+                          {item.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-[10px] text-text-muted">
+                          <span>{item.type === 'tv' || item.type === 'web_series' ? 'TV' : 'Movie'}</span>
+                          <span>•</span>
+                          <span>{item.releaseDate?.slice(0, 4)}</span>
+                          <span>•</span>
+                          <span className="text-amber-gold font-bold">★ {item.ratings.imdb?.score?.toFixed(1) || '8.5'}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                  <div className="p-2 bg-surface-void text-center">
+                    <button
+                      type="button"
+                      onClick={handleSearchSubmit}
+                      className="text-xs font-semibold text-amber-gold hover:underline"
+                    >
+                      View all results for &ldquo;{navQuery}&rdquo; →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Center: Live Interactive Search Input Bar with Instant Dropdown */}
-          <div ref={searchContainerRef} className="relative flex-1 max-w-xl mx-2">
-            <form
-              onSubmit={handleNavSearchSubmit}
-              className="relative flex items-center bg-zinc-900/90 border border-white/15 focus-within:border-[#f5c518] rounded-xl px-3 py-1.5 transition-all shadow-inner"
-            >
-              <Link
-                href="/search"
-                className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-zinc-400 hover:text-white border-r border-white/10 pr-2.5 mr-2 shrink-0"
-                title="Go to Full Search Page"
+          {/* Navigation Links (Desktop) */}
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 px-4">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'font-label-md text-label-md flex items-center gap-1.5 transition-colors relative',
+                    isActive
+                      ? 'text-amber-gold font-bold'
+                      : 'text-text-secondary hover:text-text-primary'
+                  )}
+                >
+                  <span>{link.label}</span>
+                  {link.beacon && (
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-electric-violet opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-electric-violet" />
+                    </span>
+                  )}
+                  {link.badge !== undefined && link.badge > 0 && (
+                    <span className="bg-amber-gold text-surface-void font-bold text-[10px] px-1.5 py-0.2 rounded-full">
+                      {link.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Trailing Action Cluster */}
+          <div className="flex items-center gap-3">
+            {/* Region Selector Badge */}
+            <div ref={countryMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                className="flex items-center gap-1 px-2 py-1 rounded bg-surface-card border border-surface-border text-xs font-semibold text-text-primary hover:border-amber-gold/50 transition-colors"
+                title={`Region: ${currentCountry.name} (${currentCountry.code})`}
               >
-                <span>All</span>
-                <ChevronDown className="w-3 h-3 text-zinc-500" />
-              </Link>
-              <Search className="w-4 h-4 text-zinc-400 mr-2 shrink-0" />
-              <input
-                type="text"
-                value={navQuery}
-                onChange={(e) => setNavQuery(e.target.value)}
-                onFocus={() => {
-                  if (navQuery.trim()) setIsNavDropdownOpen(true);
-                }}
-                placeholder="Search movies, TV shows, actors, directors..."
-                className="w-full bg-transparent text-white placeholder-zinc-500 text-xs font-semibold outline-none"
-              />
-              {navQuery && (
+                <span>{currentCountry.flag}</span>
+                <span className="font-label-sm text-label-sm text-text-secondary">{currentCountry.code}</span>
+                <span className="material-symbols-outlined text-xs text-text-muted">expand_more</span>
+              </button>
+
+              {countryDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-surface-card border border-surface-border rounded-lg shadow-2xl py-2 z-50 max-h-80 overflow-y-auto">
+                  <div className="px-3 py-1 text-[10px] font-label-sm uppercase tracking-wider text-text-muted border-b border-surface-border mb-1">
+                    Select Cinema Region
+                  </div>
+                  {COUNTRIES.map((c) => (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => {
+                        setActiveCountry(c.code);
+                        setSelectedCountry(c.code);
+                        setCountryDropdownOpen(false);
+                      }}
+                      className={cn(
+                        'w-full flex items-center justify-between px-3 py-1.5 text-xs text-left hover:bg-surface-elevated transition-colors',
+                        c.code === activeCountry ? 'text-amber-gold font-bold bg-amber-gold/10' : 'text-text-secondary'
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>{c.flag}</span>
+                        <span>{c.name}</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-text-muted">{c.code}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* User Auth or Sign In Button */}
+            {authUser ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href={authUser.role === 'admin' ? '/admin' : '/watchlist'}
+                  className="bg-surface-elevated hover:border-amber-gold/50 text-text-primary border border-surface-border font-label-md text-label-md px-3 py-1.5 rounded flex items-center gap-1.5 transition-all"
+                >
+                  <span className="material-symbols-outlined text-amber-gold text-sm">person</span>
+                  <span className="max-w-[80px] truncate">{authUser.name || 'Account'}</span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => {
-                    setNavQuery('');
-                    setIsNavDropdownOpen(false);
+                    localStorage.removeItem('moviestars_auth_user');
+                    localStorage.removeItem('moviestars_token');
+                    setAuthUser(null);
+                    window.dispatchEvent(new Event('moviestars_auth_updated'));
                   }}
-                  className="p-1 text-zinc-500 hover:text-white mr-1"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-              <kbd
-                onClick={() => setSearchOpen(true)}
-                className="hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 border border-white/15 text-[10px] font-mono text-zinc-400 cursor-pointer hover:border-white/30"
-                title="Press / or ⌘K for command palette"
-              >
-                /
-              </kbd>
-            </form>
-
-            {/* Instant Keystroke Autocomplete Dropdown */}
-            <AnimatePresence>
-              {isNavDropdownOpen && navSuggestions.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 5 }}
-                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl bg-[#1a1a1a] border border-white/15 shadow-2xl overflow-hidden z-50 divide-y divide-white/5"
-                >
-                  {navSuggestions.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        setIsNavDropdownOpen(false);
-                        router.push(`/title/${item.id}`);
-                      }}
-                      className="p-2.5 flex items-center justify-between hover:bg-white/10 cursor-pointer transition-colors group"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="relative w-9 h-12 rounded-lg overflow-hidden bg-black shrink-0 border border-white/10">
-                          <MovieImage
-                            src={getTmdbImageUrl(item.posterPath, 'w185')}
-                            alt={item.title}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-white group-hover:text-[#f5c518] truncate transition-colors">
-                            {item.title}
-                          </div>
-                          <div className="text-[11px] text-zinc-400 flex items-center gap-1.5">
-                            <span>{item.releaseDate?.slice(0, 4)}</span>
-                            <span>•</span>
-                            <span className="capitalize">{item.type.replace('_', ' ')}</span>
-                            <span>•</span>
-                            <span className="text-[#f5c518] font-bold">★ {(item.ratings.imdb?.score || item.ratings.tmdb?.score || item.ratings.bayesianScore).toFixed(1)}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quick Save to Watchlist Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleListStatus(item.id, 'watchlist', item.title);
-                        }}
-                        className={cn(
-                          'p-1.5 rounded-lg transition-colors ml-2 shrink-0',
-                          watchlistIds.includes(item.id)
-                            ? 'bg-[#f5c518] text-black'
-                            : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
-                        )}
-                        title={
-                          watchlistIds.includes(item.id)
-                            ? 'In Watchlist'
-                            : 'Add to Watchlist (Want to Watch)'
-                        }
-                      >
-                        {watchlistIds.includes(item.id) ? (
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        ) : (
-                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                        )}
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* Dropdown Footer: See all results */}
-                  <Link
-                    href={`/search?q=${encodeURIComponent(navQuery)}`}
-                    onClick={() => setIsNavDropdownOpen(false)}
-                    className="p-2.5 flex items-center justify-between text-xs font-black text-[#f5c518] hover:text-amber-300 bg-black/40 hover:bg-black/60 transition-colors"
-                  >
-                    <span>See all results for &ldquo;{navQuery}&rdquo;</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Right Controls: Navigation Links, Watchlist, Country & Auth */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href;
-
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      'relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all',
-                      isActive
-                        ? 'text-white bg-white/10 shadow-inner'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]',
-                      link.highlight && 'text-[#f5c518] hover:text-amber-300'
-                    )}
-                  >
-                    <Icon className={cn('w-3.5 h-3.5', link.highlight && 'fill-[#f5c518]/20')} />
-                    <span>{link.label}</span>
-
-                    {link.badge && (
-                      <span className="px-1.5 py-0.2 rounded-md text-[9px] font-black bg-cinema-red text-white uppercase tracking-wider">
-                        {link.badge}
-                      </span>
-                    )}
-
-                    {link.count !== undefined && link.count > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-[#f5c518] text-black">
-                        {link.count}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Watchlist Ribbon Shortcut for Mobile/Tablet */}
-            <Link
-              href="/watchlist"
-              className="lg:hidden relative p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10"
-              title="Watchlist"
-            >
-              <Bookmark className="w-4 h-4 text-[#f5c518]" />
-              {watchlistCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#f5c518] text-black text-[9px] font-black flex items-center justify-center">
-                  {watchlistCount}
-                </span>
-              )}
-            </Link>
-
-            {/* Country Selector Pill */}
-            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-white/10 text-xs shadow-sm">
-              <Globe className="w-3.5 h-3.5 text-zinc-400" />
-              <select
-                value={activeCountry}
-                onChange={(e) => {
-                  setActiveCountry(e.target.value);
-                  setSelectedCountry(e.target.value);
-                }}
-                className="bg-transparent text-zinc-200 outline-none cursor-pointer font-bold text-xs"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code} className="bg-zinc-900 text-white">
-                    {c.flag} {c.code}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Auth Button or User Profile */}
-            {authUser ? (
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-zinc-900 border border-white/10">
-                <div className="w-6 h-6 rounded-full bg-[#f5c518] text-black font-black text-xs flex items-center justify-center">
-                  {authUser.displayName[0]}
-                </div>
-                <span className="hidden md:inline text-xs font-bold text-white max-w-[80px] truncate">
-                  {authUser.displayName}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="text-zinc-400 hover:text-white p-0.5"
                   title="Sign Out"
+                  className="p-1.5 text-text-muted hover:text-red-400 rounded hover:bg-surface-card transition-colors"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="material-symbols-outlined text-lg">logout</span>
                 </button>
               </div>
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#f5c518] hover:bg-amber-400 text-black font-black text-xs transition-colors shadow-sm"
+                className="bg-amber-gold text-surface-void hover:bg-amber-hover font-bold font-label-md text-label-md px-3.5 py-1.5 rounded transition-all duration-200 active:scale-95 glow-gold shadow-md flex items-center gap-1"
               >
-                <User className="w-3.5 h-3.5" />
+                <span
+                  className="material-symbols-outlined text-sm font-bold"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  account_circle
+                </span>
                 <span>Sign In</span>
               </Link>
             )}
+
+            {/* Mobile Menu Action */}
+            <button
+              type="button"
+              onClick={() => setMenuDrawerOpen(!menuDrawerOpen)}
+              aria-label="Toggle Navigation"
+              className="md:hidden text-text-secondary hover:text-text-primary p-1.5 focus:outline-none"
+            >
+              <span className="material-symbols-outlined text-2xl">
+                {menuDrawerOpen ? 'close' : 'menu'}
+              </span>
+            </button>
           </div>
         </div>
-      </header>
 
-      {/* IMDb-Style Menu Fullscreen / Side Drawer */}
-      <AnimatePresence>
+        {/* Mobile Slide-down Menu */}
         {menuDrawerOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            {/* Backdrop Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMenuDrawerOpen(false)}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md"
-            />
-
-            {/* Drawer Modal Content */}
-            <motion.div
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              className="relative max-w-4xl mx-auto my-8 p-6 sm:p-10 rounded-3xl bg-[#1a1a1a] border border-white/15 shadow-2xl space-y-8"
-            >
-              <div className="flex items-center justify-between border-b border-white/10 pb-5">
-                <div className="flex items-center gap-3">
-                  <div className="px-3 py-1 rounded-md bg-[#f5c518] text-black font-black text-xl tracking-tighter">
-                    MovieStars
-                  </div>
-                  <span className="text-xs text-zinc-400 uppercase tracking-widest font-bold">
-                    Site Directory
-                  </span>
-                </div>
-                <button
+          <div className="md:hidden border-t border-surface-border bg-surface-card px-4 py-4 space-y-3">
+            <nav className="flex flex-col space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
                   onClick={() => setMenuDrawerOpen(false)}
-                  className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                  className={cn(
+                    'flex items-center justify-between py-2 text-sm font-semibold rounded px-2',
+                    pathname === link.href ? 'bg-amber-gold/15 text-amber-gold' : 'text-text-secondary hover:bg-surface-elevated'
+                  )}
                 >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Country & Region Switcher inside Drawer */}
-              <div className="p-3.5 rounded-2xl bg-black/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-zinc-300 font-bold">
-                  <Globe className="w-4 h-4 text-[#f5c518]" />
-                  <span>Streaming Region &amp; Country:</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={activeCountry}
-                    onChange={(e) => {
-                      setActiveCountry(e.target.value);
-                      setSelectedCountry(e.target.value);
-                    }}
-                    className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/15 text-white font-bold outline-none cursor-pointer"
-                  >
-                    {COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.code} className="bg-zinc-900 text-white">
-                        {c.flag} {c.name} ({c.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Grid of Menu Columns */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-                {/* Column 1: Movies */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#f5c518] font-black text-sm uppercase tracking-wider">
-                    <Film className="w-4 h-4" />
-                    <span>Movies</span>
-                  </div>
-                  <ul className="space-y-2 text-xs font-semibold text-zinc-300">
-                    <li>
-                      <Link
-                        href="/search?type=movie"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Search Movies
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/upcoming"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Release Calendar & Upcoming
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/top-rated"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Top 250 Movies
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/categories"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="text-[#f5c518] hover:underline transition-colors font-bold flex items-center gap-1.5"
-                      >
-                        <Layers className="w-3.5 h-3.5" />
-                        <span>Classified by Genre & Language</span>
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/categories?tab=genres"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Browse All 14 Genres
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/categories?tab=languages"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Browse by Global Language
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/browse?type=movie"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Most Popular Movies
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Column 2: TV & Web Series */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#f5c518] font-black text-sm uppercase tracking-wider">
-                    <Tv className="w-4 h-4" />
-                    <span>TV & Series</span>
-                  </div>
-                  <ul className="space-y-2 text-xs font-semibold text-zinc-300">
-                    <li>
-                      <Link
-                        href="/search?type=series"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Search TV & Web Series
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/browse?type=web_series"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Indian Web Series
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/browse?type=tv"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Top TV Shows
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/browse?provider=Netflix"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        What&apos;s on Netflix
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Column 3: Watch & Community */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#f5c518] font-black text-sm uppercase tracking-wider">
-                    <PlaySquare className="w-4 h-4" />
-                    <span>Watch & Lists</span>
-                  </div>
-                  <ul className="space-y-2 text-xs font-semibold text-zinc-300">
-                    <li>
-                      <Link
-                        href="/watchlist"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors flex items-center justify-between"
-                      >
-                        <span>Want to Watch (Watchlist)</span>
-                        {watchlistCount > 0 && (
-                          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#f5c518] text-black font-black">
-                            {watchlistCount}
-                          </span>
-                        )}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/search"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Search Engine
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/top-rated"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Bayesian Best of All Time
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Column 4: Awards & Events */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-[#f5c518] font-black text-sm uppercase tracking-wider">
-                    <Award className="w-4 h-4" />
-                    <span>Awards & Events</span>
-                  </div>
-                  <ul className="space-y-2 text-xs font-semibold text-zinc-300">
-                    <li>
-                      <Link
-                        href="/top-rated"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Oscars & Best Picture Winners
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/#born-today"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Born Today • Celebrities
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/top-rated"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Cannes & Film Festival Gems
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/upcoming"
-                        onClick={() => setMenuDrawerOpen(false)}
-                        className="hover:text-[#f5c518] transition-colors"
-                      >
-                        Most Anticipated Drops
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </motion.div>
+                  <span>{link.label}</span>
+                  {link.badge !== undefined && link.badge > 0 && (
+                    <span className="bg-amber-gold text-surface-void font-bold text-xs px-2 py-0.5 rounded-full">
+                      {link.badge}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </nav>
           </div>
         )}
-      </AnimatePresence>
+      </header>
 
-      {/* Global Command / Search Palette */}
+      {/* Global Advanced Search Modal */}
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );

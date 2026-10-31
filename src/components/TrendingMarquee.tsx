@@ -2,42 +2,44 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sparkles, Trophy, Tv, Film, Flame } from 'lucide-react';
 
 const MARQUEE_ITEMS = [
-  { icon: Flame, text: 'NOW TRENDING', highlight: 'Dune: Part Two & Oppenheimer', href: '/browse' },
-  { icon: Trophy, text: 'BAYESIAN TOP 250', highlight: 'The Godfather • The Dark Knight • Pulp Fiction', href: '/top-rated' },
-  { icon: Tv, text: 'WHERE TO WATCH', highlight: 'Streaming availability across 180+ countries', href: '/browse' },
-  { icon: Film, text: 'GLOBAL CATALOG', highlight: '11,200,000+ Worldwide IMDb & TMDB Titles', href: '/search' },
-  { icon: Sparkles, text: 'WANT TO WATCH', highlight: 'Save movies & TV shows with instant watch-time tracking', href: '/watchlist' },
+  { label: 'NOW TRENDING', text: 'Dune: Part Two & Oppenheimer', color: 'text-amber-gold', href: '/browse' },
+  { label: 'BAYESIAN TOP 250', text: 'The Godfather • The Dark Knight • Pulp Fiction', color: 'text-electric-violet', href: '/top-rated' },
+  { label: 'WHERE TO WATCH', text: 'Streaming availability across 180+ countries', color: 'text-cyber-cyan', href: '/browse' },
+  { label: 'GLOBAL CATALOG', text: '11,200,000+ Worldwide IMDb & TMDB Titles', color: 'text-amber-gold', href: '/search' },
+  { label: 'WANT TO WATCH', text: 'Save movies & TV shows with instant watch-time tracking', color: 'text-electric-violet', href: '/watchlist' },
 ];
 
 export function TrendingMarquee() {
   return (
-    <div className="w-full bg-[#111622]/90 border-b border-white/[0.08] backdrop-blur-md overflow-hidden py-1.5 select-none z-30">
-      <div className="animate-marquee flex items-center gap-8 text-xs font-semibold whitespace-nowrap">
-        {/* Double array for infinite seamless looping */}
-        {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={index}
-              href={item.href}
-              className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#f5c518] group-hover:scale-125 transition-transform" />
-              <Icon className="w-3.5 h-3.5 text-[#f5c518]" />
-              <span className="text-[10px] uppercase font-black tracking-wider text-zinc-500 group-hover:text-amber-400 transition-colors">
-                {item.text}:
-              </span>
-              <span className="text-zinc-200 group-hover:text-white transition-colors font-medium">
-                {item.highlight}
-              </span>
-            </Link>
-          );
-        })}
+    <div className="w-full bg-surface-card border-b border-surface-border overflow-hidden py-1.5 px-4 text-xs font-label-sm tracking-widest text-text-secondary select-none z-50">
+      <div className="flex items-center gap-4">
+        {/* Live Feed Indicator */}
+        <div className="flex items-center gap-1.5 shrink-0 text-amber-gold font-bold pr-3 border-r border-surface-border">
+          <span className="w-2 h-2 rounded-full bg-amber-gold animate-ping" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-gold -ml-2.5" />
+          <span>LIVE FEED</span>
+        </div>
+
+        {/* Marquee Runner */}
+        <div className="overflow-hidden w-full">
+          <div className="animate-marquee flex items-center gap-12 font-medium">
+            {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, index) => (
+              <React.Fragment key={index}>
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-2 hover:text-text-primary transition-colors cursor-pointer shrink-0"
+                >
+                  <span className={`${item.color} font-bold`}>{item.label}:</span>
+                  <span className="text-text-primary">{item.text}</span>
+                </Link>
+                <span className="text-surface-border">•</span>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-

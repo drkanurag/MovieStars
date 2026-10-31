@@ -7,10 +7,10 @@ import { BackToTop } from '@/components/BackToTop';
 import { WatchlistToast } from '@/components/WatchlistToast';
 import { TrendingMarquee } from '@/components/TrendingMarquee';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://moviestars.vercel.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://movie-stars-kappa.vercel.app';
 
 export const viewport: Viewport = {
-  themeColor: '#06080d',
+  themeColor: '#06080D',
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
@@ -20,11 +20,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: 'MovieStars — Cinema Intelligence, Bayesian Star Ratings & Where to Watch',
+    default: 'MovieStars — Cinema Discovery Engine & Bayesian Star Ratings',
     template: '%s | MovieStars',
   },
   description:
-    'An elevated, ad-free cinema intelligence platform inspired by IMDb, Letterboxd, and Apple TV+. Discover 11,200,000+ global movies, TV shows, and web series, Bayesian Top 250 leaderboards, Where to Watch streaming availability in 180+ countries, and personalized Want to Watch libraries.',
+    'An elevated cinema intelligence discovery engine inspired by IMDb, Letterboxd, and Apple TV+. Discover 11,200,000+ global movies, TV series, and web series, Bayesian Top 250 leaderboards, Where to Watch streaming availability across 180+ countries, and upcoming countdown clocks.',
   keywords: [
     'movies',
     'tv shows',
@@ -58,9 +58,9 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'MovieStars — Cinema Intelligence, Bayesian Star Ratings & Where to Watch',
+    title: 'MovieStars — The Cinematic Discovery Engine',
     description:
-      'Elevated cinema intelligence covering 11.2M+ global movies and TV series, Bayesian Top 250 ratings, and streaming availability across 180+ countries.',
+      'Elevated cinema discovery covering 11.2M+ global movies and TV series, Bayesian Top 250 ratings, and streaming availability across 180+ countries.',
     url: APP_URL,
     siteName: 'MovieStars',
     locale: 'en_US',
@@ -70,13 +70,13 @@ export const metadata: Metadata = {
         url: 'https://image.tmdb.org/t/p/w1280/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg',
         width: 1280,
         height: 720,
-        alt: 'MovieStars Cinema Intelligence Banner',
+        alt: 'MovieStars Cinema Discovery Engine Banner',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MovieStars — Cinema Intelligence & Where to Watch',
+    title: 'MovieStars — The Cinematic Discovery Engine',
     description:
       'Discover 11.2M+ movies and TV series with Bayesian Top 250 weighted rankings and streaming availability in 180+ countries.',
     images: ['https://image.tmdb.org/t/p/w1280/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg'],
@@ -100,7 +100,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Schema.org Structured Data for Google Sitelinks Searchbox & Organization
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -109,7 +108,7 @@ export default function RootLayout({
         '@id': `${APP_URL}/#website`,
         url: APP_URL,
         name: 'MovieStars',
-        description: 'Cinema Intelligence, Bayesian Star Ratings & Where to Watch Worldwide',
+        description: 'Cinema Discovery Engine, Bayesian Star Ratings & Where to Watch Worldwide',
         potentialAction: {
           '@type': 'SearchAction',
           target: {
@@ -135,21 +134,32 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <head>
-        {/* Preconnect & DNS Prefetch to Edge Media CDNs for Sub-Millisecond Asset Delivery */}
+        {/* Google Fonts: Bebas Neue for Marquee Displays & Geist for HUD typography */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geist:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+        {/* Material Symbols Outlined */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
+        />
+
+        {/* Media CDNs Preconnect */}
         <link rel="preconnect" href="https://image.tmdb.org" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://image.tmdb.org" />
         <link rel="preconnect" href="https://m.media-amazon.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://m.media-amazon.com" />
         <link rel="preconnect" href="https://img.youtube.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://img.youtube.com" />
-        <link rel="preconnect" href="https://images.metahub.space" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://images.metahub.space" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-cinema-dark text-zinc-100 antialiased selection:bg-[#f5c518] selection:text-black pb-16 lg:pb-0">
+      <body className="bg-surface-void text-text-primary font-body-md antialiased min-h-screen selection:bg-amber-gold selection:text-surface-void flex flex-col pb-16 lg:pb-0">
         <TrendingMarquee />
         <Navbar />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
