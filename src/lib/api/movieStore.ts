@@ -1,7 +1,37 @@
 import { TitleItem, FilterOptions } from '@/types/movie';
-import { INITIAL_MOVIES } from '../data/mockMovies';
+import { INITIAL_MOVIES, makeAvailability } from '../data/mockMovies';
+import leanCatalog from '../data/leanCatalog.json';
 
-let inMemoryCatalog: TitleItem[] = [...INITIAL_MOVIES];
+const hydratedLean: TitleItem[] = (leanCatalog as any[]).map((raw) => {
+  const origin = raw.originCountry || 'US';
+  return {
+    ...raw,
+    availability:
+      raw.availability ||
+      makeAvailability({}, [
+        { name: 'Netflix' },
+        { name: 'Amazon Prime Video' },
+      ]),
+  };
+});
+
+// Deduplicate by ID & IMDb ID
+const initialMap = new Map<string, TitleItem>();
+for (const item of INITIAL_MOVIES) {
+  initialMap.set(item.id, item);
+  if (item.imdbId) initialMap.set(item.imdbId, item);
+}
+
+const mergedCatalog: TitleItem[] = [...INITIAL_MOVIES];
+for (const item of hydratedLean) {
+  if (!initialMap.has(item.id) && (!item.imdbId || !initialMap.has(item.imdbId))) {
+    mergedCatalog.push(item);
+    initialMap.set(item.id, item);
+    if (item.imdbId) initialMap.set(item.imdbId, item);
+  }
+}
+
+let inMemoryCatalog: TitleItem[] = mergedCatalog;
 
 export function getCatalog(): TitleItem[] {
   return inMemoryCatalog;
@@ -170,4 +200,3 @@ export function appendOrUpdateTitle(title: TitleItem) {
     inMemoryCatalog.unshift(title);
   }
 }
-
