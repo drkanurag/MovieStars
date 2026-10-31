@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MovieImage } from '@/components/MovieImage';
 import { getBestOfAllTime } from '@/lib/api/movieStore';
-import { scoreToStars, DEFAULT_MIN_VOTES, DEFAULT_GLOBAL_MEAN } from '@/lib/bayesian';
-import { Trophy, Award, Star, Info, ExternalLink, Sparkles, Medal, Plus, Check, Filter, Globe } from 'lucide-react';
+import { scoreToStars } from '@/lib/bayesian';
+import { Trophy, Award, Star, Info, ExternalLink, Medal, Plus, Check, Filter, Globe } from 'lucide-react';
 import { getTmdbImageUrl, formatVoteCount } from '@/lib/utils';
 import { getClientState, toggleListStatus, getSelectedCountry } from '@/lib/storage';
 import { COUNTRIES, getCountryByCode } from '@/lib/data/mockMovies';
@@ -91,26 +91,6 @@ export default function BestOfAllTimePage() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Mathematical Formula Callout */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#1a1a1a] border border-[#f5c518]/30 text-xs text-zinc-300 space-y-2.5 shadow-xl">
-          <div className="flex items-center gap-2 font-black text-[#f5c518]">
-            <Sparkles className="w-4 h-4" />
-            <span>Why raw average ratings fail:</span>
-          </div>
-          <p className="text-zinc-400 leading-relaxed text-xs">
-            Sorting by raw stars allows an obscure indie title with only 3 votes of 5.0 to outrank global masterpieces like
-            <em> The Godfather</em>. To maintain mathematical fairness, we calculate the Bayesian weighted mean:
-          </p>
-          <div className="p-2.5 rounded-xl bg-black border border-white/10 font-mono text-emerald-400 text-xs overflow-x-auto">
-            W = (v / (v + m)) × R + (m / (v + m)) × C
-          </div>
-          <p className="text-[11px] text-zinc-400 font-medium">
-            Where <strong>R</strong> = title&apos;s arithmetic mean score, <strong>v</strong> = total votes,{' '}
-            <strong>m</strong> = minimum threshold ({DEFAULT_MIN_VOTES.toLocaleString()} votes), and{' '}
-            <strong>C</strong> = catalog average score ({DEFAULT_GLOBAL_MEAN}/10).
-          </p>
         </div>
       </div>
 
