@@ -271,12 +271,17 @@ function BrowseContent() {
             className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold"
           >
             <option value="all">All Languages</option>
-            <option value="en">English</option>
-            <option value="hi">Hindi</option>
-            <option value="te">Telugu</option>
-            <option value="ta">Tamil</option>
-            <option value="ko">Korean</option>
-            <option value="ja">Japanese</option>
+            <option value="en">English (Hollywood)</option>
+            <option value="hi">Hindi (Bollywood)</option>
+            <option value="te">Telugu (Tollywood)</option>
+            <option value="ta">Tamil (Kollywood)</option>
+            <option value="ml">Malayalam (Mollywood)</option>
+            <option value="ko">Korean (K-Drama)</option>
+            <option value="ja">Japanese (Anime & Cinema)</option>
+            <option value="es">Spanish (Español)</option>
+            <option value="fr">French (Français)</option>
+            <option value="de">German (Deutsch)</option>
+            <option value="pt">Portuguese (Português)</option>
           </select>
         </div>
 

@@ -27,6 +27,8 @@ import {
   Tv,
   Plus,
   Check,
+  Globe,
+  Layers,
 } from 'lucide-react';
 import { getTmdbImageUrl, formatRuntime, cn } from '@/lib/utils';
 import { staggerContainer, fadeInUp, heroSlide } from '@/lib/animations';
@@ -463,6 +465,93 @@ export default function HomePage() {
           {upcoming.slice(0, 4).map((movie) => (
             <MovieCard key={movie.id} movie={movie} />
           ))}
+        </div>
+      </section>
+
+      {/* 5b. Classified Cinema Hub: Explore by Genre & Language */}
+      <section className="space-y-6 rounded-3xl p-6 sm:p-8 glass-panel border border-white/10 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-cinema-gold/15 border border-cinema-gold/30 text-cinema-gold flex items-center justify-center">
+              <Layers className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                <span>Classified by</span>
+                <span className="gold-gradient-text">Genre & Language</span>
+              </h2>
+              <p className="text-xs text-zinc-400">
+                Filter titles across 14 genres and 11+ global languages with Bayesian star ratings
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/categories"
+            className="text-xs font-black text-cinema-gold hover:underline flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <span>Open Classification Hub</span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* Quick Genre Pills */}
+        <div className="space-y-2">
+          <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span>Popular Genres:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { name: 'Action', icon: '💥' },
+              { name: 'Science Fiction', icon: '🚀' },
+              { name: 'Drama', icon: '🎭' },
+              { name: 'Crime', icon: '🕵️' },
+              { name: 'Thriller', icon: '⚡' },
+              { name: 'Comedy', icon: '😂' },
+              { name: 'Animation', icon: '🎨' },
+              { name: 'Horror', icon: '👻' },
+              { name: 'Romance', icon: '❤️' },
+              { name: 'Fantasy', icon: '🧙' },
+            ].map((g) => (
+              <Link
+                key={g.name}
+                href={`/categories?genre=${encodeURIComponent(g.name)}`}
+                className="px-3 py-1.5 rounded-xl glass-panel border border-white/10 hover:border-cinema-gold text-xs font-bold text-zinc-200 hover:text-white transition-all flex items-center gap-1.5"
+              >
+                <span>{g.icon}</span>
+                <span>{g.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Language Hubs */}
+        <div className="space-y-2 pt-2 border-t border-white/10">
+          <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5 text-cinema-gold" />
+            <span>Global Languages:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳' },
+              { code: 'en', name: 'English', native: 'Hollywood', flag: '🇺🇸 🇬🇧' },
+              { code: 'te', name: 'Telugu', native: 'తెలుగు', flag: '🇮🇳' },
+              { code: 'ta', name: 'Tamil', native: 'தமிழ்', flag: '🇮🇳' },
+              { code: 'ko', name: 'Korean', native: '한국어', flag: '🇰🇷' },
+              { code: 'ja', name: 'Japanese', native: '日本語', flag: '🇯🇵' },
+              { code: 'ml', name: 'Malayalam', native: 'മലയാളം', flag: '🇮🇳' },
+              { code: 'es', name: 'Spanish', native: 'Español', flag: '🇪🇸' },
+            ].map((l) => (
+              <Link
+                key={l.code}
+                href={`/categories?lang=${l.code}`}
+                className="px-3 py-1.5 rounded-xl glass-panel border border-white/10 hover:border-cinema-gold text-xs font-bold text-zinc-200 hover:text-white transition-all flex items-center gap-1.5"
+              >
+                <span>{l.flag}</span>
+                <span>{l.name}</span>
+                <span className="text-[10px] text-zinc-400 font-normal">({l.native})</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

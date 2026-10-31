@@ -27,6 +27,7 @@ import {
   Plus,
   Check,
   Award,
+  Layers,
 } from 'lucide-react';
 import { COUNTRIES } from '@/lib/data/mockMovies';
 import { getSelectedCountry, setSelectedCountry, getClientState, toggleListStatus } from '@/lib/storage';
@@ -136,6 +137,7 @@ export function Navbar() {
 
   const navLinks = [
     { label: 'Browse', href: '/browse', icon: Film },
+    { label: 'Categories', href: '/categories', icon: Layers, badge: 'Genre & Lang' },
     { label: 'Search', href: '/search', icon: Search, highlight: true },
     { label: 'Upcoming', href: '/upcoming', icon: Sparkles, badge: 'Live' },
     { label: 'Top 250', href: '/top-rated', icon: Trophy },
@@ -470,6 +472,34 @@ export function Navbar() {
                         className="hover:text-[#f5c518] transition-colors"
                       >
                         Top 250 Movies
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/categories"
+                        onClick={() => setMenuDrawerOpen(false)}
+                        className="text-[#f5c518] hover:underline transition-colors font-bold flex items-center gap-1.5"
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>Classified by Genre & Language</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/categories?tab=genres"
+                        onClick={() => setMenuDrawerOpen(false)}
+                        className="hover:text-[#f5c518] transition-colors"
+                      >
+                        Browse All 14 Genres
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/categories?tab=languages"
+                        onClick={() => setMenuDrawerOpen(false)}
+                        className="hover:text-[#f5c518] transition-colors"
+                      >
+                        Browse by Global Language
                       </Link>
                     </li>
                     <li>
