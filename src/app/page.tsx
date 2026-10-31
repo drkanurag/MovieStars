@@ -3,22 +3,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getTrendingTitlesForCountry, getUpcomingTitles, getBestOfAllTime } from '@/lib/api/movieStore';
+import { getTrendingTitles, getUpcomingTitles, getBestOfAllTime } from '@/lib/api/movieStore';
 import { TitleItem } from '@/types/movie';
 import { MovieImage } from '@/components/MovieImage';
 import { TrailerModal } from '@/components/TrailerModal';
 import {
-  COUNTRIES,
-  getCountryByCode,
-  COUNTRY_STREAMING_PLATFORMS,
   STREAMING_PLATFORMS,
   CELEBRITIES_BORN_TODAY,
 } from '@/lib/data/mockMovies';
 import { getTmdbImageUrl, formatRuntime, cn } from '@/lib/utils';
-import { toggleListStatus, getClientState, getSelectedCountry, setSelectedCountry } from '@/lib/storage';
+import { toggleListStatus, getClientState } from '@/lib/storage';
 
 export default function HomePage() {
-  const [activeCountry, setActiveCountry] = useState('IN');
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [trailerMovie, setTrailerMovie] = useState<TitleItem | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
@@ -27,30 +23,22 @@ export default function HomePage() {
   const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setActiveCountry(getSelectedCountry());
     setWatchlistIds(getClientState().watchlist);
 
     const updateHandler = () => {
       setWatchlistIds(getClientState().watchlist);
     };
 
-    const countryHandler = () => {
-      setActiveCountry(getSelectedCountry());
-    };
-
     window.addEventListener('moviestars_state_updated', updateHandler);
-    window.addEventListener('moviestars_country_updated', countryHandler);
     return () => {
       window.removeEventListener('moviestars_state_updated', updateHandler);
-      window.removeEventListener('moviestars_country_updated', countryHandler);
     };
   }, []);
 
-  const countryConfig = getCountryByCode(activeCountry);
-  const trending = getTrendingTitlesForCountry(activeCountry);
+  const trending = getTrendingTitles();
   const upcoming = getUpcomingTitles();
   const topRated = getBestOfAllTime();
-  const currentPlatforms = COUNTRY_STREAMING_PLATFORMS[activeCountry] || STREAMING_PLATFORMS;
+  const currentPlatforms = STREAMING_PLATFORMS;
 
   // Hero showcase titles
   const heroList = [trending[0], trending[1], trending[2], upcoming[0], trending[3]].filter(Boolean);
@@ -499,15 +487,15 @@ export default function HomePage() {
               Explore What&apos;s Streaming
             </h2>
             <p className="font-body-sm text-body-sm text-text-secondary">
-              Verified streaming catalogs for {countryConfig.name} (powered by JustWatch)
+              Verified global streaming platforms and catalogs (powered by JustWatch)
             </p>
           </div>
 
           <Link
             className="text-xs font-semibold text-cyber-cyan hover:underline flex items-center gap-1"
-            href={`/browse?country=${activeCountry}`}
+            href="/browse"
           >
-            <span>All Providers</span>
+            <span>Explore All in Browse</span>
             <span className="material-symbols-outlined text-sm">chevron_right</span>
           </Link>
         </div>
@@ -526,7 +514,7 @@ export default function HomePage() {
             return (
               <Link
                 key={plat.id}
-                href={`/browse?country=${activeCountry}&platform=${encodeURIComponent(plat.name)}`}
+                href={`/browse?provider=${encodeURIComponent(plat.name)}`}
                 className="group bg-surface-card hover:bg-surface-elevated border border-surface-border hover:border-cyber-cyan/50 p-4 rounded-lg flex flex-col items-center justify-center text-center transition-all duration-200 hover:-translate-y-1"
               >
                 <div

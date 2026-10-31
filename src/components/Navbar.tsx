@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { COUNTRIES, getCountryByCode } from '@/lib/data/mockMovies';
-import { getSelectedCountry, setSelectedCountry, getClientState } from '@/lib/storage';
+import { getClientState } from '@/lib/storage';
 import { SearchModal } from './SearchModal';
 import { cn } from '@/lib/utils';
 import { searchCatalogAutocomplete } from '@/lib/api/movieStore';
@@ -18,10 +17,8 @@ export function Navbar() {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
-  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [activeCountry, setActiveCountry] = useState('IN');
   const [watchlistCount, setWatchlistCount] = useState(0);
   const [authUser, setAuthUser] = useState<any>(null);
 
@@ -30,10 +27,8 @@ export function Navbar() {
   const [navSuggestions, setNavSuggestions] = useState<TitleItem[]>([]);
   const [isNavDropdownOpen, setIsNavDropdownOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  const countryMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setActiveCountry(getSelectedCountry());
     const s = getClientState();
     setWatchlistCount(s.watchlist.length);
 
@@ -50,13 +45,11 @@ export function Navbar() {
     checkAuth();
 
     const handleUpdate = () => {
-      setActiveCountry(getSelectedCountry());
       const state = getClientState();
       setWatchlistCount(state.watchlist.length);
       checkAuth();
     };
 
-    window.addEventListener('moviestars_country_updated', handleUpdate);
     window.addEventListener('moviestars_state_updated', handleUpdate);
     window.addEventListener('moviestars_auth_updated', handleUpdate);
 
@@ -72,14 +65,10 @@ export function Navbar() {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setIsNavDropdownOpen(false);
       }
-      if (countryMenuRef.current && !countryMenuRef.current.contains(e.target as Node)) {
-        setCountryDropdownOpen(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-      window.removeEventListener('moviestars_country_updated', handleUpdate);
       window.removeEventListener('moviestars_state_updated', handleUpdate);
       window.removeEventListener('moviestars_auth_updated', handleUpdate);
       window.removeEventListener('keydown', handleKeyDown);
@@ -107,8 +96,6 @@ export function Navbar() {
       router.push(`/search?q=${encodeURIComponent(navQuery.trim())}`);
     }
   };
-
-  const currentCountry = getCountryByCode(activeCountry);
 
   const navLinks = [
     { label: 'Browse', href: '/browse' },
@@ -290,49 +277,6 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             {/* Theme Toggle (Dark / Light Mode) */}
             <ThemeToggle />
-
-            {/* Region Selector Badge */}
-            <div ref={countryMenuRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                className="flex items-center gap-1 px-2 py-1 rounded bg-surface-card border border-surface-border text-xs font-semibold text-text-primary hover:border-amber-gold/50 transition-colors"
-                title={`Region: ${currentCountry.name} (${currentCountry.code})`}
-              >
-                <span>{currentCountry.flag}</span>
-                <span className="font-label-sm text-label-sm text-text-secondary">{currentCountry.code}</span>
-                <span className="material-symbols-outlined text-xs text-text-muted">expand_more</span>
-              </button>
-
-              {countryDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-surface-card border border-surface-border rounded-lg shadow-2xl py-2 z-50 max-h-80 overflow-y-auto">
-                  <div className="px-3 py-1 text-[10px] font-label-sm uppercase tracking-wider text-text-muted border-b border-surface-border mb-1">
-                    Select Cinema Region
-                  </div>
-                  {COUNTRIES.map((c) => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => {
-                        setActiveCountry(c.code);
-                        setSelectedCountry(c.code);
-                        setCountryDropdownOpen(false);
-                      }}
-                      className={cn(
-                        'w-full flex items-center justify-between px-3 py-1.5 text-xs text-left hover:bg-surface-elevated transition-colors',
-                        c.code === activeCountry ? 'text-amber-gold font-bold bg-amber-gold/10' : 'text-text-secondary'
-                      )}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>{c.flag}</span>
-                        <span>{c.name}</span>
-                      </span>
-                      <span className="text-[10px] font-mono text-text-muted">{c.code}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {/* User Auth or Sign In Button */}
             {authUser ? (
