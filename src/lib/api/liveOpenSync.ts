@@ -16,7 +16,8 @@ const SYNC_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown between automatic ba
 
 /**
  * Connects to open-source cinema APIs (Stremio Cinemeta open catalog, TVMaze network, Google News feeds)
- * to automatically fetch and update any newly announced upcoming movies and web series.
+ * to automatically fetch and update newly announced upcoming movies and web series.
+ * Preserves source integrity: distinguishes real scores from unavailable ones, avoids inventing fake ratings.
  */
 export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
   const now = Date.now();
@@ -56,26 +57,26 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
     if (moviesRes.status === 'fulfilled' && moviesRes.value?.metas) {
       const rawMovies: any[] = moviesRes.value.metas;
       for (const m of rawMovies) {
-        const year = parseInt(m.year || '0');
         const releasedDate = m.released ? new Date(m.released) : null;
-        const isUpcoming = year >= 2025 || (releasedDate !== null && releasedDate > nowDate);
+        const validReleasedDate = releasedDate && !isNaN(releasedDate.getTime()) ? releasedDate : null;
+        const year = parseInt(m.year || '0');
+        
+        // Exact release-status calculation: title is upcoming only if valid future date exists
+        const isUpcoming = validReleasedDate !== null
+          ? validReleasedDate > nowDate
+          : year > nowDate.getFullYear();
 
         const imdbId = m.imdb_id || m.id;
         const titleName = m.name?.trim();
         if (!titleName || !imdbId) continue;
 
-        // Formulate normalized release date
-        let releaseDateStr = m.released ? m.released.slice(0, 10) : '';
-        if (!releaseDateStr && year > 0) {
-          releaseDateStr = `${year}-06-15`;
-        }
-        if (!releaseDateStr) {
-          releaseDateStr = `${nowDate.getFullYear() + 1}-01-01`;
-        }
+        const releaseDateStr = m.released
+          ? m.released.slice(0, 10)
+          : (year > 0 ? String(year) : 'TBA');
 
         const trailerKey = m.trailers?.[0]?.source || m.trailerStreams?.[0]?.ytId;
-        const imdbScore = parseFloat(m.imdbRating || '7.5');
-        const votes = Math.floor(Math.random() * 40000) + 15000;
+        const rawScore = m.imdbRating ? parseFloat(m.imdbRating) : null;
+        const imdbScore = rawScore !== null && !isNaN(rawScore) ? rawScore : undefined;
 
         const item: TitleItem = {
           id: imdbId,
@@ -86,7 +87,7 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
           originalTitle: m.name,
           overview:
             m.description ||
-            `Anticipated upcoming theatrical release ${titleName} (${year || '2026'}). Storyline details and official worldwide release schedules tracked by MovieStars.`,
+            `Theatrical release ${titleName}. Metadata synchronized via Cinemeta Open Catalog on MovieStars.`,
           releaseDate: releaseDateStr,
           status: isUpcoming ? 'upcoming' : 'released',
           originalLanguage: 'en',
@@ -100,35 +101,29 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
             id: idx + 1,
             name: g,
           })),
-          cast: (m.cast || ['Leading Ensemble']).slice(0, 6).map((actor: string, idx: number) => ({
+          cast: (m.cast || []).slice(0, 6).map((actor: string, idx: number) => ({
             id: idx + 100,
             name: actor,
             role: 'actor',
           })),
-          directors: (m.director || ['Acclaimed Director']).slice(0, 2).map((dir: string, idx: number) => ({
+          directors: (m.director || []).slice(0, 2).map((dir: string, idx: number) => ({
             id: idx + 200,
             name: dir,
             role: 'director',
           })),
           trailerYoutubeKey: trailerKey,
           ratings: {
-            imdb: { score: imdbScore, votes },
-            tmdb: { score: imdbScore, votes: Math.floor(votes * 0.8) },
-            userCommunity: { score: Number((imdbScore / 2).toFixed(1)), votes: Math.floor(votes * 0.1) },
-            bayesianScore: calculateBayesianScore(votes, imdbScore),
+            imdb: imdbScore !== undefined ? { score: imdbScore, votes: 0 } : undefined,
+            userCommunity: { score: 0, votes: 0 },
+            bayesianScore: imdbScore !== undefined ? calculateBayesianScore(100, imdbScore) : 5.0,
           },
-          popularity: isUpcoming ? 95.0 + Math.random() * 4 : 80.0,
+          popularity: isUpcoming ? 90.0 : 75.0,
           certification: 'PG-13',
           availability: {
             IN: {
               countryCode: 'IN',
               countryName: 'India',
-              stream: [
-                {
-                  provider: { id: 8, name: 'Theatrical / VOD Launch', logoPath: '', displayPriority: 1 },
-                  offerType: 'stream',
-                },
-              ],
+              stream: [],
               rent: [],
               buy: [],
             },
@@ -144,26 +139,26 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
     if (seriesRes.status === 'fulfilled' && seriesRes.value?.metas) {
       const rawSeries: any[] = seriesRes.value.metas;
       for (const s of rawSeries) {
+        const releasedDate = s.released ? new Date(s.released) : null;
+        const validReleasedDate = releasedDate && !isNaN(releasedDate.getTime()) ? releasedDate : null;
         const yearClean = (s.year || '').replace(/[^0-9]/g, '').slice(0, 4);
         const year = parseInt(yearClean || '0');
-        const releasedDate = s.released ? new Date(s.released) : null;
-        const isUpcoming = year >= 2025 || (releasedDate !== null && releasedDate > nowDate);
+
+        const isUpcoming = validReleasedDate !== null
+          ? validReleasedDate > nowDate
+          : year > nowDate.getFullYear();
 
         const imdbId = s.imdb_id || s.id;
         const titleName = s.name?.trim();
         if (!titleName || !imdbId) continue;
 
-        let releaseDateStr = s.released ? s.released.slice(0, 10) : '';
-        if (!releaseDateStr && year > 0) {
-          releaseDateStr = `${year}-09-20`;
-        }
-        if (!releaseDateStr) {
-          releaseDateStr = `${nowDate.getFullYear() + 1}-01-01`;
-        }
+        const releaseDateStr = s.released
+          ? s.released.slice(0, 10)
+          : (year > 0 ? String(year) : 'TBA');
 
         const trailerKey = s.trailers?.[0]?.source || s.trailerStreams?.[0]?.ytId;
-        const imdbScore = parseFloat(s.imdbRating || '8.1');
-        const votes = Math.floor(Math.random() * 30000) + 12000;
+        const rawScore = s.imdbRating ? parseFloat(s.imdbRating) : null;
+        const imdbScore = rawScore !== null && !isNaN(rawScore) ? rawScore : undefined;
 
         const item: TitleItem = {
           id: imdbId,
@@ -174,7 +169,7 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
           originalTitle: s.name,
           overview:
             s.description ||
-            `Upcoming episodic drama and prestige web series ${titleName}. Premiering across major streaming networks worldwide.`,
+            `Episodic drama and series ${titleName}. Metadata synchronized via Cinemeta Open Catalog on MovieStars.`,
           releaseDate: releaseDateStr,
           status: isUpcoming ? 'upcoming' : 'released',
           originalLanguage: 'en',
@@ -188,35 +183,29 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
             id: idx + 1,
             name: g,
           })),
-          cast: (s.cast || ['Ensemble Cast']).slice(0, 6).map((actor: string, idx: number) => ({
+          cast: (s.cast || []).slice(0, 6).map((actor: string, idx: number) => ({
             id: idx + 300,
             name: actor,
             role: 'actor',
           })),
-          directors: (s.director || ['Series Creator']).slice(0, 2).map((dir: string, idx: number) => ({
+          directors: (s.director || []).slice(0, 2).map((dir: string, idx: number) => ({
             id: idx + 400,
             name: dir,
             role: 'director',
           })),
           trailerYoutubeKey: trailerKey,
           ratings: {
-            imdb: { score: imdbScore, votes },
-            tmdb: { score: imdbScore, votes: Math.floor(votes * 0.8) },
-            userCommunity: { score: Number((imdbScore / 2).toFixed(1)), votes: Math.floor(votes * 0.1) },
-            bayesianScore: calculateBayesianScore(votes, imdbScore),
+            imdb: imdbScore !== undefined ? { score: imdbScore, votes: 0 } : undefined,
+            userCommunity: { score: 0, votes: 0 },
+            bayesianScore: imdbScore !== undefined ? calculateBayesianScore(100, imdbScore) : 5.0,
           },
-          popularity: isUpcoming ? 94.0 + Math.random() * 4 : 78.0,
+          popularity: isUpcoming ? 90.0 : 75.0,
           certification: 'U/A 16+',
           availability: {
             IN: {
               countryCode: 'IN',
               countryName: 'India',
-              stream: [
-                {
-                  provider: { id: 8, name: 'Netflix / Prime Streaming Premiere', logoPath: '', displayPriority: 1 },
-                  offerType: 'stream',
-                },
-              ],
+              stream: [],
               rent: [],
               buy: [],
             },
@@ -245,6 +234,7 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
         if (!show || !show.name) continue;
         const showId = `tvmaze-show-${show.id}`;
         const premierDate = show.premiered || ep.airdate;
+        const rawScore = show.rating?.average;
 
         const item: TitleItem = {
           id: showId,
@@ -254,8 +244,8 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
           title: show.name,
           overview:
             show.summary?.replace(/<[^>]*>/g, '') ||
-            `Catch newly premiering episodes of ${show.name} broadcasting on ${show.network?.name || 'Streaming'}.`,
-          releaseDate: premierDate || nowDate.toISOString().slice(0, 10),
+            `Broadcast series ${show.name} on ${show.network?.name || 'Streaming'}.`,
+          releaseDate: premierDate || 'TBA',
           status: 'released',
           originalLanguage: show.language ? show.language.slice(0, 2).toLowerCase() : 'en',
           posterPath:
@@ -269,27 +259,15 @@ export async function syncLiveOpenReleases(force = false): Promise<SyncResult> {
           cast: [],
           directors: [],
           ratings: {
-            imdb: { score: show.rating?.average || 7.8, votes: 25000 },
-            tmdb: { score: show.rating?.average || 7.8, votes: 20000 },
-            userCommunity: { score: 4.2, votes: 2500 },
-            bayesianScore: calculateBayesianScore(25000, show.rating?.average || 7.8),
+            userCommunity: { score: 0, votes: 0 },
+            bayesianScore: rawScore ? calculateBayesianScore(50, rawScore) : 5.0,
           },
-          popularity: 85.0,
+          popularity: 75.0,
           availability: {
             IN: {
               countryCode: 'IN',
               countryName: 'India',
-              stream: [
-                {
-                  provider: {
-                    id: 8,
-                    name: show.webChannel?.name || show.network?.name || 'Streaming Network',
-                    logoPath: '',
-                    displayPriority: 1,
-                  },
-                  offerType: 'stream',
-                },
-              ],
+              stream: [],
               rent: [],
               buy: [],
             },
@@ -341,4 +319,3 @@ function hashCode(str: string): number {
   }
   return hash;
 }
-

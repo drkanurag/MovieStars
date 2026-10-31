@@ -7,16 +7,16 @@ services:
     container_name: moviestars-postgres
     restart: always
     environment:
-      POSTGRES_DB: moviestars
-      POSTGRES_USER: moviestars_admin
-      POSTGRES_PASSWORD: cinema_secure_password_2026
+      POSTGRES_DB: ${POSTGRES_DB:-moviestars}
+      POSTGRES_USER: ${POSTGRES_USER:-moviestars_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in environment}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./src/server/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U moviestars_admin -d moviestars"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-moviestars_admin} -d ${POSTGRES_DB:-moviestars}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,13 +51,17 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://moviestars_admin:cinema_secure_password_2026@postgres:5432/moviestars?schema=public
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL:-postgresql://${POSTGRES_USER:-moviestars_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-moviestars}?schema=public}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - TMDB_API_KEY=${TMDB_API_KEY}
+      - TMDB_TOKEN=${TMDB_TOKEN}
       - OMDB_API_KEY=${OMDB_API_KEY}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
       - NODE_ENV=production
 
 volumes:
   pgdata:
+    driver: local
   redisdata:
-
+    driver: local

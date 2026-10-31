@@ -8,10 +8,15 @@ export class RatingService {
   private static instance: RatingService;
   private minHeapTopK: MinHeap<TitleItem>;
   private ratingsMap: Map<string, TitleItem['ratings']>;
+  private titlesMap: Map<string, TitleItem>;
+  // titleId -> (userId -> stars)
+  private userRatings: Map<string, Map<string, number>>;
 
   private constructor() {
     this.minHeapTopK = new MinHeap<TitleItem>(250); // Store Top 250 in O(N log K) priority queue
     this.ratingsMap = new Map();
+    this.titlesMap = new Map();
+    this.userRatings = new Map();
     this.initializeData();
     this.registerEventSubscriptions();
   }
@@ -25,7 +30,8 @@ export class RatingService {
 
   private initializeData(): void {
     for (const movie of INITIAL_MOVIES) {
-      this.ratingsMap.set(movie.id, movie.ratings);
+      this.titlesMap.set(movie.id, { ...movie });
+      this.ratingsMap.set(movie.id, { ...movie.ratings });
       if (movie.status === 'released') {
         this.minHeapTopK.push(movie.ratings.bayesianScore, movie);
       }
@@ -34,8 +40,8 @@ export class RatingService {
 
   private registerEventSubscriptions(): void {
     const eventBus = EventBus.getInstance();
-    eventBus.subscribe<{ titleId: string; newStar: number }>('rating:submitted', (event) => {
-      this.updateUserRating(event.payload.titleId, event.payload.newStar);
+    eventBus.subscribe<{ titleId: string; userId?: string; newStar: number }>('rating:submitted', (event) => {
+      this.submitUserRating(event.payload.titleId, event.payload.userId || 'anonymous', event.payload.newStar);
     });
   }
 
@@ -54,22 +60,90 @@ export class RatingService {
     return top.slice(0, limit).map((item) => item.data);
   }
 
-  public updateUserRating(titleId: string, stars: number): void {
-    const existing = this.ratingsMap.get(titleId);
-    if (existing) {
-      const prevVotes = existing.userCommunity.votes;
-      const prevScore = existing.userCommunity.score;
-      const newVotes = prevVotes + 1;
-      const newScore = Number(((prevScore * prevVotes + stars) / newVotes).toFixed(2));
+  /**
+   * Idempotent user rating submission:
+   * Replaces that user's previous rating if already rated rather than incrementing votes indefinitely.
+   * Recalculates community score, updates Bayesian weighted rating, and refreshes the leaderboard heap.
+   */
+  public submitUserRating(titleId: string, userId: string, stars: number): TitleItem['ratings'] | null {
+    let titleRatings = this.ratingsMap.get(titleId);
+    let titleItem = this.titlesMap.get(titleId);
 
-      existing.userCommunity.votes = newVotes;
-      existing.userCommunity.score = newScore;
-
-      // Recalculate Bayesian score with updated community votes
-      const totalVotes = existing.imdb.votes + newVotes;
-      const combinedRaw = (existing.imdb.score * 0.7) + (newScore * 2 * 0.3); // convert 5-star to 10-scale
-      existing.bayesianScore = this.computeBayesian(totalVotes, combinedRaw);
+    if (!titleRatings) {
+      titleRatings = {
+        userCommunity: { score: 0, votes: 0 },
+        bayesianScore: 5.0,
+      };
+      this.ratingsMap.set(titleId, titleRatings);
     }
+
+    if (!this.userRatings.has(titleId)) {
+      this.userRatings.set(titleId, new Map());
+    }
+
+    const titleUserMap = this.userRatings.get(titleId)!;
+    const previousRating = titleUserMap.get(userId);
+
+    const prevVotes = titleRatings.userCommunity?.votes || 0;
+    const prevScore = titleRatings.userCommunity?.score || 0;
+
+    let newVotes = prevVotes;
+    let newScore = prevScore;
+
+    if (previousRating !== undefined) {
+      // User is updating their existing rating: adjust the total without changing the vote count
+      const previousTotal = prevScore * prevVotes;
+      const newTotal = previousTotal - previousRating + stars;
+      newScore = prevVotes > 0 ? Number((newTotal / prevVotes).toFixed(2)) : stars;
+    } else {
+      // First-time rating by this user: increment the vote count
+      newVotes = prevVotes + 1;
+      const previousTotal = prevScore * prevVotes;
+      newScore = Number(((previousTotal + stars) / newVotes).toFixed(2));
+    }
+
+    // Save user's updated rating
+    titleUserMap.set(userId, stars);
+
+    titleRatings.userCommunity = {
+      score: newScore,
+      votes: newVotes,
+    };
+
+    // Calculate updated combined score
+    const extScore = titleRatings.imdb?.score || titleRatings.tmdb?.score || newScore * 2;
+    const extVotes = titleRatings.imdb?.votes || titleRatings.tmdb?.votes || 100;
+    const totalVotes = extVotes + newVotes;
+    const combinedRaw = (extScore * 0.7) + (newScore * 2 * 0.3);
+
+    titleRatings.bayesianScore = this.computeBayesian(totalVotes, combinedRaw);
+
+    // Refresh title in local map and refresh Top-K Leaderboard Min-Heap
+    if (titleItem) {
+      titleItem.ratings = { ...titleRatings };
+      this.refreshLeaderboardHeap();
+    }
+
+    return titleRatings;
+  }
+
+  public getUserRating(titleId: string, userId: string): number | null {
+    return this.userRatings.get(titleId)?.get(userId) ?? null;
+  }
+
+  public getTitleRatings(titleId: string): TitleItem['ratings'] | undefined {
+    return this.ratingsMap.get(titleId);
+  }
+
+  private refreshLeaderboardHeap(): void {
+    // Reconstruct heap from updated titles map
+    const newHeap = new MinHeap<TitleItem>(250);
+    for (const title of this.titlesMap.values()) {
+      if (title.status === 'released') {
+        newHeap.push(title.ratings.bayesianScore, title);
+      }
+    }
+    this.minHeapTopK = newHeap;
   }
 
   public getStats() {
@@ -78,7 +152,7 @@ export class RatingService {
       minScoreInHeap: this.minHeapTopK.peek()?.score ?? 0,
       thresholdVotes_m: DEFAULT_MIN_VOTES,
       globalMean_C: DEFAULT_GLOBAL_MEAN,
+      uniqueUsersRated: Array.from(this.userRatings.values()).reduce((acc, m) => acc + m.size, 0),
     };
   }
 }
-

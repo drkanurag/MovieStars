@@ -65,6 +65,23 @@ export function toggleListStatus(
 
   saveClientState(current);
 
+  // Async server sync if authenticated
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('moviestars_auth_token');
+    if (token) {
+      fetch('/api/user/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          titleId,
+          listType: listKey,
+          action: exists ? 'remove' : 'add',
+        }),
+      }).catch((e) => console.warn('Server watchlist sync failed', e));
+    }
+  }
+
   // Dispatch toast event with metadata
   if (typeof window !== 'undefined') {
     const actionLabel =
@@ -104,6 +121,22 @@ export function setUserStarRating(titleId: string, stars: number) {
   const current = getClientState();
   current.userRatings[titleId] = stars;
   saveClientState(current);
+
+  // Async server sync if authenticated
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('moviestars_auth_token');
+    if (token) {
+      fetch('/api/user/ratings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          titleId,
+          stars,
+        }),
+      }).catch((e) => console.warn('Server rating sync failed', e));
+    }
+  }
 }
 
 export function clearList(listKey: 'watchlist' | 'watched' | 'favorites' | 'reminders') {

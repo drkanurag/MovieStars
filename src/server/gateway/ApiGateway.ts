@@ -30,7 +30,7 @@ export class ApiGateway {
     return ApiGateway.instance;
   }
 
-  public handleRequest(service: string, action: string, params: any = {}) {
+  public async handleRequest(service: string, action: string, params: Record<string, any> = {}): Promise<{ status: number; data?: any; error?: string; message?: string; [key: string]: any }> {
     // 1. Rate Limiting Check
     if (!this.clientRateLimiter.tryConsume(1)) {
       return {
@@ -40,60 +40,93 @@ export class ApiGateway {
       };
     }
 
+    // Input Sanitization & Type Validation
+    const cleanParams: Record<string, any> = {};
+    for (const [k, v] of Object.entries(params)) {
+      if (typeof v === 'string') {
+        cleanParams[k] = v.trim().slice(0, 1000); // Prevent unbounded string payloads
+      } else {
+        cleanParams[k] = v;
+      }
+    }
+
     // 2. Routing to Microservices
     switch (service) {
       case 'catalog': {
         const catalog = CatalogService.getInstance();
         if (action === 'get') {
-          return { status: 200, data: catalog.getTitleById(params.id) };
+          if (!cleanParams.id || typeof cleanParams.id !== 'string') {
+            return { status: 400, error: 'A valid string ID parameter is required' };
+          }
+          return { status: 200, data: catalog.getTitleById(cleanParams.id) };
         }
         if (action === 'paginate') {
-          return { status: 200, data: catalog.getTitlesPaginated(params.cursor, params.limit) };
+          const limit = Math.min(Math.max(1, parseInt(cleanParams.limit || '20', 10)), 100);
+          return { status: 200, data: catalog.getTitlesPaginated(cleanParams.cursor, limit) };
         }
         if (action === 'similar') {
-          return { status: 200, data: catalog.getSimilarTitles(params.id, params.limit) };
+          if (!cleanParams.id || typeof cleanParams.id !== 'string') {
+            return { status: 400, error: 'A valid string ID parameter is required' };
+          }
+          const limit = Math.min(Math.max(1, parseInt(cleanParams.limit || '4', 10)), 20);
+          return { status: 200, data: catalog.getSimilarTitles(cleanParams.id, limit) };
         }
         return { status: 200, data: catalog.getAllTitles() };
       }
 
       case 'search': {
         const search = SearchService.getInstance();
+        const q = String(cleanParams.q || '').slice(0, 100);
+        const limit = Math.min(Math.max(1, parseInt(cleanParams.limit || '10', 10)), 50);
         if (action === 'autocomplete') {
-          return { status: 200, data: search.searchAutocomplete(params.q, params.limit) };
+          return { status: 200, data: search.searchAutocomplete(q, limit) };
         }
-        return { status: 200, data: search.searchFullText(params.q, params.limit) };
+        return { status: 200, data: search.searchFullText(q, limit) };
       }
 
       case 'ratings': {
         const rating = RatingService.getInstance();
         if (action === 'top') {
-          return { status: 200, data: rating.getTopKBest(params.limit) };
+          const limit = Math.min(Math.max(1, parseInt(cleanParams.limit || '10', 10)), 250);
+          return { status: 200, data: rating.getTopKBest(limit) };
         }
         return { status: 200, data: rating.getStats() };
       }
 
       case 'availability': {
         const avail = AvailabilityService.getInstance();
-        const matches = avail.queryByFilters(params);
+        const matches = avail.queryByFilters(cleanParams);
         return { status: 200, data: { matchingTitleIds: Array.from(matches) } };
       }
 
       case 'user': {
         const userSvc = UserService.getInstance();
         if (action === 'register') {
-          const res = userSvc.register(params.email, params.password, params.displayName);
+          if (!cleanParams.email || !cleanParams.password) {
+            return { status: 400, error: 'Email and password are required' };
+          }
+          const res = userSvc.register(cleanParams.email, cleanParams.password, cleanParams.displayName || '');
           return res.success ? { status: 201, data: res.session } : { status: 400, error: res.error };
         }
         if (action === 'login') {
-          const res = userSvc.login(params.email, params.password);
+          if (!cleanParams.email || !cleanParams.password) {
+            return { status: 400, error: 'Email and password are required' };
+          }
+          const res = userSvc.login(cleanParams.email, cleanParams.password);
           return res.success ? { status: 200, data: res.session } : { status: 401, error: res.error };
         }
         if (action === 'google') {
-          const session = userSvc.loginWithGoogle(params.email, params.displayName, params.avatarUrl);
-          return { status: 200, data: session };
+          if (!cleanParams.idToken) {
+            return { status: 400, error: 'Google ID Token is required for OAuth verification' };
+          }
+          const res = await userSvc.verifyAndLoginWithGoogle(cleanParams.idToken);
+          return res.success ? { status: 200, data: res.session } : { status: 401, error: res.error };
         }
         if (action === 'me') {
-          const session = userSvc.validateSession(params.token);
+          if (!cleanParams.token) {
+            return { status: 401, error: 'Token is required' };
+          }
+          const session = userSvc.validateSession(cleanParams.token);
           return session ? { status: 200, data: session } : { status: 401, error: 'Unauthorized' };
         }
         return { status: 400, error: 'Invalid user action' };

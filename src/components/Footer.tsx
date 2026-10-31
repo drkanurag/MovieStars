@@ -69,7 +69,7 @@ export function Footer() {
                 Where to watch streaming availability data powered by <strong>JustWatch</strong>.
               </p>
               <p>
-                IMDb ratings and vote counts synced via licensed OMDb API services.
+                Worldwide title metadata federated via <strong>Stremio Cinemeta</strong> and <strong>TVMaze</strong> open catalog services.
               </p>
             </div>
           </div>

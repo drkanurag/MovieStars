@@ -8,6 +8,8 @@ import { SetIntersectionEngine } from '../src/server/ds/SetIntersection';
 import { MovieGraph } from '../src/server/ds/MovieGraph';
 import { InvertedIndex } from '../src/server/ds/InvertedIndex';
 import { getDaysUntil } from '../src/lib/utils';
+import { AvailabilityService } from '../src/server/services/AvailabilityService';
+import { RatingService } from '../src/server/services/RatingService';
 
 console.log('🧪 Running MovieStars System Test Suite (Section 11 Testing Checklist)...');
 
@@ -114,6 +116,71 @@ it('Inverted Index: Tokenizes and ranks BM25 relevance matches', () => {
   assert(results.some((r) => r.titleId === 'm2'));
 });
 
+it('Inverted Index: Idempotent document update replaces previous terms and does not accumulate duplicate totalDocs', () => {
+  const index = new InvertedIndex();
+  index.addDocument('doc1', { title: 'Dune Part One', overview: 'Desert planet Arrakis spice mining' });
+  assert.strictEqual(index.getTotalDocs(), 1);
+
+  // Update doc1 with new title and overview
+  index.addDocument('doc1', { title: 'Dune Part Two', overview: 'Paul Atreides unites with the Fremen' });
+  assert.strictEqual(index.getTotalDocs(), 1, 'Total docs must remain 1 after updating existing doc');
+
+  // Old term 'mining' should no longer match doc1
+  const miningResults = index.search('mining');
+  assert.strictEqual(miningResults.length, 0, 'Old removed terms should not match updated document');
+
+  // New term 'fremen' must match doc1
+  const fremenResults = index.search('fremen');
+  assert.strictEqual(fremenResults.length, 1);
+  assert.strictEqual(fremenResults[0].titleId, 'doc1');
+});
+
+it('Inverted Index: Multi-match prefix search returns all matching terms without early break', () => {
+  const index = new InvertedIndex();
+  index.addDocument('m1', { title: 'Dark Shadows', overview: 'Vampire returns to his mansion' });
+  index.addDocument('m2', { title: 'Darkness Falls', overview: 'Tooth fairy terrorizes a town' });
+  index.addDocument('m3', { title: 'Daring Rescue', overview: 'Mission into hostile territory' });
+
+  // Prefix 'dar' should match all 3 titles: 'Dark', 'Darkness', 'Daring'
+  const results = index.search('dar');
+  assert.strictEqual(results.length, 3, `Expected all 3 prefix matches for 'dar', got ${results.length}`);
+  const matchedIds = new Set(results.map((r) => r.titleId));
+  assert(matchedIds.has('m1') && matchedIds.has('m2') && matchedIds.has('m3'));
+});
+
+it('Availability Service: Unknown filter values return empty set rather than ignoring', () => {
+  const avail = AvailabilityService.getInstance();
+  // Unknown genre
+  const genreResults = avail.queryByFilters({ genre: 'non_existent_mythological_western_12345' });
+  assert.strictEqual(genreResults.size, 0, 'Unknown genre must return 0 results');
+
+  // Unknown type
+  const typeResults = avail.queryByFilters({ type: 'hologram_experience' });
+  assert.strictEqual(typeResults.size, 0, 'Unknown type must return 0 results');
+});
+
+it('Rating Service: Repeat ratings replace previous user rating without incrementing votes', () => {
+  const ratingService = RatingService.getInstance();
+  const testTitleId = 'the-godfather';
+  const testUserId = 'test_user_unique_99';
+
+  const initialRatings = ratingService.getTitleRatings(testTitleId);
+  const initialVotes = initialRatings?.userCommunity?.votes || 0;
+
+  // First rating by test_user_unique_99
+  const first = ratingService.submitUserRating(testTitleId, testUserId, 5.0);
+  assert.strictEqual(first?.userCommunity?.votes, initialVotes + 1, 'First rating should increment votes by 1');
+
+  // Second rating update by SAME test_user_unique_99 to 2.0 stars
+  const second = ratingService.submitUserRating(testTitleId, testUserId, 2.0);
+  assert.strictEqual(
+    second?.userCommunity?.votes,
+    initialVotes + 1,
+    'Subsequent rating by same user must REPLACE rating, not increment votes'
+  );
+  assert.strictEqual(ratingService.getUserRating(testTitleId, testUserId), 2.0);
+});
+
 // 3. SECTION 11: UPCOMING TO RELEASED DAY TRANSITION TEST
 it('Lifecycle: Correctly detects release date transitions', () => {
   const future = new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0];
@@ -130,4 +197,3 @@ it('Lifecycle: Correctly detects release date transitions', () => {
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
-

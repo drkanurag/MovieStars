@@ -150,7 +150,8 @@ function SearchPageContent() {
       }
 
       // 5. Min Rating
-      if (minRating > 0 && movie.ratings.imdb.score < minRating) {
+      const effectiveScore = movie.ratings.imdb?.score ?? movie.ratings.tmdb?.score ?? movie.ratings.bayesianScore;
+      if (minRating > 0 && effectiveScore < minRating) {
         return false;
       }
 

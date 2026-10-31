@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { MovieImage } from '@/components/MovieImage';
 import Link from 'next/link';
@@ -169,40 +169,153 @@ export default function TitleDetailPage() {
     );
   }
 
+  // Fetch persistent user reviews and rating from server
+  useEffect(() => {
+    if (!movie?.id) return;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('moviestars_auth_token') : null;
+
+    fetch(`/api/user/reviews?titleId=${encodeURIComponent(movie.id)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.reviews && Array.isArray(data.reviews) && data.reviews.length > 0) {
+          setReviewsList(data.reviews);
+        }
+      })
+      .catch(() => {});
+
+    if (token) {
+      fetch(`/api/user/ratings?titleId=${encodeURIComponent(movie.id)}&token=${encodeURIComponent(token)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.userRating !== null && data?.userRating !== undefined) {
+            setUserStars(data.userRating);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [movie?.id]);
+
   const handleAction = (type: 'watchlist' | 'favorites' | 'watched') => {
     const active = toggleListStatus(movie.id, type, movie.title);
     if (type === 'watchlist') setInWatchlist(active);
     if (type === 'favorites') setInFavorites(active);
     if (type === 'watched') setInWatched(active);
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('moviestars_auth_token') : null;
+    if (token) {
+      fetch('/api/user/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          titleId: movie.id,
+          listType: type,
+          action: active ? 'add' : 'remove',
+        }),
+      }).catch(() => {});
+    }
   };
 
-  const handleRate = (stars: number) => {
+  const handleRate = async (stars: number) => {
     setUserStars(stars);
     setUserStarRating(movie.id, stars);
     setRatingToast(true);
     setRatingModalOpen(false);
     setTimeout(() => setRatingToast(false), 3000);
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('moviestars_auth_token') : null;
+    try {
+      await fetch('/api/user/ratings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titleId: movie.id, stars, token }),
+      });
+    } catch {
+      // Graceful fallback to client storage
+    }
   };
 
-  const handleAddReview = (e: React.FormEvent) => {
+  const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewText.trim()) return;
 
-    setReviewsList([
+    const token = typeof window !== 'undefined' ? localStorage.getItem('moviestars_auth_token') : null;
+    const userJson = typeof window !== 'undefined' ? localStorage.getItem('moviestars_auth_user') : null;
+    let authorName = 'MovieStars Member';
+    if (userJson) {
+      try {
+        authorName = JSON.parse(userJson).displayName || authorName;
+      } catch {}
+    }
+
+    try {
+      const res = await fetch('/api/user/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titleId: movie.id,
+          content: reviewText.trim(),
+          stars: userStars || 5.0,
+          token,
+          author: authorName,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.review) {
+        setReviewsList((prev) => [data.review, ...prev]);
+        setReviewText('');
+        return;
+      }
+    } catch {}
+
+    setReviewsList((prev) => [
       {
-        author: 'You',
+        author: authorName,
         stars: userStars || 5,
         content: reviewText.trim(),
         date: 'Just now',
       },
-      ...reviewsList,
+      ...prev,
     ]);
     setReviewText('');
   };
 
-  const similarTitles = getTrendingTitles()
-    .filter((t) => t.id !== movie.id)
-    .slice(0, 4);
+  // Real Graph / Jaccard Genre & Cast Similarity Engine
+  const similarTitles = useMemo(() => {
+    if (!movie) return [];
+    const fullCatalog = getCatalog();
+    const movieGenres = new Set((movie.genres || []).map((g) => g.name.toLowerCase()));
+    const movieCast = new Set((movie.cast || []).map((c) => c.name.toLowerCase()));
+
+    const scored = fullCatalog
+      .filter((c) => c.id !== movie.id)
+      .map((c) => {
+        const cGenres = new Set((c.genres || []).map((g) => g.name.toLowerCase()));
+        const cCast = new Set((c.cast || []).map((a) => a.name.toLowerCase()));
+
+        // Jaccard similarity across genres: |A ∩ B| / |A ∪ B|
+        let gIntersect = 0;
+        movieGenres.forEach((g) => {
+          if (cGenres.has(g)) gIntersect++;
+        });
+        const gUnion = movieGenres.size + cGenres.size - gIntersect;
+        const gSim = gUnion > 0 ? gIntersect / gUnion : 0;
+
+        // Jaccard similarity across cast
+        let aIntersect = 0;
+        movieCast.forEach((a) => {
+          if (cCast.has(a)) aIntersect++;
+        });
+        const aUnion = movieCast.size + cCast.size - aIntersect;
+        const aSim = aUnion > 0 ? aIntersect / aUnion : 0;
+
+        const totalSim = gSim * 0.7 + aSim * 0.3;
+        return { item: c, score: totalSim };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    return scored.slice(0, 4).map((s) => s.item);
+  }, [movie]);
 
   const bayesianStars = scoreToStars(movie.ratings.bayesianScore);
 
@@ -210,6 +323,10 @@ export default function TitleDetailPage() {
   const currentIndex = catalog.findIndex((t) => t.id === movie.id);
   const prevMovie = currentIndex > 0 ? catalog[currentIndex - 1] : catalog[catalog.length - 1];
   const nextMovie = currentIndex < catalog.length - 1 ? catalog[currentIndex + 1] : catalog[0];
+
+  function safeJsonLd(obj: any): string {
+    return JSON.stringify(obj).replace(/</g, '\\u003c');
+  }
 
   // Schema.org Movie / TVSeries Structured Data for Rich Google Snippets
   const movieSchema = {
@@ -220,21 +337,21 @@ export default function TitleDetailPage() {
     image: movie.posterPath,
     description: movie.overview,
     datePublished: movie.releaseDate,
-    genre: movie.genres.map((g) => g.name),
-    director: movie.directors.map((d) => ({
+    genre: (movie.genres || []).map((g) => g.name),
+    director: (movie.directors || []).map((d) => ({
       '@type': 'Person',
       name: d.name,
     })),
-    actor: movie.cast.map((c) => ({
+    actor: (movie.cast || []).map((c) => ({
       '@type': 'Person',
       name: c.name,
     })),
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: movie.ratings.imdb.score,
+      ratingValue: movie.ratings.imdb?.score || movie.ratings.tmdb?.score || movie.ratings.bayesianScore,
       bestRating: '10',
       worstRating: '1',
-      ratingCount: movie.ratings.imdb.votes,
+      ratingCount: movie.ratings.imdb?.votes || movie.ratings.tmdb?.votes || 100,
     },
   };
 
@@ -246,33 +363,33 @@ export default function TitleDetailPage() {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://moviestars.vercel.app',
+        item: 'https://movie-stars-kappa.vercel.app',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: movie.type === 'web_series' ? 'Web Series' : movie.type === 'tv' ? 'TV Shows' : 'Movies',
-        item: `https://moviestars.vercel.app/browse?type=${movie.type}`,
+        item: `https://movie-stars-kappa.vercel.app/browse?type=${movie.type}`,
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: movie.title,
-        item: `https://moviestars.vercel.app/title/${movie.id}`,
+        item: `https://movie-stars-kappa.vercel.app/title/${movie.id}`,
       },
     ],
   };
 
   return (
     <div className="space-y-8">
-      {/* Schema.org SEO Structured Data */}
+      {/* Schema.org SEO Structured Data with XSS-safe serialization */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(movieSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(movieSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbSchema) }}
       />
       {/* 1. Top Bar: Breadcrumbs & Next/Prev Navigator */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
@@ -572,7 +689,7 @@ export default function TitleDetailPage() {
             />
           </div>
           <p className="text-center text-xs text-zinc-400">
-            Hover over the stars to pick your score (0.5 to 5.0).
+            Hover or tap on the left or right of any star to select half or whole stars (0.5 to 5.0).
           </p>
         </div>
       )}
@@ -796,7 +913,7 @@ export default function TitleDetailPage() {
                 <div className="w-1.5 h-5 rounded-full bg-[#f5c518]" />
                 <h3 className="text-lg font-black text-white">User Reviews</h3>
               </div>
-              <span className="text-xs text-zinc-400">{reviewsList.length} verified reviews</span>
+              <span className="text-xs text-zinc-400">{reviewsList.length} community reviews</span>
             </div>
 
             {/* Submit Review Box */}
@@ -916,7 +1033,7 @@ export default function TitleDetailPage() {
                       {sim.title}
                     </div>
                     <div className="text-[11px] text-zinc-400 mt-0.5">
-                      {sim.releaseDate?.slice(0, 4)} • ★ {sim.ratings.imdb.score.toFixed(1)}
+                      {sim.releaseDate?.slice(0, 4)} • ★ {(sim.ratings.imdb?.score ?? sim.ratings.tmdb?.score ?? sim.ratings.bayesianScore).toFixed(1)}
                     </div>
                   </div>
                 </Link>

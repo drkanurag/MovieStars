@@ -250,7 +250,7 @@ export function Navbar() {
                             <span>•</span>
                             <span className="capitalize">{item.type.replace('_', ' ')}</span>
                             <span>•</span>
-                            <span className="text-[#f5c518] font-bold">★ {item.ratings.imdb.score.toFixed(1)}</span>
+                            <span className="text-[#f5c518] font-bold">★ {(item.ratings.imdb?.score || item.ratings.tmdb?.score || item.ratings.bayesianScore).toFixed(1)}</span>
                           </div>
                         </div>
                       </div>

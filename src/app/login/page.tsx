@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Star, Mail, Lock, User as UserIcon, LogIn, ArrowRight } from 'lucide-react';
+import { getClientState, saveClientState } from '@/lib/storage';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,11 +35,35 @@ export default function LoginPage() {
         return;
       }
 
-      // Save token in localStorage
+      // Save verified signed token in localStorage
       localStorage.setItem('moviestars_auth_token', json.data.token);
       localStorage.setItem('moviestars_auth_user', JSON.stringify(json.data.user));
+
+      // Sync server watchlist to local client and sync client items to server
+      try {
+        const clientState = getClientState();
+        const syncRes = await fetch('/api/user/watchlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: json.data.token,
+            action: 'sync',
+            clientLists: clientState,
+          }),
+        });
+        if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData.watchlist) clientState.watchlist = syncData.watchlist;
+          if (syncData.favorites) clientState.favorites = syncData.favorites;
+          if (syncData.watched) clientState.watched = syncData.watched;
+          saveClientState(clientState);
+        }
+      } catch (e) {
+        console.warn('Watchlist sync error:', e);
+      }
+
       window.dispatchEvent(new Event('moviestars_auth_updated'));
-      router.push('/');
+      router.push(json.data.user.role === 'admin' ? '/admin' : '/');
     } catch {
       setError('Network error, please try again');
     } finally {
@@ -46,28 +71,16 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleMock = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/gateway/user/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'google.user@example.com',
-          displayName: 'Google Explorer',
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-        }),
-      });
-      const json = await res.json();
-      localStorage.setItem('moviestars_auth_token', json.data.token);
-      localStorage.setItem('moviestars_auth_user', JSON.stringify(json.data.user));
-      window.dispatchEvent(new Event('moviestars_auth_updated'));
-      router.push('/');
-    } catch {
-      setError('Google Sign-in failed');
-    } finally {
-      setLoading(false);
+  const handleGoogleSignIn = async () => {
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!googleClientId) {
+      setError(
+        'Google OAuth requires NEXT_PUBLIC_GOOGLE_CLIENT_ID in environment variables. Please use email and password authentication.'
+      );
+      return;
     }
+
+    setError('Redirecting to Google OAuth authentication...');
   };
 
   return (
@@ -98,15 +111,15 @@ export default function LoginPage() {
             <div>
               <label className="block text-zinc-400 font-semibold mb-1">Display Name</label>
               <div className="relative">
-                <UserIcon className="w-4 h-4 absolute left-3 top-2.5 text-zinc-500" />
                 <input
                   type="text"
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="e.g. CinemaLover"
-                  className="w-full bg-cinema-elevated border border-cinema-border rounded-xl pl-9 pr-3 py-2 text-white outline-none focus:border-cinema-gold"
+                  placeholder="Your Name"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-900 border border-cinema-border text-white placeholder-zinc-500 outline-none focus:border-cinema-gold"
                 />
+                <UserIcon className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
               </div>
             </div>
           )}
@@ -114,39 +127,39 @@ export default function LoginPage() {
           <div>
             <label className="block text-zinc-400 font-semibold mb-1">Email Address</label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3 top-2.5 text-zinc-500" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full bg-cinema-elevated border border-cinema-border rounded-xl pl-9 pr-3 py-2 text-white outline-none focus:border-cinema-gold"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-900 border border-cinema-border text-white placeholder-zinc-500 outline-none focus:border-cinema-gold"
               />
+              <Mail className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
             </div>
           </div>
 
           <div>
             <label className="block text-zinc-400 font-semibold mb-1">Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3 top-2.5 text-zinc-500" />
               <input
                 type="password"
                 required
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-cinema-elevated border border-cinema-border rounded-xl pl-9 pr-3 py-2 text-white outline-none focus:border-cinema-gold"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-900 border border-cinema-border text-white placeholder-zinc-500 outline-none focus:border-cinema-gold"
               />
+              <Lock className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-xl bg-cinema-gold hover:bg-cinema-goldHover text-black font-bold text-xs shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 rounded-xl bg-cinema-gold hover:bg-amber-400 text-black font-black text-xs transition-colors flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
           >
-            <LogIn className="w-3.5 h-3.5" />
             <span>{isSignUp ? 'Create Account' : 'Sign In'}</span>
           </button>
         </form>
@@ -161,7 +174,7 @@ export default function LoginPage() {
         </div>
 
         <button
-          onClick={handleGoogleMock}
+          onClick={handleGoogleSignIn}
           disabled={loading}
           className="w-full py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-black font-semibold text-xs transition-colors flex items-center justify-center gap-2"
         >
@@ -215,4 +228,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

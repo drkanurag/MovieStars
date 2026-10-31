@@ -89,11 +89,54 @@ function BrowseContent() {
   const displayItems = useMemo(() => {
     if (searchQuery.trim().length > 1 && worldwideResults.length > 0) {
       const existingIds = new Set(items.map((i) => i.id));
-      const newItems = worldwideResults.filter((w) => !existingIds.has(w.id));
-      return [...items, ...newItems];
+      
+      // Apply all active browse filters consistently to worldwide federated items
+      const filteredWorldwide = worldwideResults.filter((w) => {
+        if (existingIds.has(w.id)) return false;
+
+        // Type filter
+        if (type !== 'all' && w.type !== type) return false;
+
+        // Genre filter
+        if (genre !== 'all') {
+          const hasGenre = w.genres?.some((g) => g.name.toLowerCase() === genre.toLowerCase());
+          if (!hasGenre) return false;
+        }
+
+        // Language filter
+        if (language !== 'all' && w.originalLanguage.toLowerCase() !== language.toLowerCase()) {
+          return false;
+        }
+
+        // Year filter
+        if (year !== 'all' && !w.releaseDate?.startsWith(year)) {
+          return false;
+        }
+
+        // Minimum Rating filter
+        if (ratingMin > 0) {
+          const score = w.ratings.bayesianScore || w.ratings.imdb?.score || w.ratings.tmdb?.score || 0;
+          if (score < ratingMin) return false;
+        }
+
+        // Streaming Provider filter
+        if (provider !== 'all') {
+          const regionAvail = w.availability[country] || w.availability['IN'];
+          if (!regionAvail) return false;
+          const allOffers = [...regionAvail.stream, ...regionAvail.rent, ...regionAvail.buy];
+          const hasProvider = allOffers.some((o) =>
+            o.provider.name.toLowerCase().includes(provider.toLowerCase())
+          );
+          if (!hasProvider) return false;
+        }
+
+        return true;
+      });
+
+      return [...items, ...filteredWorldwide];
     }
     return items;
-  }, [items, searchQuery, worldwideResults]);
+  }, [items, searchQuery, worldwideResults, type, genre, language, year, ratingMin, provider, country]);
 
   const handleReset = () => {
     setType('all');

@@ -49,6 +49,22 @@ export function WhereToWatchWidget({
     buy: buyOffers,
   }[activeTab];
 
+  const getProviderDirectUrl = (providerName: string, title: string, directUrl?: string) => {
+    if (directUrl && directUrl.startsWith('http') && !directUrl.includes('google.com')) {
+      return directUrl;
+    }
+    const n = providerName.toLowerCase();
+    const q = encodeURIComponent(title);
+    if (n.includes('netflix')) return `https://www.netflix.com/search?q=${q}`;
+    if (n.includes('prime')) return `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${q}`;
+    if (n.includes('hotstar') || n.includes('disney')) return `https://www.hotstar.com/in/explore?search_query=${q}`;
+    if (n.includes('jio')) return `https://www.jiocinema.com/search/${q}`;
+    if (n.includes('apple')) return `https://tv.apple.com/search?term=${q}`;
+    if (n.includes('zee')) return `https://www.zee5.com/search?q=${q}`;
+    if (n.includes('sony')) return `https://www.sonyliv.com/search/${q}`;
+    return `https://www.justwatch.com/in/search?q=${q}`;
+  };
+
   const getPlatformStyle = (name: string) => {
     const n = name.toLowerCase();
     if (n.includes('netflix')) return 'border-red-500/40 hover:border-red-500 hover:shadow-red-500/20';
@@ -147,7 +163,7 @@ export function WhereToWatchWidget({
             {currentOffers.map((offer, idx) => (
               <a
                 key={idx}
-                href={offer.streamUrl || `https://www.google.com/search?q=watch+${encodeURIComponent(titleName)}+on+${encodeURIComponent(offer.provider.name)}`}
+                href={getProviderDirectUrl(offer.provider.name, titleName, offer.streamUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTitleById, getCatalog } from '@/lib/api/movieStore';
 import { fetchFromTmdb, isTmdbConfigured } from '@/lib/api/tmdb';
 
-// Simple in-memory cache to prevent redundant YouTube lookups
+// In-memory cache for resolved trailer metadata
 const trailerCache = new Map<string, { key: string; videoTitle?: string }>();
 
 export async function GET(req: NextRequest) {
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // 2. Check local catalog by ID or title
+  // 2. Check local verified catalog by ID or title
   if (id) {
     const local = getTitleById(id);
     if (local?.trailerYoutubeKey) {
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 3. Check TMDB if configured
+  // 3. Official TMDB Video Metadata Lookup
   if (isTmdbConfigured() && title) {
     try {
       const searchRes = await fetchFromTmdb<{ results: any[] }>('/search/multi', {
@@ -87,83 +87,51 @@ export async function GET(req: NextRequest) {
             videoTitle: trailer.name || `${title} Official Trailer`,
             watchUrl: `https://www.youtube.com/watch?v=${trailer.key}`,
             searchUrl,
-            source: 'tmdb_api',
+            source: 'tmdb_official_videos_api',
           });
         }
       }
     } catch (e) {
-      console.warn('TMDB trailer search error:', e);
+      console.warn('TMDB official trailer lookup error:', e);
     }
   }
 
-  // 4. Dynamic YouTube Search Fallback
-  if (title) {
+  // 4. Official YouTube Data API v3 (if YOUTUBE_API_KEY is configured)
+  const ytApiKey = process.env.YOUTUBE_API_KEY;
+  if (ytApiKey && title) {
     try {
-      const searchQuery = `${title} ${year} official trailer`.trim();
-      const ytRes = await fetch(
-        `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`,
-        {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-          },
-          next: { revalidate: 86400 }, // Cache 24h
-        }
+      const query = `${title} ${year} official trailer`.trim();
+      const ytApiRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(
+          query
+        )}&type=video&maxResults=1&key=${encodeURIComponent(ytApiKey)}`
       );
-
-      if (ytRes.ok) {
-        const html = await ytRes.text();
-        const matches = [...html.matchAll(/\/watch\?v=([a-zA-Z0-9_-]{11})/g)].map((m) => m[1]);
-        const unique = [...new Set(matches)];
-
-        // Validate top candidate with oEmbed
-        for (const candidateKey of unique.slice(0, 3)) {
-          try {
-            const check = await fetch(
-              `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${candidateKey}&format=json`,
-              { signal: AbortSignal.timeout(3000) }
-            );
-            if (check.ok) {
-              const data = (await check.json()) as { title?: string };
-              trailerCache.set(queryKey, { key: candidateKey, videoTitle: data.title });
-              return NextResponse.json({
-                youtubeKey: candidateKey,
-                videoTitle: data.title || `${title} Official Trailer`,
-                watchUrl: `https://www.youtube.com/watch?v=${candidateKey}`,
-                searchUrl,
-                source: 'youtube_search_discovery',
-              });
-            }
-          } catch {
-            // continue to next candidate
-          }
-        }
-
-        // If oEmbed check timed out but we have a candidate, use the first key
-        if (unique.length > 0) {
-          const firstKey = unique[0];
-          trailerCache.set(queryKey, { key: firstKey });
+      if (ytApiRes.ok) {
+        const data = await ytApiRes.json();
+        const item = data.items?.[0];
+        const videoId = item?.id?.videoId;
+        if (videoId) {
+          trailerCache.set(queryKey, { key: videoId, videoTitle: item.snippet?.title });
           return NextResponse.json({
-            youtubeKey: firstKey,
-            videoTitle: `${title} Official Trailer`,
-            watchUrl: `https://www.youtube.com/watch?v=${firstKey}`,
+            youtubeKey: videoId,
+            videoTitle: item.snippet?.title || `${title} Official Trailer`,
+            watchUrl: `https://www.youtube.com/watch?v=${videoId}`,
             searchUrl,
-            source: 'youtube_search_fast',
+            source: 'youtube_official_data_api',
           });
         }
       }
     } catch (e) {
-      console.warn('YouTube search fallback error:', e);
+      console.warn('YouTube Data API v3 lookup error:', e);
     }
   }
 
-  // 5. If all else fails, return the direct search link
+  // 5. Official structured direct destination (no brittle HTML web scraping)
   return NextResponse.json({
     youtubeKey: null,
     searchUrl,
     watchUrl: searchUrl,
-    message: 'Could not resolve exact embed key; open direct YouTube search.',
+    message: 'Trailer available via official YouTube search.',
+    source: 'official_search_redirect',
   });
 }
-

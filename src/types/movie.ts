@@ -39,11 +39,11 @@ export interface RegionAvailability {
 }
 
 export interface RatingBreakdown {
-  imdb: {
+  imdb?: {
     score: number; // e.g., 8.9 (out of 10)
     votes: number;
   };
-  tmdb: {
+  tmdb?: {
     score: number; // e.g., 8.4 (out of 10)
     votes: number;
   };

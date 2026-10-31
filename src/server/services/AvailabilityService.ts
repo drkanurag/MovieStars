@@ -6,7 +6,8 @@ export class AvailabilityService {
   private static instance: AvailabilityService;
   // Inverted indexes for fast set intersections:
   private genreIndex: Map<string, Set<string>>;
-  private platformIndex: Map<string, Set<string>>;
+  // country -> platform -> Set<titleId>
+  private platformIndex: Map<string, Map<string, Set<string>>>;
   private languageIndex: Map<string, Set<string>>;
   private typeIndex: Map<string, Set<string>>;
 
@@ -27,67 +28,111 @@ export class AvailabilityService {
 
   private buildFilterIndexes(): void {
     for (const movie of INITIAL_MOVIES) {
-      // Index Type
-      if (!this.typeIndex.has(movie.type)) this.typeIndex.set(movie.type, new Set());
-      this.typeIndex.get(movie.type)!.add(movie.id);
+      this.indexTitle(movie);
+    }
+  }
 
-      // Index Language
-      const lang = movie.originalLanguage.toLowerCase();
-      if (!this.languageIndex.has(lang)) this.languageIndex.set(lang, new Set());
-      this.languageIndex.get(lang)!.add(movie.id);
+  public indexTitle(movie: TitleItem): void {
+    // Index Type
+    if (!this.typeIndex.has(movie.type)) this.typeIndex.set(movie.type, new Set());
+    this.typeIndex.get(movie.type)!.add(movie.id);
 
-      // Index Genres
-      for (const g of movie.genres) {
-        const gn = g.name.toLowerCase();
-        if (!this.genreIndex.has(gn)) this.genreIndex.set(gn, new Set());
-        this.genreIndex.get(gn)!.add(movie.id);
+    // Index Language
+    const lang = movie.originalLanguage.toLowerCase();
+    if (!this.languageIndex.has(lang)) this.languageIndex.set(lang, new Set());
+    this.languageIndex.get(lang)!.add(movie.id);
+
+    // Index Genres
+    for (const g of movie.genres) {
+      const gn = g.name.toLowerCase();
+      if (!this.genreIndex.has(gn)) this.genreIndex.set(gn, new Set());
+      this.genreIndex.get(gn)!.add(movie.id);
+    }
+
+    // Index Platforms by Country Region
+    for (const [countryCode, regionData] of Object.entries(movie.availability)) {
+      const code = countryCode.toUpperCase();
+      if (!this.platformIndex.has(code)) {
+        this.platformIndex.set(code, new Map());
       }
+      const countryMap = this.platformIndex.get(code)!;
 
-      // Index Platforms for India (IN)
-      const inData = movie.availability['IN'];
-      if (inData) {
-        const allOffers = [...inData.stream, ...inData.rent, ...inData.buy];
-        for (const offer of allOffers) {
-          const prov = offer.provider.name.toLowerCase();
-          if (!this.platformIndex.has(prov)) this.platformIndex.set(prov, new Set());
-          this.platformIndex.get(prov)!.add(movie.id);
-        }
+      const allOffers = [...regionData.stream, ...regionData.rent, ...regionData.buy];
+      for (const offer of allOffers) {
+        const prov = offer.provider.name.toLowerCase();
+        if (!countryMap.has(prov)) countryMap.set(prov, new Set());
+        countryMap.get(prov)!.add(movie.id);
       }
     }
   }
 
   /**
-   * Fast multi-filter query using Set Intersection:
-   * Returns Set<titleId> matching genre ∩ platform ∩ language ∩ type
+   * Multi-filter query using Set Intersection:
+   * Returns Set<titleId> matching genre ∩ platform ∩ language ∩ type ∩ country.
+   * Unknown filter values return empty sets (zero matches) instead of being silently ignored.
    */
   public queryByFilters(filters: {
     type?: string;
     genre?: string;
     language?: string;
     platform?: string;
+    country?: string;
   }): Set<string> {
     const candidateSets: Set<string>[] = [];
+    const country = (filters.country || 'IN').toUpperCase();
 
-    if (filters.type && filters.type !== 'all' && this.typeIndex.has(filters.type)) {
-      candidateSets.push(this.typeIndex.get(filters.type)!);
+    // 1. Type Filter
+    if (filters.type && filters.type !== 'all') {
+      const targetType = filters.type.toLowerCase();
+      if (this.typeIndex.has(targetType)) {
+        candidateSets.push(this.typeIndex.get(targetType)!);
+      } else {
+        // Unknown filter type: explicitly returns 0 matches
+        return new Set();
+      }
     }
-    if (filters.genre && filters.genre !== 'all' && this.genreIndex.has(filters.genre.toLowerCase())) {
-      candidateSets.push(this.genreIndex.get(filters.genre.toLowerCase())!);
+
+    // 2. Genre Filter
+    if (filters.genre && filters.genre !== 'all') {
+      const targetGenre = filters.genre.toLowerCase();
+      if (this.genreIndex.has(targetGenre)) {
+        candidateSets.push(this.genreIndex.get(targetGenre)!);
+      } else {
+        // Unknown genre: returns 0 matches
+        return new Set();
+      }
     }
-    if (filters.language && filters.language !== 'all' && this.languageIndex.has(filters.language.toLowerCase())) {
-      candidateSets.push(this.languageIndex.get(filters.language.toLowerCase())!);
+
+    // 3. Language Filter
+    if (filters.language && filters.language !== 'all') {
+      const targetLang = filters.language.toLowerCase();
+      if (this.languageIndex.has(targetLang)) {
+        candidateSets.push(this.languageIndex.get(targetLang)!);
+      } else {
+        // Unknown language: returns 0 matches
+        return new Set();
+      }
     }
+
+    // 4. Platform & Region Filter
     if (filters.platform && filters.platform !== 'all') {
-      const matchKey = Array.from(this.platformIndex.keys()).find((k) =>
-        k.includes(filters.platform!.toLowerCase())
-      );
+      const targetProv = filters.platform.toLowerCase();
+      const countryMap = this.platformIndex.get(country) || this.platformIndex.get('IN');
+      if (!countryMap) {
+        return new Set();
+      }
+
+      const matchKey = Array.from(countryMap.keys()).find((k) => k.includes(targetProv));
       if (matchKey) {
-        candidateSets.push(this.platformIndex.get(matchKey)!);
+        candidateSets.push(countryMap.get(matchKey)!);
+      } else {
+        // Unknown platform: returns 0 matches
+        return new Set();
       }
     }
 
     if (candidateSets.length === 0) {
-      // No strict filters applied, return all titles
+      // No filters applied, return all titles
       return new Set(INITIAL_MOVIES.map((m) => m.id));
     }
 
@@ -96,10 +141,10 @@ export class AvailabilityService {
 
   public getStats() {
     return {
-      indexedPlatforms: this.platformIndex.size,
+      indexedCountries: this.platformIndex.size,
       indexedGenres: this.genreIndex.size,
       indexedLanguages: this.languageIndex.size,
+      indexedTypes: this.typeIndex.size,
     };
   }
 }
-

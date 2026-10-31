@@ -21,7 +21,9 @@ export function RatingBadge({
 }: RatingBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const bayesianStars = scoreToStars(ratings.bayesianScore);
-  const explanation = explainBayesianRank(ratings.imdb.votes, ratings.imdb.score);
+  const imdbVotes = ratings.imdb?.votes ?? 0;
+  const imdbScore = ratings.imdb?.score ?? ratings.bayesianScore;
+  const explanation = explainBayesianRank(imdbVotes, imdbScore);
 
   return (
     <div className={cn('relative inline-flex flex-wrap items-center gap-2.5', className)}>
@@ -61,16 +63,20 @@ export function RatingBadge({
       {showDetails && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {/* IMDb badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f5c518] text-black font-black shadow-sm" title="IMDb Rating">
-            <span className="tracking-tighter">IMDb</span>
-            <span className="font-extrabold">{ratings.imdb.score.toFixed(1)}</span>
-          </div>
+          {ratings.imdb && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f5c518] text-black font-black shadow-sm" title="IMDb Rating">
+              <span className="tracking-tighter">IMDb</span>
+              <span className="font-extrabold">{ratings.imdb.score.toFixed(1)}</span>
+            </div>
+          )}
 
           {/* TMDB badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 font-bold shadow-sm" title="TMDB Community Score">
-            <span>TMDB</span>
-            <span>{ratings.tmdb.score.toFixed(1)}</span>
-          </div>
+          {ratings.tmdb && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 font-bold shadow-sm" title="TMDB Community Score">
+              <span>TMDB</span>
+              <span>{ratings.tmdb.score.toFixed(1)}</span>
+            </div>
+          )}
 
           {/* Community user rating */}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass-pill text-zinc-200 font-bold" title="MovieStars Community Rating">

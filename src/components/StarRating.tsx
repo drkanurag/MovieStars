@@ -37,10 +37,24 @@ export function StarRating({
 
   const currentScore = hoverScore !== null ? hoverScore : score;
 
-  const handleClick = (starNumber: number) => {
+  const calculateScoreFromMouseEvent = (e: React.MouseEvent<HTMLButtonElement>, starIndex: number): number => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const isLeftHalf = x < rect.width / 2;
+    return isLeftHalf ? starIndex + 0.5 : starIndex + 1.0;
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>, starIndex: number) => {
     if (!interactive) return;
+    const starValue = calculateScoreFromMouseEvent(e, starIndex);
     triggerStarConfetti();
-    if (onRate) onRate(starNumber);
+    if (onRate) onRate(starValue);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>, starIndex: number) => {
+    if (!interactive) return;
+    const starValue = calculateScoreFromMouseEvent(e, starIndex);
+    setHoverScore(starValue);
   };
 
   return (
@@ -57,14 +71,18 @@ export function StarRating({
               disabled={!interactive}
               whileHover={interactive ? { scale: 1.35, y: -2 } : undefined}
               whileTap={interactive ? { scale: 0.85 } : undefined}
-              onClick={() => handleClick(starNumber)}
-              onMouseEnter={() => interactive && setHoverScore(starNumber)}
+              onClick={(e) => handleClick(e, i)}
+              onMouseMove={(e) => handleMouseMove(e, i)}
               onMouseLeave={() => interactive && setHoverScore(null)}
               className={cn(
                 'relative p-0.5 transition-colors',
                 interactive && 'cursor-pointer'
               )}
-              title={interactive ? `Rate ${starNumber} / ${maxStars} stars` : `${score} out of ${maxStars} stars`}
+              title={
+                interactive
+                  ? `Rate ${hoverScore ? `${hoverScore} / ` : ''}${maxStars} stars (supports 0.5 half-stars)`
+                  : `${score.toFixed(1)} out of ${maxStars} stars`
+              }
             >
               {/* Background empty star */}
               <Star className={cn(starSize, 'text-zinc-700 transition-colors')} />
@@ -85,7 +103,7 @@ export function StarRating({
 
       {showValue && (
         <span className="font-black text-cinema-gold text-sm tracking-tight drop-shadow-sm">
-          {score.toFixed(1)}
+          {currentScore.toFixed(1)}
           <span className="text-zinc-500 font-normal text-xs">/5</span>
         </span>
       )}

@@ -16,7 +16,7 @@ export async function GET(
   });
 
   const gateway = ApiGateway.getInstance();
-  const result = gateway.handleRequest(service, action, queryParams);
+  const result = await gateway.handleRequest(service, action, queryParams);
 
   return NextResponse.json(result, { status: result.status });
 }
@@ -37,7 +37,7 @@ export async function POST(
   }
 
   const gateway = ApiGateway.getInstance();
-  const result = gateway.handleRequest(service, action, body);
+  const result = await gateway.handleRequest(service, action, body);
 
   return NextResponse.json(result, { status: result.status });
 }

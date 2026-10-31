@@ -1,0 +1,7 @@
+# MovieStars Robots File
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://movie-stars-kappa.vercel.app/sitemap.xml

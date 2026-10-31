@@ -46,8 +46,16 @@ export default function BestOfAllTimePage() {
 
   // Sort
   filtered.sort((a, b) => {
-    if (sortBy === 'imdb') return b.ratings.imdb.score - a.ratings.imdb.score;
-    if (sortBy === 'votes') return b.ratings.imdb.votes - a.ratings.imdb.votes;
+    if (sortBy === 'imdb') {
+      const aScore = a.ratings.imdb?.score ?? a.ratings.tmdb?.score ?? a.ratings.bayesianScore;
+      const bScore = b.ratings.imdb?.score ?? b.ratings.tmdb?.score ?? b.ratings.bayesianScore;
+      return bScore - aScore;
+    }
+    if (sortBy === 'votes') {
+      const aVotes = a.ratings.imdb?.votes ?? a.ratings.tmdb?.votes ?? 0;
+      const bVotes = b.ratings.imdb?.votes ?? b.ratings.tmdb?.votes ?? 0;
+      return bVotes - aVotes;
+    }
     if (sortBy === 'year') return (b.releaseDate || '').localeCompare(a.releaseDate || '');
     return b.ratings.bayesianScore - a.ratings.bayesianScore;
   });
@@ -278,7 +286,7 @@ export default function BestOfAllTimePage() {
                 <div className="text-right">
                   <div className="flex items-center gap-1.5 text-[#f5c518] font-black text-xl">
                     <Star className="w-5 h-5 fill-[#f5c518] text-[#f5c518]" />
-                    <span>{title.ratings.imdb.score.toFixed(1)}</span>
+                    <span>{(title.ratings.imdb?.score ?? title.ratings.tmdb?.score ?? title.ratings.bayesianScore).toFixed(1)}</span>
                     <span className="text-xs text-zinc-500 font-medium">/10</span>
                   </div>
                   <div className="text-[11px] text-zinc-400 font-medium">
@@ -287,7 +295,13 @@ export default function BestOfAllTimePage() {
                 </div>
 
                 <div className="text-right text-[11px] text-zinc-400 font-medium">
-                  Based on <strong>{formatVoteCount(title.ratings.imdb.votes)}</strong> IMDb votes
+                  {title.ratings.imdb ? (
+                    <>Based on <strong>{formatVoteCount(title.ratings.imdb.votes)}</strong> IMDb votes</>
+                  ) : title.ratings.tmdb ? (
+                    <>Based on <strong>{formatVoteCount(title.ratings.tmdb.votes)}</strong> TMDB votes</>
+                  ) : (
+                    <>Global Bayesian Score</>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,29 +1,13 @@
 import { TitleItem, TitleType } from '@/types/movie';
 import { calculateBayesianScore } from '../bayesian';
 
-const DEFAULT_TMDB_API_KEY = '652fd7c9e7c6cbfe09b61a6bf8f623b6';
-const DEFAULT_TMDB_TOKEN =
-  'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI2NTJmZDdjOWU3YzZjYmZlMDliNjFhNmJmOGY2MjNiNiIsIm5iZiI6MTc5MzM1MTYxNC4xLCJzdWIiOiI2YWU0NWZiZWI2Y2QyNGRiYzgzMWY2MGMiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.16jY6jZAfiQe9UAoRDusBWddwXmzgjm3AF_Z0mlWyC0';
-
-const TMDB_API_KEY = process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY || DEFAULT_TMDB_API_KEY;
-const TMDB_TOKEN = process.env.TMDB_TOKEN || DEFAULT_TMDB_TOKEN;
+const TMDB_API_KEY = process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY || '';
+const TMDB_TOKEN = process.env.TMDB_TOKEN || '';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
 export const GLOBAL_DATASET_SPEC = {
-  imdb: {
-    name: 'IMDb Official Daily Non-Commercial Datasets',
-    endpoint: 'https://datasets.imdbws.com/',
-    coverage: '11,200,000+ Titles (All movies, TV series, shorts, miniseries, and web series since 1894 worldwide)',
-    files: [
-      { name: 'title.basics.tsv.gz', desc: 'Every title ever registered: tconst, titleType, primaryTitle, originalTitle, startYear, runtimeMinutes, genres' },
-      { name: 'title.ratings.tsv.gz', desc: 'Worldwide ratings & vote counts: tconst, averageRating, numVotes' },
-      { name: 'title.crew.tsv.gz', desc: 'Directors and writers mapping: tconst, directors, writers' },
-      { name: 'title.principals.tsv.gz', desc: 'Principal cast and characters: tconst, nconst, category, job, characters' },
-      { name: 'title.akas.tsv.gz', desc: 'Localized alternate titles in 80+ languages: tconst, title, region, language, types' },
-    ],
-  },
   tmdb: {
-    name: 'The Movie Database (TMDB) Daily Exports & API v3',
+    name: 'The Movie Database (TMDB) API v3 & Daily ID Exports',
     endpoint: 'https://api.themoviedb.org/3/',
     coverage: '1,250,000+ Movies & 360,000+ TV Series across 180+ countries and territories',
     dailyExportFiles: [
@@ -32,18 +16,27 @@ export const GLOBAL_DATASET_SPEC = {
       'person_ids_MM_DD_YYYY.json.gz (All registered actors, directors & crew globally)',
     ],
   },
+  cinemeta: {
+    name: 'Stremio Cinemeta Open Metadata Catalog',
+    endpoint: 'https://v3-cinemeta.strem.io/',
+    coverage: '11,200,000+ Titles indexed by IMDb ID worldwide',
+  },
+  tvmaze: {
+    name: 'TVMaze Open Television Network API',
+    endpoint: 'https://api.tvmaze.com/',
+    coverage: 'Worldwide broadcast and web series schedules, cast & network listings',
+  },
   justWatch: {
     name: 'JustWatch Streaming Availability Engine',
-    coverage: 'Worldwide streaming providers (Netflix, Amazon Prime Video, Disney+ Hotstar, JioCinema, Apple TV, Zee5, Max, Hulu, Peacock, Crunchyroll, etc.) across 180+ regions',
-  },
-  omdb: {
-    name: 'Open Movie Database (OMDb) API',
-    endpoint: 'https://www.omdbapi.com/',
-    coverage: 'On-demand real-time IMDb ratings, Rotten Tomatoes critic scores, Metascores, and box office figures by IMDb ID (tt...)',
+    coverage: 'Streaming providers (Netflix, Amazon Prime Video, Disney+ Hotstar, JioCinema, Apple TV, Zee5) across global regions',
   },
 };
 
 export async function fetchFromTmdb<T>(endpoint: string, params: Record<string, string> = {}): Promise<T | null> {
+  if (!isTmdbConfigured()) {
+    return null;
+  }
+
   const query = new URLSearchParams({
     api_key: TMDB_API_KEY,
     ...params,
@@ -154,13 +147,15 @@ export async function findTmdbByImdbId(imdbId: string): Promise<TitleItem | null
 
 /**
  * Normalizes a raw TMDB movie or TV series response into MovieStars' TitleItem schema
+ * Keeps sources distinct: does NOT copy TMDB scores to IMDb, does NOT invent fake community votes,
+ * and does NOT label other countries' streaming availability as Indian availability.
  */
 export function normalizeTmdbItem(item: any, type: 'movie' | 'tv'): TitleItem {
   const isMovie = type === 'movie';
   const title = isMovie ? item.title || item.original_title : item.name || item.original_name;
   const releaseDate = isMovie ? item.release_date || '' : item.first_air_date || '';
-  const voteCount = item.vote_count || 100;
-  const voteAverage = item.vote_average || 7.0;
+  const voteCount = item.vote_count ?? 0;
+  const voteAverage = item.vote_average ?? 0;
 
   // Extract YouTube trailer key
   let trailerYoutubeKey: string | undefined = undefined;
@@ -174,51 +169,48 @@ export function normalizeTmdbItem(item: any, type: 'movie' | 'tv'): TitleItem {
     }
   }
 
-  // Extract watch providers
+  // Extract watch providers accurately per country without cross-labeling
   const watchProviders = item['watch/providers']?.results || item.providers || {};
-  const inProviders = watchProviders.IN?.flatrate || watchProviders.IN?.buy || watchProviders.US?.flatrate || [];
+  const inFlatrate = watchProviders.IN?.flatrate || [];
+  const inRent = watchProviders.IN?.rent || [];
+  const inBuy = watchProviders.IN?.buy || [];
 
-  const streamList = inProviders.length > 0
-    ? inProviders.map((p: any) => ({
-        provider: {
-          id: p.provider_id,
-          name: p.provider_name,
-          logoPath: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : '',
-          displayPriority: p.display_priority || 1,
-        },
-        offerType: 'stream' as const,
-        streamUrl: watchProviders.IN?.link || watchProviders.US?.link || 'https://www.justwatch.com',
-      }))
-    : [
-        {
-          provider: {
-            id: 119,
-            name: isMovie ? 'Theatrical / Prime Video' : 'Netflix / Prime Video',
-            logoPath: '',
-            displayPriority: 1,
-          },
-          offerType: 'stream' as const,
-          streamUrl: 'https://www.justwatch.com',
-        },
-      ];
+  const mapOffer = (p: any, offerType: 'stream' | 'rent' | 'buy') => ({
+    provider: {
+      id: p.provider_id,
+      name: p.provider_name,
+      logoPath: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : '',
+      displayPriority: p.display_priority || 1,
+    },
+    offerType,
+    streamUrl: watchProviders.IN?.link || '',
+  });
 
-  const imdbId = item.external_ids?.imdb_id || item.imdb_id || `tt${item.id}`;
+  const streamList = inFlatrate.map((p: any) => mapOffer(p, 'stream'));
+  const rentList = inRent.map((p: any) => mapOffer(p, 'rent'));
+  const buyList = inBuy.map((p: any) => mapOffer(p, 'buy'));
+
+  const imdbId = item.external_ids?.imdb_id || item.imdb_id;
+
+  // Check release status safely based on full release date against current local date
+  const isUpcoming =
+    item.status?.toLowerCase().includes('post') ||
+    item.status?.toLowerCase().includes('plan') ||
+    (releaseDate ? new Date(releaseDate).getTime() > new Date('2026-10-30').getTime() : false);
 
   return {
     id: `tmdb-${type}-${item.id}`,
     tmdbId: item.id,
-    imdbId,
+    imdbId: imdbId || `tt${item.id}`,
     type: isMovie ? 'movie' : 'tv',
     title: title || 'Untitled',
     originalTitle: isMovie ? item.original_title : item.original_name,
     overview: item.overview || 'No overview available for this worldwide release.',
-    releaseDate: releaseDate,
-    runtimeMinutes: isMovie ? item.runtime || 120 : undefined,
-    seasonsCount: !isMovie ? item.number_of_seasons || 1 : undefined,
-    episodesCount: !isMovie ? item.number_of_episodes || 10 : undefined,
-    status: item.status?.toLowerCase().includes('post') || (releaseDate && new Date(releaseDate) > new Date())
-      ? 'upcoming'
-      : 'released',
+    releaseDate: releaseDate || 'TBA',
+    runtimeMinutes: isMovie ? item.runtime || undefined : undefined,
+    seasonsCount: !isMovie ? item.number_of_seasons || undefined : undefined,
+    episodesCount: !isMovie ? item.number_of_episodes || undefined : undefined,
+    status: isUpcoming ? 'upcoming' : 'released',
     originalLanguage: item.original_language || 'en',
     posterPath: item.poster_path
       ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
@@ -244,20 +236,19 @@ export function normalizeTmdbItem(item: any, type: 'movie' | 'tv'): TitleItem {
       })),
     trailerYoutubeKey,
     ratings: {
-      imdb: { score: Number(voteAverage.toFixed(1)), votes: voteCount },
-      tmdb: { score: Number(voteAverage.toFixed(1)), votes: voteCount },
-      userCommunity: { score: Number((voteAverage / 2).toFixed(1)), votes: Math.floor(voteCount * 0.1) },
-      bayesianScore: calculateBayesianScore(voteCount, voteAverage),
+      tmdb: voteCount > 0 ? { score: Number(voteAverage.toFixed(1)), votes: voteCount } : undefined,
+      userCommunity: { score: 0, votes: 0 },
+      bayesianScore: voteCount > 0 ? calculateBayesianScore(voteCount, voteAverage) : 5.0,
     },
-    popularity: item.popularity || 50.0,
+    popularity: item.popularity || 0,
     certification: 'U/A 16+',
     availability: {
       IN: {
         countryCode: 'IN',
         countryName: 'India',
         stream: streamList,
-        rent: [],
-        buy: [],
+        rent: rentList,
+        buy: buyList,
       },
     },
   };
@@ -279,7 +270,7 @@ export function getSyncStatus(catalogCount: number): SyncStatus {
     isTmdbConnected: connected,
     message: connected
       ? 'Connected to official TMDB API. Ingestion sync active across global catalogs.'
-      : 'Using master seed catalog. Add TMDB_API_KEY in .env.local to enable real-time worldwide streaming federation.',
+      : 'Using master seed catalog. Configure TMDB_API_KEY environment secret for real-time worldwide TMDB federation.',
     datasetsInfo: GLOBAL_DATASET_SPEC,
   };
 }

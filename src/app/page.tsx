@@ -172,7 +172,7 @@ export default function HomePage() {
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/70 border border-white/15 text-white font-extrabold text-xs">
                   <Star className="w-4 h-4 fill-[#f5c518] text-[#f5c518]" />
-                  <span>{heroMovie.ratings.imdb.score.toFixed(1)}</span>
+                  <span>{(heroMovie.ratings.imdb?.score || heroMovie.ratings.tmdb?.score || heroMovie.ratings.bayesianScore).toFixed(1)}</span>
                   <span className="text-zinc-500 font-normal">/10</span>
                 </div>
 
@@ -283,7 +283,7 @@ export default function HomePage() {
                       <div className="mt-1 flex items-center gap-2 text-[11px] text-zinc-400">
                         <span className="flex items-center gap-1 text-[#f5c518] font-bold">
                           <Star className="w-3 h-3 fill-current" />
-                          {nextMovie.ratings.imdb.score.toFixed(1)}
+                          {(nextMovie.ratings.imdb?.score || nextMovie.ratings.tmdb?.score || nextMovie.ratings.bayesianScore).toFixed(1)}
                         </span>
                         <span>•</span>
                         <span>{nextMovie.releaseDate?.slice(0, 4)}</span>

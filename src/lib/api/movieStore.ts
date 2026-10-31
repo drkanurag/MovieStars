@@ -106,7 +106,11 @@ export function filterAndSortTitles(filters: Partial<FilterOptions>): {
       result.sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime());
       break;
     case 'votes':
-      result.sort((a, b) => (b.ratings.imdb.votes + b.ratings.tmdb.votes) - (a.ratings.imdb.votes + a.ratings.tmdb.votes));
+      result.sort((a, b) => {
+        const aVotes = (a.ratings.imdb?.votes ?? 0) + (a.ratings.tmdb?.votes ?? 0);
+        const bVotes = (b.ratings.imdb?.votes ?? 0) + (b.ratings.tmdb?.votes ?? 0);
+        return bVotes - aVotes;
+      });
       break;
     case 'title':
       result.sort((a, b) => a.title.localeCompare(b.title));
