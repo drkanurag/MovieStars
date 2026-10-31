@@ -10,12 +10,14 @@ export class AvailabilityService {
   private platformIndex: Map<string, Map<string, Set<string>>>;
   private languageIndex: Map<string, Set<string>>;
   private typeIndex: Map<string, Set<string>>;
+  private originCountryIndex: Map<string, Set<string>>;
 
   private constructor() {
     this.genreIndex = new Map();
     this.platformIndex = new Map();
     this.languageIndex = new Map();
     this.typeIndex = new Map();
+    this.originCountryIndex = new Map();
     this.buildFilterIndexes();
   }
 
@@ -41,6 +43,13 @@ export class AvailabilityService {
     const lang = movie.originalLanguage.toLowerCase();
     if (!this.languageIndex.has(lang)) this.languageIndex.set(lang, new Set());
     this.languageIndex.get(lang)!.add(movie.id);
+
+    // Index Origin Country
+    if (movie.originCountry) {
+      const oc = movie.originCountry.toUpperCase();
+      if (!this.originCountryIndex.has(oc)) this.originCountryIndex.set(oc, new Set());
+      this.originCountryIndex.get(oc)!.add(movie.id);
+    }
 
     // Index Genres
     for (const g of movie.genres) {
@@ -77,6 +86,7 @@ export class AvailabilityService {
     language?: string;
     platform?: string;
     country?: string;
+    originCountry?: string;
   }): Set<string> {
     const candidateSets: Set<string>[] = [];
     const country = (filters.country || 'IN').toUpperCase();
@@ -114,7 +124,18 @@ export class AvailabilityService {
       }
     }
 
-    // 4. Platform & Region Filter
+    // 4. Origin Country Filter
+    if (filters.originCountry && filters.originCountry !== 'all') {
+      const targetOrigin = filters.originCountry.toUpperCase();
+      if (this.originCountryIndex.has(targetOrigin)) {
+        candidateSets.push(this.originCountryIndex.get(targetOrigin)!);
+      } else {
+        // Unknown origin country: returns 0 matches
+        return new Set();
+      }
+    }
+
+    // 5. Platform & Region Filter
     if (filters.platform && filters.platform !== 'all') {
       const targetProv = filters.platform.toLowerCase();
       const countryMap = this.platformIndex.get(country) || this.platformIndex.get('IN');

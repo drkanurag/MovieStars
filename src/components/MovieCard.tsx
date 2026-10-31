@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { TitleItem } from '@/types/movie';
 import { Star, Bookmark, Play, Heart, CheckCircle2, Plus, Check } from 'lucide-react';
 import { scoreToStars } from '@/lib/bayesian';
+import { getCountryByCode } from '@/lib/data/mockMovies';
 import { getDaysUntil, getTmdbImageUrl, formatReleaseYear } from '@/lib/utils';
 import { getClientState, toggleListStatus, getSelectedCountry } from '@/lib/storage';
 import { TrailerModal } from './TrailerModal';
@@ -224,6 +225,15 @@ export function MovieCard({ movie, rank, className, showTrendingNumber }: MovieC
                 {movie.type === 'web_series' ? 'Web Series' : movie.type === 'tv' ? 'TV Series' : 'Movie'}
               </span>
               <span className="text-zinc-500">•</span>
+              {movie.originCountry && (
+                <>
+                  <span className="inline-flex items-center gap-1 font-bold text-zinc-300">
+                    <span>{getCountryByCode(movie.originCountry).flag}</span>
+                    <span>{movie.originCountry}</span>
+                  </span>
+                  <span className="text-zinc-500">•</span>
+                </>
+              )}
               <span>{(movie.originalLanguage || 'en').toUpperCase()}</span>
               <span className="text-zinc-500">•</span>
               <span>{formatReleaseYear(movie.releaseDate)}</span>

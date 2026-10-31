@@ -157,6 +157,12 @@ it('Availability Service: Unknown filter values return empty set rather than ign
   // Unknown type
   const typeResults = avail.queryByFilters({ type: 'hologram_experience' });
   assert.strictEqual(typeResults.size, 0, 'Unknown type must return 0 results');
+
+  // Country based origin filter: JP should return Spirited Away and Seven Samurai
+  const jpResults = avail.queryByFilters({ originCountry: 'JP' });
+  assert(jpResults.has('spirited-away-2001'));
+  assert(jpResults.has('seven-samurai-1954'));
+  assert(!jpResults.has('oppenheimer-2023'));
 });
 
 it('Rating Service: Repeat ratings replace previous user rating without incrementing votes', () => {

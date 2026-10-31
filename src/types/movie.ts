@@ -80,6 +80,7 @@ export interface TitleItem {
   episodesCount?: number;
   status: TitleStatus;
   originalLanguage: string;
+  originCountry?: string;
   posterPath: string;
   backdropPath: string;
   genres: Genre[];
@@ -128,6 +129,7 @@ export interface FilterOptions {
   ratingMin: number;
   provider: string;
   country: string;
+  originCountry?: string;
   sortBy: 'bayesian' | 'popularity' | 'releaseDate' | 'votes' | 'title';
   searchQuery?: string;
 }

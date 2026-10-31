@@ -438,6 +438,30 @@ export function Navbar() {
                 </button>
               </div>
 
+              {/* Country & Region Switcher inside Drawer */}
+              <div className="p-3.5 rounded-2xl bg-black/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-zinc-300 font-bold">
+                  <Globe className="w-4 h-4 text-[#f5c518]" />
+                  <span>Streaming Region &amp; Country:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={activeCountry}
+                    onChange={(e) => {
+                      setActiveCountry(e.target.value);
+                      setSelectedCountry(e.target.value);
+                    }}
+                    className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/15 text-white font-bold outline-none cursor-pointer"
+                  >
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code} className="bg-zinc-900 text-white">
+                        {c.flag} {c.name} ({c.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               {/* Grid of Menu Columns */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
                 {/* Column 1: Movies */}

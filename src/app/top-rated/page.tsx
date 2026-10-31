@@ -6,15 +6,18 @@ import Image from 'next/image';
 import { MovieImage } from '@/components/MovieImage';
 import { getBestOfAllTime } from '@/lib/api/movieStore';
 import { scoreToStars, DEFAULT_MIN_VOTES, DEFAULT_GLOBAL_MEAN } from '@/lib/bayesian';
-import { Trophy, Award, Star, Info, ExternalLink, Sparkles, Medal, Plus, Check, Filter } from 'lucide-react';
+import { Trophy, Award, Star, Info, ExternalLink, Sparkles, Medal, Plus, Check, Filter, Globe } from 'lucide-react';
 import { getTmdbImageUrl, formatVoteCount } from '@/lib/utils';
-import { getClientState, toggleListStatus } from '@/lib/storage';
+import { getClientState, toggleListStatus, getSelectedCountry } from '@/lib/storage';
+import { COUNTRIES, getCountryByCode } from '@/lib/data/mockMovies';
 import { cn } from '@/lib/utils';
 import { TitleItem } from '@/types/movie';
 
 export default function BestOfAllTimePage() {
   const allTitles = getBestOfAllTime();
   const [selectedType, setSelectedType] = useState<'all' | 'movie' | 'tv' | 'web_series'>('all');
+  const [selectedCountry, setSelectedCountryFilter] = useState<string>('all');
+  const [activeCountry, setActiveCountry] = useState<string>('IN');
   const [sortBy, setSortBy] = useState<'bayesian' | 'imdb' | 'votes' | 'year'>('bayesian');
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
 
@@ -22,14 +25,23 @@ export default function BestOfAllTimePage() {
     document.title = 'IMDb Top 250 & Best of All Time Movies — Bayesian Rankings | MovieStars';
     const s = getClientState();
     setWatchlistIds(s.watchlist);
+    setActiveCountry(getSelectedCountry());
 
     const handleUpdate = () => {
       const state = getClientState();
       setWatchlistIds(state.watchlist);
     };
 
+    const handleCountryUpdate = () => {
+      setActiveCountry(getSelectedCountry());
+    };
+
     window.addEventListener('moviestars_state_updated', handleUpdate);
-    return () => window.removeEventListener('moviestars_state_updated', handleUpdate);
+    window.addEventListener('moviestars_country_updated', handleCountryUpdate);
+    return () => {
+      window.removeEventListener('moviestars_state_updated', handleUpdate);
+      window.removeEventListener('moviestars_country_updated', handleCountryUpdate);
+    };
   }, []);
 
   const handleWatchlistToggle = (e: React.MouseEvent, titleId: string) => {
@@ -40,8 +52,9 @@ export default function BestOfAllTimePage() {
 
   // Filter
   let filtered = allTitles.filter((t) => {
-    if (selectedType === 'all') return true;
-    return t.type === selectedType;
+    if (selectedType !== 'all' && t.type !== selectedType) return false;
+    if (selectedCountry !== 'all' && t.originCountry?.toUpperCase() !== selectedCountry.toUpperCase()) return false;
+    return true;
   });
 
   // Sort
@@ -101,44 +114,77 @@ export default function BestOfAllTimePage() {
         </div>
       </div>
 
-      {/* 2. Interactive Filters & Sorters */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#1a1a1a] border border-white/10">
-        {/* Category Pills */}
-        <div className="flex flex-wrap items-center gap-2">
+      {/* 2. Interactive Country & Type Filters */}
+      <div className="space-y-3">
+        {/* Country Filter Carousel Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {[
-            { id: 'all', label: 'All Titles' },
-            { id: 'movie', label: 'Movies' },
-            { id: 'tv', label: 'TV Shows' },
-            { id: 'web_series', label: 'Web Series' },
-          ].map((cat) => (
+            { code: 'all', label: '🌍 All World Cinema' },
+            { code: 'IN', label: '🇮🇳 Indian Cinema' },
+            { code: 'US', label: '🇺🇸 Hollywood (USA)' },
+            { code: 'JP', label: '🇯🇵 Japanese Cinema' },
+            { code: 'KR', label: '🇰🇷 Korean Cinema' },
+            { code: 'GB', label: '🇬🇧 British Cinema' },
+            { code: 'FR', label: '🇫🇷 French Cinema' },
+            { code: 'ES', label: '🇪🇸 Spanish Cinema' },
+            { code: 'DE', label: '🇩🇪 German Cinema' },
+            { code: 'IT', label: '🇮🇹 Italian Cinema' },
+            { code: 'BR', label: '🇧🇷 Brazilian Cinema' },
+          ].map((c) => (
             <button
-              key={cat.id}
-              onClick={() => setSelectedType(cat.id as any)}
+              key={c.code}
+              onClick={() => setSelectedCountryFilter(c.code)}
               className={cn(
-                'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all',
-                selectedType === cat.id
-                  ? 'bg-[#f5c518] text-black shadow-md'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0',
+                selectedCountry === c.code
+                  ? 'bg-[#f5c518] text-black shadow-md shadow-amber-500/20 scale-105'
+                  : 'bg-[#1a1a1a] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-white/5'
               )}
             >
-              {cat.label}
+              {c.label}
             </button>
           ))}
         </div>
 
-        {/* Sort Selector */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-zinc-400 font-bold">Sort by:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/10 text-white font-bold outline-none cursor-pointer"
-          >
-            <option value="bayesian">Ranking (Bayesian)</option>
-            <option value="imdb">IMDb Rating</option>
-            <option value="votes">Number of Ratings</option>
-            <option value="year">Release Date</option>
-          </select>
+        {/* Type & Sorter Row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#1a1a1a] border border-white/10">
+          {/* Category Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: 'all', label: 'All Formats' },
+              { id: 'movie', label: 'Feature Films' },
+              { id: 'tv', label: 'TV Shows' },
+              { id: 'web_series', label: 'Web Series' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedType(cat.id as any)}
+                className={cn(
+                  'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all',
+                  selectedType === cat.id
+                    ? 'bg-zinc-200 text-black shadow-sm'
+                    : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                )}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort Selector */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-zinc-400 font-bold">Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/10 text-white font-bold outline-none cursor-pointer"
+            >
+              <option value="bayesian">Ranking (Bayesian)</option>
+              <option value="imdb">IMDb Rating</option>
+              <option value="votes">Number of Ratings</option>
+              <option value="year">Release Date</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -147,7 +193,7 @@ export default function BestOfAllTimePage() {
         {filtered.map((title, index) => {
           const rank = index + 1;
           const stars = scoreToStars(title.ratings.bayesianScore);
-          const inAvailability = title.availability['IN'] || title.availability['US'];
+          const inAvailability = title.availability[activeCountry] || title.availability['IN'];
           const streamingOffers = inAvailability?.stream || [];
           const inWatchlist = watchlistIds.includes(title.id);
 
@@ -244,6 +290,15 @@ export default function BestOfAllTimePage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-zinc-400 font-semibold">
+                    {title.originCountry && (
+                      <>
+                        <span className="px-2 py-0.5 rounded-lg bg-zinc-800 border border-white/10 text-white font-bold inline-flex items-center gap-1.5 shadow-sm">
+                          <span>{getCountryByCode(title.originCountry).flag}</span>
+                          <span>{getCountryByCode(title.originCountry).name}</span>
+                        </span>
+                        <span className="text-zinc-600">•</span>
+                      </>
+                    )}
                     <span>{title.releaseDate ? title.releaseDate.slice(0, 4) : 'TBA'}</span>
                     <span className="text-zinc-600">•</span>
                     <span className="capitalize text-zinc-300">{title.type.replace('_', ' ')}</span>
@@ -263,7 +318,7 @@ export default function BestOfAllTimePage() {
                   {/* Streaming Availability Badges */}
                   <div className="flex items-center gap-1.5 mt-2.5 overflow-hidden">
                     <span className="text-[10px] text-zinc-400 font-black uppercase tracking-wider">
-                      Stream on:
+                      Stream in {getCountryByCode(activeCountry).name} {getCountryByCode(activeCountry).flag}:
                     </span>
                     {streamingOffers.length > 0 ? (
                       streamingOffers.slice(0, 3).map((offer, idx) => (

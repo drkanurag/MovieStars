@@ -1,5 +1,192 @@
-import { TitleItem, Celebrity } from '@/types/movie';
+import { TitleItem, Celebrity, RegionAvailability } from '@/types/movie';
 import { calculateBayesianScore } from '../bayesian';
+
+export interface CountryConfig {
+  code: string;
+  name: string;
+  flag: string;
+  primaryLanguage: string;
+  region: string;
+  currency: string;
+  tagline: string;
+}
+
+export const COUNTRIES: CountryConfig[] = [
+  { code: 'IN', name: 'India', flag: '🇮🇳', primaryLanguage: 'hi', region: 'South Asia', currency: '₹', tagline: 'Bollywood, Tollywood & South Asian Cinema' },
+  { code: 'US', name: 'United States', flag: '🇺🇸', primaryLanguage: 'en', region: 'North America', currency: '$', tagline: 'Hollywood Blockbusters & Premium TV' },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', primaryLanguage: 'en', region: 'Europe', currency: '£', tagline: 'British Drama, BBC & West End Cinema' },
+  { code: 'CA', name: 'Canada', flag: '🇨🇦', primaryLanguage: 'en', region: 'North America', currency: 'C$', tagline: 'TIFF Gems & Canadian Cinema' },
+  { code: 'AU', name: 'Australia', flag: '🇦🇺', primaryLanguage: 'en', region: 'Oceania', currency: 'A$', tagline: 'Aussie Cinema & Stan Originals' },
+  { code: 'JP', name: 'Japan', flag: '🇯🇵', primaryLanguage: 'ja', region: 'East Asia', currency: '¥', tagline: 'Anime Masterpieces, Ghibli & Japanese Classics' },
+  { code: 'KR', name: 'South Korea', flag: '🇰🇷', primaryLanguage: 'ko', region: 'East Asia', currency: '₩', tagline: 'K-Drama, Hallyu Wave & CJ ENM Masterpieces' },
+  { code: 'FR', name: 'France', flag: '🇫🇷', primaryLanguage: 'fr', region: 'Western Europe', currency: '€', tagline: 'French New Wave, Cannes & Auteur Cinema' },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪', primaryLanguage: 'de', region: 'Central Europe', currency: '€', tagline: 'Berlinale, German Thrillers & Sci-Fi' },
+  { code: 'ES', name: 'Spain', flag: '🇪🇸', primaryLanguage: 'es', region: 'Southern Europe', currency: '€', tagline: 'Spanish Thrillers, Goya Gems & Series' },
+  { code: 'IT', name: 'Italy', flag: '🇮🇹', primaryLanguage: 'it', region: 'Southern Europe', currency: '€', tagline: 'Italian Neorealism, Venice & Masterpieces' },
+  { code: 'BR', name: 'Brazil', flag: '🇧🇷', primaryLanguage: 'pt', region: 'South America', currency: 'R$', tagline: 'Cinema Novo & Brazilian Masterpieces' },
+];
+
+export function getCountryByCode(code: string): CountryConfig {
+  return COUNTRIES.find((c) => c.code.toUpperCase() === (code || '').toUpperCase()) || COUNTRIES[0];
+}
+
+function getProviderLogo(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('netflix')) return 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png';
+  if (n.includes('prime')) return 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png';
+  if (n.includes('hotstar') || n.includes('disney')) return 'https://image.tmdb.org/t/p/w92/7rw.png';
+  if (n.includes('jio')) return 'https://image.tmdb.org/t/p/w92/7rw3q.png';
+  if (n.includes('apple')) return 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png';
+  if (n.includes('zee')) return 'https://image.tmdb.org/t/p/w92/zee5.png';
+  if (n.includes('sony')) return 'https://image.tmdb.org/t/p/w92/sonyliv.png';
+  if (n.includes('max')) return 'https://image.tmdb.org/t/p/w92/68vAe5f5ofh2grr5WfWupv86.png';
+  if (n.includes('peacock')) return 'https://image.tmdb.org/t/p/w92/8vcGC7.png';
+  if (n.includes('hulu')) return 'https://image.tmdb.org/t/p/w92/giwM8EZdrim2J2mHMsyNVao.png';
+  return 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png';
+}
+
+export function makeAvailability(
+  streams: Record<string, { name: string; url?: string }[]>,
+  defaultStream: { name: string; url?: string }[] = []
+): Record<string, RegionAvailability> {
+  const result: Record<string, RegionAvailability> = {};
+  for (const c of COUNTRIES) {
+    const streamList = streams[c.code] || defaultStream;
+    result[c.code] = {
+      countryCode: c.code,
+      countryName: c.name,
+      stream: streamList.map((s, idx) => ({
+        provider: {
+          id: idx + 1,
+          name: s.name,
+          logoPath: getProviderLogo(s.name),
+          displayPriority: idx + 1,
+        },
+        offerType: 'stream',
+        streamUrl: s.url,
+      })),
+      rent: [
+        {
+          provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 },
+          offerType: 'rent',
+        },
+        {
+          provider: { id: 3, name: 'Google Play Movies', logoPath: 'https://image.tmdb.org/t/p/w92/8z7rC8uIDaTM91X0Z.png', displayPriority: 2 },
+          offerType: 'rent',
+        },
+      ],
+      buy: [
+        {
+          provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 },
+          offerType: 'buy',
+        },
+      ],
+    };
+  }
+  return result;
+}
+
+export const COUNTRY_STREAMING_PLATFORMS: Record<
+  string,
+  { id: string; name: string; logo: string; directUrl?: string }[]
+> = {
+  IN: [
+    { id: 'jiocinema', name: 'JioCinema', logo: 'https://image.tmdb.org/t/p/w92/7rw3q.png', directUrl: 'https://www.jiocinema.com' },
+    { id: 'hotstar', name: 'Disney+ Hotstar', logo: 'https://image.tmdb.org/t/p/w92/7rw.png', directUrl: 'https://www.hotstar.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'zee5', name: 'Zee5', logo: 'https://image.tmdb.org/t/p/w92/zee5.png', directUrl: 'https://www.zee5.com' },
+    { id: 'sonyliv', name: 'SonyLIV', logo: 'https://image.tmdb.org/t/p/w92/sonyliv.png', directUrl: 'https://www.sonyliv.com' },
+  ],
+  US: [
+    { id: 'max', name: 'Max', logo: 'https://image.tmdb.org/t/p/w92/68vAe5f5ofh2grr5WfWupv86.png', directUrl: 'https://www.max.com' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'peacock', name: 'Peacock Premium', logo: 'https://image.tmdb.org/t/p/w92/8vcGC7.png', directUrl: 'https://www.peacocktv.com' },
+    { id: 'hulu', name: 'Hulu', logo: 'https://image.tmdb.org/t/p/w92/giwM8EZdrim2J2mHMsyNVao.png', directUrl: 'https://www.hulu.com' },
+    { id: 'paramount', name: 'Paramount+', logo: 'https://image.tmdb.org/t/p/w92/paramount.png', directUrl: 'https://www.paramountplus.com' },
+  ],
+  GB: [
+    { id: 'bbciplayer', name: 'BBC iPlayer', logo: 'https://image.tmdb.org/t/p/w92/bbciplayer.png', directUrl: 'https://www.bbc.co.uk/iplayer' },
+    { id: 'now', name: 'NOW', logo: 'https://image.tmdb.org/t/p/w92/now.png', directUrl: 'https://www.nowtv.com' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'channel4', name: 'Channel 4', logo: 'https://image.tmdb.org/t/p/w92/channel4.png', directUrl: 'https://www.channel4.com' },
+    { id: 'itvx', name: 'ITVX', logo: 'https://image.tmdb.org/t/p/w92/itvx.png', directUrl: 'https://www.itv.com' },
+  ],
+  CA: [
+    { id: 'crave', name: 'Crave', logo: 'https://image.tmdb.org/t/p/w92/crave.png', directUrl: 'https://www.crave.ca' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'cbcgem', name: 'CBC Gem', logo: 'https://image.tmdb.org/t/p/w92/cbc.png', directUrl: 'https://gem.cbc.ca' },
+    { id: 'paramount', name: 'Paramount+', logo: 'https://image.tmdb.org/t/p/w92/paramount.png', directUrl: 'https://www.paramountplus.com' },
+    { id: 'appletv', name: 'Apple TV', logo: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', directUrl: 'https://tv.apple.com' },
+  ],
+  AU: [
+    { id: 'stan', name: 'Stan', logo: 'https://image.tmdb.org/t/p/w92/stan.png', directUrl: 'https://www.stan.com.au' },
+    { id: 'binge', name: 'BINGE', logo: 'https://image.tmdb.org/t/p/w92/binge.png', directUrl: 'https://binge.com.au' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'abciview', name: 'ABC iview', logo: 'https://image.tmdb.org/t/p/w92/abc.png', directUrl: 'https://iview.abc.net.au' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'foxtel', name: 'Foxtel Now', logo: 'https://image.tmdb.org/t/p/w92/foxtel.png', directUrl: 'https://www.foxtel.com.au/now' },
+  ],
+  JP: [
+    { id: 'unext', name: 'U-NEXT', logo: 'https://image.tmdb.org/t/p/w92/unext.png', directUrl: 'https://video.unext.jp' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.amazon.co.jp/primevideo' },
+    { id: 'hulujapan', name: 'Hulu Japan', logo: 'https://image.tmdb.org/t/p/w92/giwM8EZdrim2J2mHMsyNVao.png', directUrl: 'https://www.hulu.jp' },
+    { id: 'abema', name: 'ABEMA', logo: 'https://image.tmdb.org/t/p/w92/abema.png', directUrl: 'https://abema.tv' },
+    { id: 'dmmtv', name: 'DMM TV', logo: 'https://image.tmdb.org/t/p/w92/dmm.png', directUrl: 'https://tv.dmm.com' },
+  ],
+  KR: [
+    { id: 'tving', name: 'TVING', logo: 'https://image.tmdb.org/t/p/w92/tving.png', directUrl: 'https://www.tving.com' },
+    { id: 'wavve', name: 'Wavve', logo: 'https://image.tmdb.org/t/p/w92/wavve.png', directUrl: 'https://www.wavve.com' },
+    { id: 'watcha', name: 'Watcha', logo: 'https://image.tmdb.org/t/p/w92/watcha.png', directUrl: 'https://watcha.com' },
+    { id: 'coupang', name: 'Coupang Play', logo: 'https://image.tmdb.org/t/p/w92/coupang.png', directUrl: 'https://www.coupangplay.com' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'disney', name: 'Disney+', logo: 'https://image.tmdb.org/t/p/w92/7rw.png', directUrl: 'https://www.disneyplus.com' },
+  ],
+  FR: [
+    { id: 'canalplus', name: 'Canal+', logo: 'https://image.tmdb.org/t/p/w92/canal.png', directUrl: 'https://www.canalplus.com' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'francetv', name: 'France TV', logo: 'https://image.tmdb.org/t/p/w92/francetv.png', directUrl: 'https://www.france.tv' },
+    { id: 'arte', name: 'Arte', logo: 'https://image.tmdb.org/t/p/w92/arte.png', directUrl: 'https://www.arte.tv' },
+    { id: 'disney', name: 'Disney+', logo: 'https://image.tmdb.org/t/p/w92/7rw.png', directUrl: 'https://www.disneyplus.com' },
+  ],
+  DE: [
+    { id: 'wow', name: 'WOW (Sky)', logo: 'https://image.tmdb.org/t/p/w92/wow.png', directUrl: 'https://www.wowtv.de' },
+    { id: 'joyn', name: 'Joyn', logo: 'https://image.tmdb.org/t/p/w92/joyn.png', directUrl: 'https://www.joyn.de' },
+    { id: 'rtlplus', name: 'RTL+', logo: 'https://image.tmdb.org/t/p/w92/rtl.png', directUrl: 'https://plus.rtl.de' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'zdf', name: 'ZDF Mediathek', logo: 'https://image.tmdb.org/t/p/w92/zdf.png', directUrl: 'https://www.zdf.de' },
+  ],
+  ES: [
+    { id: 'movistar', name: 'Movistar Plus+', logo: 'https://image.tmdb.org/t/p/w92/movistar.png', directUrl: 'https://www.movistarplus.es' },
+    { id: 'filmin', name: 'Filmin', logo: 'https://image.tmdb.org/t/p/w92/filmin.png', directUrl: 'https://www.filmin.es' },
+    { id: 'rtve', name: 'RTVE Play', logo: 'https://image.tmdb.org/t/p/w92/rtve.png', directUrl: 'https://www.rtve.es/play' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'atresplayer', name: 'Atresplayer', logo: 'https://image.tmdb.org/t/p/w92/atres.png', directUrl: 'https://www.atresplayer.com' },
+  ],
+  IT: [
+    { id: 'raiplay', name: 'RaiPlay', logo: 'https://image.tmdb.org/t/p/w92/raiplay.png', directUrl: 'https://www.raiplay.it' },
+    { id: 'now', name: 'NOW', logo: 'https://image.tmdb.org/t/p/w92/now.png', directUrl: 'https://www.nowtv.it' },
+    { id: 'timvision', name: 'TIMVISION', logo: 'https://image.tmdb.org/t/p/w92/tim.png', directUrl: 'https://www.timvision.it' },
+    { id: 'mediaset', name: 'Mediaset Infinity', logo: 'https://image.tmdb.org/t/p/w92/mediaset.png', directUrl: 'https://mediasetinfinity.mediaset.it' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+  ],
+  BR: [
+    { id: 'globoplay', name: 'Globoplay', logo: 'https://image.tmdb.org/t/p/w92/globoplay.png', directUrl: 'https://globoplay.globo.com' },
+    { id: 'max', name: 'Max', logo: 'https://image.tmdb.org/t/p/w92/68vAe5f5ofh2grr5WfWupv86.png', directUrl: 'https://www.max.com' },
+    { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', directUrl: 'https://www.netflix.com' },
+    { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', directUrl: 'https://www.primevideo.com' },
+    { id: 'clarotv', name: 'Claro tv+', logo: 'https://image.tmdb.org/t/p/w92/claro.png', directUrl: 'https://www.clarotvmais.com.br' },
+    { id: 'telecine', name: 'Telecine', logo: 'https://image.tmdb.org/t/p/w92/telecine.png', directUrl: 'https://globoplay.globo.com/telecine' },
+  ],
+};
 
 export const INITIAL_MOVIES: TitleItem[] = [
   {
@@ -13,6 +200,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 180,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg',
     genres: [
@@ -55,32 +243,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.6, votes: 420 },
       bayesianScore: calculateBayesianScore(810000, 8.9),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.primevideo.com' },
-          { provider: { id: 220, name: 'JioCinema', logoPath: 'https://image.tmdb.org/t/p/w92/7rw3q.png', displayPriority: 2 }, offerType: 'stream', streamUrl: 'https://www.jiocinema.com' }
-        ],
-        rent: [
-          { provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 3 }, offerType: 'rent' },
-          { provider: { id: 3, name: 'Google Play Movies', logoPath: 'https://image.tmdb.org/t/p/w92/8z7rC8uIDaTM91X0Z.png', displayPriority: 4 }, offerType: 'rent' },
-        ],
-        buy: [
-          { provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'buy' }
-        ],
-      },
-      US: {
-        countryCode: 'US',
-        countryName: 'United States',
-        stream: [
-          { provider: { id: 384, name: 'Peacock Premium', logoPath: 'https://image.tmdb.org/t/p/w92/8vcGC7.png', displayPriority: 1 }, offerType: 'stream' }
-        ],
-        rent: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'rent' }],
-        buy: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'buy' }],
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }, { name: 'JioCinema', url: 'https://www.jiocinema.com' }],
+      US: [{ name: 'Peacock Premium', url: 'https://www.peacocktv.com' }, { name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }],
+      GB: [{ name: 'NOW', url: 'https://www.nowtv.com' }, { name: 'Sky Cinema' }],
+      CA: [{ name: 'Crave', url: 'https://www.crave.ca' }, { name: 'Amazon Prime Video' }],
+      AU: [{ name: 'BINGE', url: 'https://binge.com.au' }, { name: 'Foxtel Now' }],
+      JP: [{ name: 'U-NEXT', url: 'https://video.unext.jp' }, { name: 'Amazon Prime Video' }],
+      KR: [{ name: 'TVING', url: 'https://www.tving.com' }, { name: 'Wavve' }],
+      FR: [{ name: 'Canal+', url: 'https://www.canalplus.com' }, { name: 'Amazon Prime Video' }],
+      DE: [{ name: 'WOW', url: 'https://www.wowtv.de' }, { name: 'Sky Go' }],
+      ES: [{ name: 'Movistar Plus+', url: 'https://www.movistarplus.es' }, { name: 'Amazon Prime Video' }],
+      IT: [{ name: 'NOW', url: 'https://www.nowtv.it' }, { name: 'Sky Italia' }],
+      BR: [{ name: 'Max', url: 'https://www.max.com' }, { name: 'Amazon Prime Video' }],
+    }, [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }])
   },
   {
     id: 'dune-part-two-2024',
@@ -93,6 +269,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 166,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/uhUO7vQQKvCTfQWubOt5MAKokbL.jpg',
     genres: [
@@ -135,20 +312,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.7, votes: 620 },
       bayesianScore: calculateBayesianScore(540000, 8.6),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 220, name: 'JioCinema', logoPath: 'https://image.tmdb.org/t/p/w92/7rw3q.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.jiocinema.com' }
-        ],
-        rent: [
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 1 }, offerType: 'rent' },
-          { provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 2 }, offerType: 'rent' }
-        ],
-        buy: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'buy' }]
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'JioCinema', url: 'https://www.jiocinema.com' }, { name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }],
+      US: [{ name: 'Max', url: 'https://www.max.com' }],
+      GB: [{ name: 'NOW', url: 'https://www.nowtv.com' }],
+      CA: [{ name: 'Crave', url: 'https://www.crave.ca' }],
+      AU: [{ name: 'BINGE', url: 'https://binge.com.au' }],
+      JP: [{ name: 'U-NEXT', url: 'https://video.unext.jp' }],
+      KR: [{ name: 'TVING', url: 'https://www.tving.com' }],
+      FR: [{ name: 'Canal+', url: 'https://www.canalplus.com' }],
+      DE: [{ name: 'WOW', url: 'https://www.wowtv.de' }],
+      ES: [{ name: 'Movistar Plus+', url: 'https://www.movistarplus.es' }],
+      IT: [{ name: 'NOW', url: 'https://www.nowtv.it' }],
+      BR: [{ name: 'Max', url: 'https://www.max.com' }],
+    }, [{ name: 'Max', url: 'https://www.max.com' }])
   },
   {
     id: 'the-godfather-1972',
@@ -161,6 +338,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 175,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/tmU7GeKVybMWFButWEGl2M4GeiP.jpg',
     genres: [
@@ -203,18 +381,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.9, votes: 1850 },
       bayesianScore: calculateBayesianScore(2000000, 9.2),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 220, name: 'JioCinema', logoPath: 'https://image.tmdb.org/t/p/w92/7rw3q.png', displayPriority: 1 }, offerType: 'stream' },
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 2 }, offerType: 'stream' }
-        ],
-        rent: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'rent' }],
-        buy: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'buy' }]
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'JioCinema', url: 'https://www.jiocinema.com' }, { name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }],
+      US: [{ name: 'Paramount+', url: 'https://www.paramountplus.com' }, { name: 'Showtime' }],
+      GB: [{ name: 'Paramount+', url: 'https://www.paramountplus.com' }, { name: 'NOW' }],
+      CA: [{ name: 'Paramount+' }],
+      AU: [{ name: 'Paramount+' }, { name: 'Stan' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'TVING' }],
+      FR: [{ name: 'Paramount+' }, { name: 'Canal+' }],
+      DE: [{ name: 'Paramount+' }, { name: 'WOW' }],
+      ES: [{ name: 'Movistar Plus+' }],
+      IT: [{ name: 'Paramount+' }, { name: 'NOW' }],
+      BR: [{ name: 'Paramount+' }, { name: 'Telecine' }],
+    }, [{ name: 'Paramount+' }])
   },
   {
     id: 'the-shawshank-redemption-1994',
@@ -227,6 +407,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 142,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg',
     genres: [
@@ -268,17 +449,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.9, votes: 2200 },
       bayesianScore: calculateBayesianScore(2900000, 9.3),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream' }
-        ],
-        rent: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'rent' }],
-        buy: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'buy' }]
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }, { name: 'Netflix' }],
+      US: [{ name: 'Max', url: 'https://www.max.com' }],
+      GB: [{ name: 'NOW', url: 'https://www.nowtv.com' }, { name: 'Sky Cinema' }],
+      CA: [{ name: 'Crave' }],
+      AU: [{ name: 'Stan' }, { name: 'BINGE' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'Watcha' }],
+      FR: [{ name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Movistar Plus+' }],
+      IT: [{ name: 'NOW' }],
+      BR: [{ name: 'Max' }],
+    }, [{ name: 'Amazon Prime Video' }])
   },
   {
     id: 'breaking-bad-2008',
@@ -293,6 +477,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 47,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg',
     genres: [
@@ -335,17 +520,11 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.9, votes: 2400 },
       bayesianScore: calculateBayesianScore(2200000, 9.5),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' }
-        ],
-        rent: [],
-        buy: []
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      US: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      GB: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+    }, [{ name: 'Netflix', url: 'https://www.netflix.com' }])
   },
   {
     id: 'interstellar-2014',
@@ -358,6 +537,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 169,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
     genres: [
@@ -401,18 +581,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 2600 },
       bayesianScore: calculateBayesianScore(2100000, 8.7),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 220, name: 'JioCinema', logoPath: 'https://image.tmdb.org/t/p/w92/7rw3q.png', displayPriority: 1 }, offerType: 'stream' },
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 2 }, offerType: 'stream' }
-        ],
-        rent: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'rent' }],
-        buy: [{ provider: { id: 2, name: 'Apple TV', logoPath: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png', displayPriority: 1 }, offerType: 'buy' }]
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }, { name: 'JioCinema' }],
+      US: [{ name: 'Paramount+', url: 'https://www.paramountplus.com' }, { name: 'Amazon Prime Video' }],
+      GB: [{ name: 'NOW' }, { name: 'Sky Cinema' }],
+      CA: [{ name: 'Paramount+' }],
+      AU: [{ name: 'BINGE' }, { name: 'Stan' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'TVING' }],
+      FR: [{ name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Movistar Plus+' }],
+      IT: [{ name: 'NOW' }],
+      BR: [{ name: 'Max' }],
+    }, [{ name: 'Amazon Prime Video' }])
   },
   {
     id: '12th-fail-2023',
@@ -425,6 +607,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 147,
     status: 'released',
     originalLanguage: 'hi',
+    originCountry: 'IN',
     posterPath: 'https://image.tmdb.org/t/p/w500/eebUPRI4Z5e1Z7Hev4JZAwMIFkX.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/6RV2o8PBCEyw9ylOWViV1CtULIF.jpg',
     genres: [
@@ -466,17 +649,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 1120 },
       bayesianScore: calculateBayesianScore(130000, 8.9),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 122, name: 'Disney+ Hotstar', logoPath: 'https://image.tmdb.org/t/p/w92/7rw.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.hotstar.com' }
-        ],
-        rent: [],
-        buy: []
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Disney+ Hotstar', url: 'https://www.hotstar.com' }],
+      US: [{ name: 'Hulu', url: 'https://www.hulu.com' }, { name: 'Disney+' }],
+      GB: [{ name: 'Disney+', url: 'https://www.disneyplus.com' }],
+      CA: [{ name: 'Disney+' }],
+      AU: [{ name: 'Disney+' }],
+      JP: [{ name: 'Disney+' }],
+      KR: [{ name: 'Disney+' }],
+      FR: [{ name: 'Disney+' }],
+      DE: [{ name: 'Disney+' }],
+      ES: [{ name: 'Disney+' }],
+      IT: [{ name: 'Disney+' }],
+      BR: [{ name: 'Disney+' }],
+    }, [{ name: 'Disney+' }])
   },
   {
     id: 'mirzapur-s3-2024',
@@ -490,6 +676,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     episodesCount: 29,
     status: 'released',
     originalLanguage: 'hi',
+    originCountry: 'IN',
     posterPath: 'https://image.tmdb.org/t/p/w500/p0qM8hhlMF5DuxHBzl2EZR6TehX.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/3dV7pWAdwIPKR2lMIACMfObXdgK.jpg',
     genres: [
@@ -532,17 +719,11 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.6, votes: 890 },
       bayesianScore: calculateBayesianScore(87000, 8.5),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.primevideo.com' }
-        ],
-        rent: [],
-        buy: []
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }],
+      US: [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }],
+      GB: [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }],
+    }, [{ name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }])
   },
   {
     id: 'rrr-2022',
@@ -555,6 +736,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 187,
     status: 'released',
     originalLanguage: 'te',
+    originCountry: 'IN',
     posterPath: 'https://image.tmdb.org/t/p/w500/wE0I6efAW4cDDmZQWtwZMOW44EJ.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/i0Y0wP8H6SRgjr6QmuwbtQbS24D.jpg',
     genres: [
@@ -597,18 +779,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.7, votes: 1400 },
       bayesianScore: calculateBayesianScore(175000, 7.8),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' },
-          { provider: { id: 232, name: 'Zee5', logoPath: 'https://image.tmdb.org/t/p/w92/zee5.png', displayPriority: 2 }, offerType: 'stream' }
-        ],
-        rent: [],
-        buy: []
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }, { name: 'Zee5', url: 'https://www.zee5.com' }, { name: 'Disney+ Hotstar' }],
+      US: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      GB: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      CA: [{ name: 'Netflix' }],
+      AU: [{ name: 'Netflix' }],
+      JP: [{ name: 'Netflix' }, { name: 'U-NEXT' }],
+      KR: [{ name: 'Netflix' }],
+      FR: [{ name: 'Netflix' }],
+      DE: [{ name: 'Netflix' }],
+      ES: [{ name: 'Netflix' }],
+      IT: [{ name: 'Netflix' }],
+      BR: [{ name: 'Netflix' }],
+    }, [{ name: 'Netflix' }])
   },
   {
     id: 'avengers-secret-wars-2027',
@@ -621,6 +805,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 195,
     status: 'upcoming',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/tTMmREfhVd51CCg7GN73wL8cIoT.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/rObL4of4eFA8yWaN9pRFo9aOVNi.jpg',
     genres: [
@@ -652,17 +837,9 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.9, votes: 980 },
       bayesianScore: 8.5,
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 122, name: 'Disney+ Hotstar', logoPath: 'https://image.tmdb.org/t/p/w92/7rw.png', displayPriority: 1 }, offerType: 'stream' }
-        ],
-        rent: [],
-        buy: []
-      }
-    }
+    availability: makeAvailability({
+
+    }, [])
   },
   {
     id: 'kalki-2898-ad-2024',
@@ -675,6 +852,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 181,
     status: 'released',
     originalLanguage: 'te',
+    originCountry: 'IN',
     posterPath: 'https://image.tmdb.org/t/p/w500/rstcAnBeCkxNQjNp3YXrF6IP1tW.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/whNjsTOUVg2lZLCKgGhnACnmV8E.jpg',
     genres: [
@@ -702,18 +880,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.6, votes: 540 },
       bayesianScore: calculateBayesianScore(78000, 7.6),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' },
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 2 }, offerType: 'stream', streamUrl: 'https://www.primevideo.com' }
-        ],
-        rent: [],
-        buy: []
-      }
-    }
+    availability: makeAvailability({
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }, { name: 'Amazon Prime Video', url: 'https://www.primevideo.com' }],
+      US: [{ name: 'Netflix' }, { name: 'Amazon Prime Video' }],
+      GB: [{ name: 'Netflix' }, { name: 'Amazon Prime Video' }],
+      CA: [{ name: 'Netflix' }, { name: 'Amazon Prime Video' }],
+      AU: [{ name: 'Netflix' }, { name: 'Amazon Prime Video' }],
+      JP: [{ name: 'Netflix' }],
+      KR: [{ name: 'Netflix' }],
+      FR: [{ name: 'Netflix' }],
+      DE: [{ name: 'Netflix' }],
+      ES: [{ name: 'Netflix' }],
+      IT: [{ name: 'Netflix' }],
+      BR: [{ name: 'Netflix' }],
+    }, [{ name: 'Netflix' }, { name: 'Amazon Prime Video' }])
   },
   {
     id: 'the-batman-part-ii-2026',
@@ -726,6 +906,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 170,
     status: 'upcoming',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/r5fl4aMsmTjgc8DdDqQaM84roWp.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/4uaHnYDDpUTj0nCg6YqBKab50YW.jpg',
     genres: [
@@ -749,17 +930,9 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 410 },
       bayesianScore: 8.4,
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 220, name: 'JioCinema', logoPath: 'https://image.tmdb.org/t/p/w92/7rw3q.png', displayPriority: 1 }, offerType: 'stream' }
-        ],
-        rent: [],
-        buy: []
-      }
-    }
+    availability: makeAvailability({
+
+    }, [])
   },
   {
     id: 'the-dark-knight-2008',
@@ -772,6 +945,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 152,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg',
     genres: [
@@ -813,25 +987,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.9, votes: 1200 },
       bayesianScore: calculateBayesianScore(2950000, 9.0),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 220, name: 'JioCinema', logoPath: 'https://image.tmdb.org/t/p/w92/7rw3q.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.jiocinema.com' },
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 2 }, offerType: 'stream' },
-        ],
-        rent: [{ provider: { id: 2, name: 'Apple TV', logoPath: '', displayPriority: 1 }, offerType: 'rent' }],
-        buy: [{ provider: { id: 2, name: 'Apple TV', logoPath: '', displayPriority: 1 }, offerType: 'buy' }],
-      },
-      US: {
-        countryCode: 'US',
-        countryName: 'United States',
-        stream: [{ provider: { id: 1899, name: 'Max', logoPath: '', displayPriority: 1 }, offerType: 'stream' }],
-        rent: [],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      IN: [{ name: 'JioCinema', url: 'https://www.jiocinema.com' }, { name: 'Amazon Prime Video' }, { name: 'Netflix' }],
+      US: [{ name: 'Max', url: 'https://www.max.com' }],
+      GB: [{ name: 'NOW' }, { name: 'Sky Cinema' }],
+      CA: [{ name: 'Crave' }],
+      AU: [{ name: 'BINGE' }, { name: 'Foxtel Now' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'Coupang Play' }],
+      FR: [{ name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Movistar Plus+' }],
+      IT: [{ name: 'NOW' }],
+      BR: [{ name: 'Max' }],
+    }, [{ name: 'Max' }]),
   },
   {
     id: 'pulp-fiction-1994',
@@ -844,6 +1013,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 154,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
     genres: [
@@ -882,17 +1052,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 940 },
       bayesianScore: calculateBayesianScore(2280000, 8.9),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 1 }, offerType: 'stream' },
-        ],
-        rent: [],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      IN: [{ name: 'Amazon Prime Video' }, { name: 'JioCinema' }],
+      US: [{ name: 'Paramount+' }, { name: 'Max' }],
+      GB: [{ name: 'NOW' }, { name: 'Sky Cinema' }],
+      CA: [{ name: 'Paramount+' }],
+      AU: [{ name: 'Stan' }, { name: 'Paramount+' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'Watcha' }],
+      FR: [{ name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Movistar Plus+' }],
+      IT: [{ name: 'NOW' }],
+      BR: [{ name: 'Telecine' }, { name: 'Globoplay' }],
+    }, [{ name: 'Amazon Prime Video' }]),
   },
   {
     id: 'spirited-away-2001',
@@ -906,6 +1079,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 125,
     status: 'released',
     originalLanguage: 'ja',
+    originCountry: 'JP',
     posterPath: 'https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/Ab8mkHmkYADjU7wQiOkia9BzGvS.jpg',
     genres: [
@@ -943,17 +1117,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 650 },
       bayesianScore: calculateBayesianScore(850000, 8.6),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' },
-        ],
-        rent: [],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      JP: [{ name: 'U-NEXT' }, { name: 'Hulu Japan' }],
+      US: [{ name: 'Max', url: 'https://www.max.com' }],
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      GB: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      CA: [{ name: 'Netflix' }],
+      AU: [{ name: 'Netflix' }],
+      KR: [{ name: 'Netflix' }, { name: 'Watcha' }],
+      FR: [{ name: 'Netflix' }],
+      DE: [{ name: 'Netflix' }],
+      ES: [{ name: 'Netflix' }],
+      IT: [{ name: 'Netflix' }],
+      BR: [{ name: 'Netflix' }],
+    }, [{ name: 'Netflix' }]),
   },
   {
     id: 'parasite-2019',
@@ -967,6 +1144,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 132,
     status: 'released',
     originalLanguage: 'ko',
+    originCountry: 'KR',
     posterPath: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/TU9NIjwzjoKPwQHoHshkFcQUCG.jpg',
     genres: [
@@ -1006,17 +1184,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 710 },
       bayesianScore: calculateBayesianScore(940000, 8.5),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 122, name: 'Sony LIV', logoPath: '', displayPriority: 1 }, offerType: 'stream' },
-        ],
-        rent: [{ provider: { id: 2, name: 'Apple TV', logoPath: '', displayPriority: 1 }, offerType: 'rent' }],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      KR: [{ name: 'TVING' }, { name: 'Watcha' }, { name: 'Wavve' }],
+      US: [{ name: 'Max' }, { name: 'Hulu' }],
+      IN: [{ name: 'Amazon Prime Video' }, { name: 'SonyLIV' }],
+      GB: [{ name: 'Amazon Prime Video' }],
+      CA: [{ name: 'Amazon Prime Video' }],
+      AU: [{ name: 'Stan' }],
+      JP: [{ name: 'U-NEXT' }],
+      FR: [{ name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Filmin' }],
+      IT: [{ name: 'NOW' }],
+      BR: [{ name: 'Max' }],
+    }, [{ name: 'Amazon Prime Video' }]),
   },
   {
     id: 'seven-samurai-1954',
@@ -1030,6 +1211,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 207,
     status: 'released',
     originalLanguage: 'ja',
+    originCountry: 'JP',
     posterPath: 'https://image.tmdb.org/t/p/w500/lOMGc8bnSwQhS4XyE1S99uH8NXf.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/qvZ91FwMq6O47VViAr8vZNQz3WI.jpg',
     genres: [
@@ -1065,17 +1247,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 290 },
       bayesianScore: calculateBayesianScore(375000, 8.6),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: '', displayPriority: 1 }, offerType: 'stream' },
-        ],
-        rent: [],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      JP: [{ name: 'U-NEXT' }, { name: 'Amazon Prime Video' }],
+      US: [{ name: 'Max' }, { name: 'Criterion Channel' }],
+      GB: [{ name: 'BFI Player' }, { name: 'Amazon Prime Video' }],
+      CA: [{ name: 'Criterion Channel' }],
+      AU: [{ name: 'Stan' }],
+      KR: [{ name: 'Watcha' }],
+      FR: [{ name: 'Arte' }, { name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Filmin' }],
+      IT: [{ name: 'RaiPlay' }],
+      BR: [{ name: 'Telecine' }],
+      IN: [{ name: 'Amazon Prime Video' }],
+    }, [{ name: 'Amazon Prime Video' }]),
   },
   {
     id: 'city-of-god-2002',
@@ -1089,6 +1274,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 130,
     status: 'released',
     originalLanguage: 'pt',
+    originCountry: 'BR',
     posterPath: 'https://image.tmdb.org/t/p/w500/k7eYdWvhYQyRQoU2TB2A2Xu2TfD.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/iNh3BivHyg5sQRPP1KOkzguEX0H.jpg',
     genres: [
@@ -1127,17 +1313,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.7, votes: 520 },
       bayesianScore: calculateBayesianScore(820000, 8.6),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: '', displayPriority: 1 }, offerType: 'stream' },
-        ],
-        rent: [],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      BR: [{ name: 'Globoplay' }, { name: 'Telecine' }, { name: 'Claro tv+' }],
+      US: [{ name: 'Paramount+' }],
+      GB: [{ name: 'Amazon Prime Video' }],
+      CA: [{ name: 'Paramount+' }],
+      AU: [{ name: 'Stan' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'Watcha' }],
+      FR: [{ name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Movistar Plus+' }],
+      IT: [{ name: 'NOW' }],
+      IN: [{ name: 'Amazon Prime Video' }],
+    }, [{ name: 'Amazon Prime Video' }]),
   },
   {
     id: 'baahubali-2-2017',
@@ -1150,6 +1339,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 167,
     status: 'released',
     originalLanguage: 'te',
+    originCountry: 'IN',
     posterPath: 'https://image.tmdb.org/t/p/w500/21sC2assImQIYCEDA84Qh9d1RsK.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/whNjsTOUVg2lZLCKgGhnACnmV8E.jpg',
     genres: [
@@ -1188,18 +1378,20 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.6, votes: 550 },
       bayesianScore: calculateBayesianScore(120000, 8.2),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' },
-          { provider: { id: 122, name: 'Sony LIV', logoPath: '', displayPriority: 2 }, offerType: 'stream' },
-        ],
-        rent: [],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      IN: [{ name: 'Disney+ Hotstar' }, { name: 'Netflix' }, { name: 'SonyLIV' }],
+      US: [{ name: 'Netflix' }, { name: 'Disney+' }],
+      GB: [{ name: 'Netflix' }],
+      CA: [{ name: 'Netflix' }],
+      AU: [{ name: 'Netflix' }],
+      JP: [{ name: 'Netflix' }, { name: 'U-NEXT' }],
+      KR: [{ name: 'Netflix' }],
+      FR: [{ name: 'Netflix' }],
+      DE: [{ name: 'Netflix' }],
+      ES: [{ name: 'Netflix' }],
+      IT: [{ name: 'Netflix' }],
+      BR: [{ name: 'Netflix' }],
+    }, [{ name: 'Netflix' }]),
   },
   {
     id: 'sacred-games-series',
@@ -1213,6 +1405,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     episodesCount: 16,
     status: 'released',
     originalLanguage: 'hi',
+    originCountry: 'IN',
     posterPath: 'https://image.tmdb.org/t/p/w500/dD3HcMczLC9wNvfNzx4pZVyl6q8.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/5YEnPWmTMpPtFk3MxjlfO1U1xW5.jpg',
     genres: [
@@ -1245,17 +1438,11 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.7, votes: 410 },
       bayesianScore: calculateBayesianScore(94000, 8.5),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' },
-        ],
-        rent: [],
-        buy: [],
-      },
-    },
+    availability: makeAvailability({
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      US: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      GB: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+    }, [{ name: 'Netflix', url: 'https://www.netflix.com' }]),
   },
   {
     id: 'stranger-things-series',
@@ -1269,6 +1456,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     episodesCount: 34,
     status: 'released',
     originalLanguage: 'en',
+    originCountry: 'US',
     posterPath: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
     genres: [
@@ -1299,29 +1487,252 @@ export const INITIAL_MOVIES: TitleItem[] = [
       userCommunity: { score: 4.8, votes: 830 },
       bayesianScore: calculateBayesianScore(1400000, 8.7),
     },
-    availability: {
-      IN: {
-        countryCode: 'IN',
-        countryName: 'India',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' },
-        ],
-        rent: [],
-        buy: [],
-      },
-      US: {
-        countryCode: 'US',
-        countryName: 'United States',
-        stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream' },
-        ],
-        rent: [],
-        buy: [],
-      },
+    availability: makeAvailability({
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      US: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      GB: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+    }, [{ name: 'Netflix', url: 'https://www.netflix.com' }]),
+  },
+  {
+    id: 'peaky-blinders-series',
+    tmdbId: 60574,
+    imdbId: 'tt2442560',
+    type: 'tv',
+    title: 'Peaky Blinders',
+    overview: 'A gangster family epic set in 1900s England, centering on a gang who sew razor blades in the peaks of their caps, and their fierce boss Tommy Shelby.',
+    releaseDate: '2013-09-12',
+    seasonsCount: 6,
+    episodesCount: 36,
+    status: 'released',
+    originalLanguage: 'en',
+    originCountry: 'GB',
+    posterPath: 'https://image.tmdb.org/t/p/w500/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/dzq83RHwQcnP6WGJ6YkenIqeaa5.jpg',
+    genres: [
+      { id: 18, name: 'Drama' },
+      { id: 80, name: 'Crime' }
+    ],
+    cast: [
+      { id: 2037, name: 'Cillian Murphy', role: 'actor', character: 'Thomas Shelby', profilePath: 'https://image.tmdb.org/t/p/w185/2lKs67r7FI4bPu0AXxMUJZxmUXn.jpg' },
+      { id: 11107, name: 'Paul Anderson', role: 'actor', character: 'Arthur Shelby' },
+      { id: 2524, name: 'Tom Hardy', role: 'actor', character: 'Alfie Solomons' }
+    ],
+    directors: [{ id: 11394, name: 'Steven Knight', role: 'creator' }],
+    trailerYoutubeKey: 'oVzVdvGIC7U',
+    popularity: 91.2,
+    certification: 'TV-MA',
+    tagline: 'Crime pays. But Tommy Shelby extracts a heavier cost.',
+    metascore: 77,
+    metascoreReviewsCount: 32,
+    trendingRank: 4,
+    ratings: {
+      imdb: { score: 8.8, votes: 620000 },
+      tmdb: { score: 8.5, votes: 11493 },
+      userCommunity: { score: 4.8, votes: 510 },
+      bayesianScore: calculateBayesianScore(620000, 8.8)
     },
+    availability: makeAvailability({
+      GB: [{ name: 'BBC iPlayer', url: 'https://www.bbc.co.uk/iplayer' }, { name: 'Netflix', url: 'https://www.netflix.com' }],
+      US: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+    }, [{ name: 'Netflix', url: 'https://www.netflix.com' }])
+  },
+  {
+    id: 'dark-series',
+    tmdbId: 70523,
+    imdbId: 'tt5753856',
+    type: 'tv',
+    title: 'Dark',
+    originalTitle: 'Dark',
+    overview: 'A missing child sets four families on a frantic hunt for answers as they unearth a mind-bending mystery that spans three generations in a small German town.',
+    releaseDate: '2017-12-01',
+    seasonsCount: 3,
+    episodesCount: 26,
+    status: 'released',
+    originalLanguage: 'de',
+    originCountry: 'DE',
+    posterPath: 'https://image.tmdb.org/t/p/w500/wiiyc3m6HKaQhFBYeuM7ySCNQsG.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/3jDXL4Xvj3AzDOF6UH1xeyHW8MH.jpg',
+    genres: [
+      { id: 878, name: 'Science Fiction' },
+      { id: 9648, name: 'Mystery' },
+      { id: 18, name: 'Drama' }
+    ],
+    cast: [
+      { id: 1253303, name: 'Louis Hofmann', role: 'actor', character: 'Jonas Kahnwald' },
+      { id: 71536, name: 'Oliver Masucci', role: 'actor', character: 'Ulrich Nielsen' },
+      { id: 48937, name: 'Karoline Eichhorn', role: 'actor', character: 'Charlotte Doppler' }
+    ],
+    directors: [{ id: 104770, name: 'Baran bo Odar', role: 'creator' }],
+    trailerYoutubeKey: 'rrwycJ08PSA',
+    popularity: 89.6,
+    certification: 'TV-MA',
+    tagline: 'The question is not where, but when.',
+    metascore: 82,
+    metascoreReviewsCount: 24,
+    ratings: {
+      imdb: { score: 8.7, votes: 445000 },
+      tmdb: { score: 8.4, votes: 7957 },
+      userCommunity: { score: 4.7, votes: 390 },
+      bayesianScore: calculateBayesianScore(445000, 8.7)
+    },
+    availability: makeAvailability({
+      DE: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      US: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      GB: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+    }, [{ name: 'Netflix', url: 'https://www.netflix.com' }])
+  },
+  {
+    id: 'money-heist-series',
+    tmdbId: 71446,
+    imdbId: 'tt6468322',
+    type: 'tv',
+    title: 'Money Heist',
+    originalTitle: 'La Casa de Papel',
+    overview: 'An unusual group of robbers attempt to carry out the most perfect robbery in Spanish history - stealing 2.4 billion euros from the Royal Mint of Spain.',
+    releaseDate: '2017-05-02',
+    seasonsCount: 5,
+    episodesCount: 41,
+    status: 'released',
+    originalLanguage: 'es',
+    originCountry: 'ES',
+    posterPath: 'https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/xGexTKCJDkl12dTW4YCBDXWb1AD.jpg',
+    genres: [
+      { id: 80, name: 'Crime' },
+      { id: 18, name: 'Drama' },
+      { id: 53, name: 'Thriller' }
+    ],
+    cast: [
+      { id: 1251336, name: 'Álvaro Morte', role: 'actor', character: 'El Profesor' },
+      { id: 1251337, name: 'Úrsula Corberó', role: 'actor', character: 'Tokio' },
+      { id: 1251338, name: 'Pedro Alonso', role: 'actor', character: 'Berlín' }
+    ],
+    directors: [{ id: 1251335, name: 'Álex Pina', role: 'creator' }],
+    trailerYoutubeKey: '_InqQJRqGW4',
+    popularity: 94.3,
+    certification: 'TV-MA',
+    tagline: 'The biggest heist in history.',
+    metascore: 78,
+    metascoreReviewsCount: 22,
+    ratings: {
+      imdb: { score: 8.2, votes: 530000 },
+      tmdb: { score: 8.2, votes: 19773 },
+      userCommunity: { score: 4.5, votes: 440 },
+      bayesianScore: calculateBayesianScore(530000, 8.2)
+    },
+    availability: makeAvailability({
+      ES: [{ name: 'Netflix', url: 'https://www.netflix.com' }, { name: 'Movistar Plus+' }],
+      US: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      GB: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+      IN: [{ name: 'Netflix', url: 'https://www.netflix.com' }],
+    }, [{ name: 'Netflix', url: 'https://www.netflix.com' }])
+  },
+  {
+    id: 'amelie-2001',
+    tmdbId: 194,
+    imdbId: 'tt0211915',
+    type: 'movie',
+    title: 'Amélie',
+    originalTitle: 'Le Fabuleux Destin d\'Amélie Poulain',
+    overview: 'Amélie is an innocent and naive girl in Paris with her own sense of justice. She decides to help those around her and, along the way, discovers love.',
+    releaseDate: '2001-04-25',
+    runtimeMinutes: 122,
+    status: 'released',
+    originalLanguage: 'fr',
+    originCountry: 'FR',
+    posterPath: 'https://image.tmdb.org/t/p/w500/nSxDa3M9aMvGVLoItzWTepQ5h5d.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/6n53UI4mX9QMfe2S0Pgt8mGebY1.jpg',
+    genres: [
+      { id: 35, name: 'Comedy' },
+      { id: 10749, name: 'Romance' }
+    ],
+    cast: [
+      { id: 7056, name: 'Audrey Tautou', role: 'actor', character: 'Amélie Poulain' },
+      { id: 7057, name: 'Mathieu Kassovitz', role: 'actor', character: 'Nino Quincampoix' }
+    ],
+    directors: [{ id: 7055, name: 'Jean-Pierre Jeunet', role: 'director' }],
+    trailerYoutubeKey: 'HUECWi5pX7o',
+    popularity: 84.1,
+    certification: 'R',
+    tagline: 'She will change your life.',
+    metascore: 69,
+    metascoreReviewsCount: 31,
+    ratings: {
+      imdb: { score: 8.3, votes: 780000 },
+      tmdb: { score: 7.9, votes: 12786 },
+      userCommunity: { score: 4.6, votes: 310 },
+      bayesianScore: calculateBayesianScore(780000, 8.3)
+    },
+    availability: makeAvailability({
+      FR: [{ name: 'Canal+', url: 'https://www.canalplus.com' }, { name: 'France TV' }, { name: 'Arte' }],
+      US: [{ name: 'Paramount+' }, { name: 'Apple TV' }],
+      GB: [{ name: 'Amazon Prime Video' }],
+      CA: [{ name: 'Crave' }],
+      AU: [{ name: 'Stan' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'Watcha' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Filmin' }],
+      IT: [{ name: 'RaiPlay' }],
+      BR: [{ name: 'Globoplay' }],
+      IN: [{ name: 'Amazon Prime Video' }],
+    }, [{ name: 'Amazon Prime Video' }])
+  },
+  {
+    id: 'cinema-paradiso-1988',
+    tmdbId: 11216,
+    imdbId: 'tt0095765',
+    type: 'movie',
+    title: 'Cinema Paradiso',
+    originalTitle: 'Nuovo Cinema Paradiso',
+    overview: 'A filmmaker recalls his childhood when falling in love with the pictures at the cinema of his home village and forms a deep friendship with the projectionist.',
+    releaseDate: '1988-11-17',
+    runtimeMinutes: 155,
+    status: 'released',
+    originalLanguage: 'it',
+    originCountry: 'IT',
+    posterPath: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg',
+    genres: [
+      { id: 18, name: 'Drama' },
+      { id: 10749, name: 'Romance' }
+    ],
+    cast: [
+      { id: 11504, name: 'Philippe Noiret', role: 'actor', character: 'Alfredo' },
+      { id: 11505, name: 'Salvatore Cascio', role: 'actor', character: 'Salvatore (child)' },
+      { id: 11506, name: 'Marco Leonardi', role: 'actor', character: 'Salvatore (adolescent)' }
+    ],
+    directors: [{ id: 11503, name: 'Giuseppe Tornatore', role: 'director' }],
+    trailerYoutubeKey: 'stLec4nmUS0',
+    popularity: 82.5,
+    certification: 'PG',
+    tagline: 'A celebration of the magic of cinema.',
+    metascore: 80,
+    metascoreReviewsCount: 20,
+    ratings: {
+      imdb: { score: 8.5, votes: 290000 },
+      tmdb: { score: 8.4, votes: 4400 },
+      userCommunity: { score: 4.8, votes: 260 },
+      bayesianScore: calculateBayesianScore(290000, 8.5)
+    },
+    availability: makeAvailability({
+      IT: [{ name: 'RaiPlay', url: 'https://www.raiplay.it' }, { name: 'NOW' }, { name: 'Mediaset Infinity' }],
+      US: [{ name: 'Paramount+' }, { name: 'Criterion Channel' }],
+      GB: [{ name: 'BFI Player' }],
+      CA: [{ name: 'Crave' }],
+      AU: [{ name: 'Stan' }],
+      JP: [{ name: 'U-NEXT' }],
+      KR: [{ name: 'Watcha' }],
+      FR: [{ name: 'Canal+' }],
+      DE: [{ name: 'WOW' }],
+      ES: [{ name: 'Filmin' }],
+      BR: [{ name: 'Telecine' }],
+      IN: [{ name: 'Amazon Prime Video' }],
+    }, [{ name: 'Amazon Prime Video' }])
   }
 ];
-
 export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
   {
     id: 525,
@@ -1391,19 +1802,5 @@ export const ALL_GENRES = [
   'Science Fiction', 'Thriller'
 ];
 
-export const STREAMING_PLATFORMS = [
-  { id: 'netflix', name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png' },
-  { id: 'prime', name: 'Amazon Prime', logo: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png' },
-  { id: 'hotstar', name: 'Disney+ Hotstar', logo: 'https://image.tmdb.org/t/p/w92/7rw.png' },
-  { id: 'jiocinema', name: 'JioCinema', logo: 'https://image.tmdb.org/t/p/w92/7rw3q.png' },
-  { id: 'zee5', name: 'Zee5', logo: 'https://image.tmdb.org/t/p/w92/zee5.png' },
-  { id: 'appletv', name: 'Apple TV', logo: 'https://image.tmdb.org/t/p/w92/peURlLlr8jggOwK53fJ5wdQl05y.png' },
-];
+export const STREAMING_PLATFORMS = COUNTRY_STREAMING_PLATFORMS['IN'];
 
-export const COUNTRIES = [
-  { code: 'IN', name: 'India', flag: '🇮🇳' },
-  { code: 'US', name: 'United States', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
-];

@@ -46,6 +46,7 @@ const CLASSIFIED_LANGUAGES: LanguageDef[] = [
   { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', region: 'French World Cinema', gradient: 'from-cyan-600/30 to-blue-800/30' },
   { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪', region: 'German & European Cinema', gradient: 'from-zinc-600/30 to-stone-800/30' },
   { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇧🇷 🇵🇹', region: 'Brazilian & Portuguese Cinema', gradient: 'from-green-600/30 to-emerald-800/30' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹', region: 'Italian Neorealism & Masterpieces', gradient: 'from-emerald-600/30 to-rose-800/30' },
 ];
 
 const GENRE_METADATA: Record<string, { icon: string; description: string; gradient: string }> = {

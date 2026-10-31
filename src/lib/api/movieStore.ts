@@ -23,10 +23,28 @@ export function getTrendingTitles(): TitleItem[] {
   return [...inMemoryCatalog].sort((a, b) => b.popularity - a.popularity);
 }
 
+export function getTrendingTitlesForCountry(countryCode = 'IN'): TitleItem[] {
+  const code = (countryCode || 'IN').toUpperCase();
+  return [...inMemoryCatalog].sort((a, b) => {
+    const aMatch = a.originCountry?.toUpperCase() === code ? 1 : 0;
+    const bMatch = b.originCountry?.toUpperCase() === code ? 1 : 0;
+    if (aMatch !== bMatch) return bMatch - aMatch;
+    return b.popularity - a.popularity;
+  });
+}
+
 export function getBestOfAllTime(): TitleItem[] {
   return [...inMemoryCatalog]
     .filter((item) => item.status === 'released')
     .sort((a, b) => b.ratings.bayesianScore - a.ratings.bayesianScore);
+}
+
+export function getBestOfAllTimeForCountry(countryCode = 'all'): TitleItem[] {
+  let list = [...inMemoryCatalog].filter((item) => item.status === 'released');
+  if (countryCode && countryCode !== 'all') {
+    list = list.filter((item) => item.originCountry?.toUpperCase() === countryCode.toUpperCase());
+  }
+  return list.sort((a, b) => b.ratings.bayesianScore - a.ratings.bayesianScore);
 }
 
 export function filterAndSortTitles(filters: Partial<FilterOptions>): {
@@ -57,6 +75,13 @@ export function filterAndSortTitles(filters: Partial<FilterOptions>): {
   // Filter by Release Year
   if (filters.year && filters.year !== 'all') {
     result = result.filter((item) => item.releaseDate.startsWith(filters.year!));
+  }
+
+  // Filter by Origin Country
+  if (filters.originCountry && filters.originCountry !== 'all') {
+    result = result.filter(
+      (item) => item.originCountry?.toUpperCase() === filters.originCountry?.toUpperCase()
+    );
   }
 
   // Filter by Minimum Rating (scale 0-5 stars)

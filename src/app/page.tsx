@@ -5,12 +5,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MovieImage } from '@/components/MovieImage';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getTrendingTitles, getUpcomingTitles, getBestOfAllTime } from '@/lib/api/movieStore';
+import { getTrendingTitlesForCountry, getUpcomingTitles, getBestOfAllTime } from '@/lib/api/movieStore';
 import { TitleItem } from '@/types/movie';
 import { MovieCard } from '@/components/MovieCard';
 import { RatingBadge } from '@/components/RatingBadge';
 import { TrailerModal } from '@/components/TrailerModal';
-import { STREAMING_PLATFORMS, CELEBRITIES_BORN_TODAY } from '@/lib/data/mockMovies';
+import {
+  COUNTRIES,
+  CountryConfig,
+  getCountryByCode,
+  COUNTRY_STREAMING_PLATFORMS,
+  STREAMING_PLATFORMS,
+  CELEBRITIES_BORN_TODAY,
+} from '@/lib/data/mockMovies';
 import {
   Sparkles,
   TrendingUp,
@@ -32,15 +39,10 @@ import {
 } from 'lucide-react';
 import { getTmdbImageUrl, formatRuntime, cn } from '@/lib/utils';
 import { staggerContainer, fadeInUp, heroSlide } from '@/lib/animations';
-import { toggleListStatus, getClientState } from '@/lib/storage';
+import { toggleListStatus, getClientState, getSelectedCountry, setSelectedCountry } from '@/lib/storage';
 
 export default function HomePage() {
-  const trending = getTrendingTitles();
-  const upcoming = getUpcomingTitles();
-  const topRated = getBestOfAllTime();
-
-  // Hero showcase titles
-  const heroList = [trending[0], trending[1], trending[2], upcoming[0], trending[3]].filter(Boolean);
+  const [activeCountry, setActiveCountry] = useState('IN');
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [trailerMovie, setTrailerMovie] = useState<TitleItem | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
@@ -48,19 +50,39 @@ export default function HomePage() {
   const [isHeroHovered, setIsHeroHovered] = useState(false);
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
 
+  useEffect(() => {
+    setActiveCountry(getSelectedCountry());
+    setWatchlistIds(getClientState().watchlist);
+
+    const updateHandler = () => {
+      setWatchlistIds(getClientState().watchlist);
+    };
+
+    const countryHandler = () => {
+      setActiveCountry(getSelectedCountry());
+    };
+
+    window.addEventListener('moviestars_state_updated', updateHandler);
+    window.addEventListener('moviestars_country_updated', countryHandler);
+    return () => {
+      window.removeEventListener('moviestars_state_updated', updateHandler);
+      window.removeEventListener('moviestars_country_updated', countryHandler);
+    };
+  }, []);
+
+  const countryConfig = getCountryByCode(activeCountry);
+  const trending = getTrendingTitlesForCountry(activeCountry);
+  const upcoming = getUpcomingTitles();
+  const topRated = getBestOfAllTime();
+  const currentPlatforms = COUNTRY_STREAMING_PLATFORMS[activeCountry] || STREAMING_PLATFORMS;
+
+  // Hero showcase titles
+  const heroList = [trending[0], trending[1], trending[2], upcoming[0], trending[3]].filter(Boolean);
+
   const openTrailer = (m: TitleItem) => {
     setTrailerMovie(m);
     setTrailerOpen(true);
   };
-
-  useEffect(() => {
-    setWatchlistIds(getClientState().watchlist);
-    const updateHandler = () => {
-      setWatchlistIds(getClientState().watchlist);
-    };
-    window.addEventListener('moviestars_state_updated', updateHandler);
-    return () => window.removeEventListener('moviestars_state_updated', updateHandler);
-  }, []);
 
   // Auto-advance hero carousel unless hovered
   useEffect(() => {
@@ -81,7 +103,56 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="space-y-14">
+    <div className="space-y-12">
+      {/* 0. Country-First Experience: Active Region Banner & Rapid Flag Switcher */}
+      <div className="rounded-3xl p-4 sm:p-5 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-white/10 shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-[#f5c518]/15 border border-[#f5c518]/30 text-[#f5c518] flex items-center justify-center shrink-0">
+            <Globe className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+                <span className="text-xl">{countryConfig.flag}</span>
+                <span>{countryConfig.name} Regional Cinema &amp; Streaming</span>
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#f5c518] text-black uppercase tracking-wider">
+                Live Catalog
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              {countryConfig.tagline} • Regional currency: {countryConfig.currency}
+            </p>
+          </div>
+        </div>
+
+        {/* 12-Country Selector Pill Track */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+          {COUNTRIES.map((c) => {
+            const isSelected = c.code === activeCountry;
+            return (
+              <button
+                key={c.code}
+                onClick={() => {
+                  setActiveCountry(c.code);
+                  setSelectedCountry(c.code);
+                }}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0',
+                  isSelected
+                    ? 'bg-[#f5c518] text-black shadow-lg shadow-amber-500/25 scale-105'
+                    : 'bg-zinc-800/80 text-zinc-300 hover:text-white hover:bg-zinc-700/80 border border-white/5'
+                )}
+                title={`${c.name} (${c.region})`}
+              >
+                <span>{c.flag}</span>
+                <span>{c.code}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 1. IMDb-Style Split Hero Showcase: Main Video Stage + "Up Next" Queue */}
       <section
         className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch"
@@ -308,14 +379,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. Top 10 on MovieStars this Week (IMDb / Netflix Top 10 Styling) */}
+      {/* 2. Top 10 on MovieStars this Week (Adapts to Active Country) */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-1.5 h-6 rounded-full bg-[#f5c518]" />
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
-              Top 10 on MovieStars this week
-            </h2>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                <span>Top 10 in {countryConfig.name} this week</span>
+                <span>{countryConfig.flag}</span>
+              </h2>
+              <p className="text-xs text-zinc-400">
+                Trending blockbusters and acclaimed titles tailored for viewers in {countryConfig.name}
+              </p>
+            </div>
           </div>
           <Link
             href="/top-rated"
@@ -345,39 +422,40 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Explore What's Streaming in India 🇮🇳 */}
+      {/* 3. Explore What's Streaming in Selected Country */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-1.5 h-6 rounded-full bg-[#f5c518]" />
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                Explore What&apos;s Streaming
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                <span>Explore What&apos;s Streaming in {countryConfig.name}</span>
+                <span>{countryConfig.flag}</span>
               </h2>
               <p className="text-xs text-zinc-400">
-                Verified streaming catalogs for India (powered by JustWatch)
+                Verified streaming catalogs and providers in {countryConfig.name} (JustWatch &amp; TMDB)
               </p>
             </div>
           </div>
           <Link
-            href="/browse"
+            href={`/browse?country=${activeCountry}`}
             className="text-xs font-bold text-[#f5c518] hover:text-amber-300 flex items-center gap-1"
           >
-            <span>All Providers</span>
+            <span>All {countryConfig.name} Providers</span>
             <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
 
         {/* Platform Selector Buttons */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-          {STREAMING_PLATFORMS.map((platform) => (
+          {currentPlatforms.map((platform) => (
             <motion.div
               key={platform.id}
               whileHover={{ y: -3, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <Link
-                href={`/browse?provider=${encodeURIComponent(platform.name)}`}
+                href={`/browse?provider=${encodeURIComponent(platform.name)}&country=${activeCountry}`}
                 className="flex items-center gap-3 p-3 rounded-2xl bg-[#1a1a1a] hover:bg-zinc-800 border border-white/10 hover:border-[#f5c518]/60 transition-all group shadow-md"
               >
                 <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center font-black text-xs text-[#f5c518] border border-white/10 shrink-0">
@@ -387,7 +465,7 @@ export default function HomePage() {
                   <div className="text-xs font-extrabold text-white truncate group-hover:text-[#f5c518] transition-colors">
                     {platform.name}
                   </div>
-                  <div className="text-[10px] text-zinc-400">Catalog</div>
+                  <div className="text-[10px] text-zinc-400">{countryConfig.code} Catalog</div>
                 </div>
               </Link>
             </motion.div>

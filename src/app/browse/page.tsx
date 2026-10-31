@@ -3,7 +3,7 @@
 import React, { Suspense, useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { filterAndSortTitles } from '@/lib/api/movieStore';
-import { ALL_GENRES, COUNTRIES, STREAMING_PLATFORMS } from '@/lib/data/mockMovies';
+import { ALL_GENRES, COUNTRIES, COUNTRY_STREAMING_PLATFORMS, STREAMING_PLATFORMS, getCountryByCode } from '@/lib/data/mockMovies';
 import { MovieCard } from '@/components/MovieCard';
 import { FilterOptions, TitleType, TitleItem } from '@/types/movie';
 import { Filter, SlidersHorizontal, RefreshCcw, Film, Tv, Clapperboard, Star, LayoutGrid, List, Sparkles } from 'lucide-react';
@@ -22,6 +22,7 @@ function BrowseContent() {
   const [ratingMin, setRatingMin] = useState<number>(0);
   const [provider, setProvider] = useState<string>(searchParams.get('provider') || 'all');
   const [country, setCountry] = useState<string>('IN');
+  const [originCountry, setOriginCountry] = useState<string>(searchParams.get('origin') || 'all');
   const [sortBy, setSortBy] = useState<FilterOptions['sortBy']>(
     (searchParams.get('sortBy') as any) || 'bayesian'
   );
@@ -31,8 +32,18 @@ function BrowseContent() {
   const [isSearchingWorldwide, setIsSearchingWorldwide] = useState<boolean>(false);
 
   useEffect(() => {
-    document.title = 'Explore Movies & TV Series — Streaming Availability Worldwide | MovieStars';
-    setCountry(getSelectedCountry());
+    document.title = 'Explore Movies & TV Series — Country & Streaming Availability | MovieStars';
+    const cParam = searchParams.get('country');
+    if (cParam) {
+      setCountry(cParam);
+      setSelectedCountry(cParam);
+    } else {
+      setCountry(getSelectedCountry());
+    }
+
+    const oParam = searchParams.get('origin');
+    if (oParam) setOriginCountry(oParam);
+
     const q = searchParams.get('q');
     if (q) setSearchQuery(q);
     const prov = searchParams.get('provider');
@@ -76,10 +87,11 @@ function BrowseContent() {
       ratingMin,
       provider,
       country,
+      originCountry,
       sortBy,
       searchQuery,
     }),
-    [type, genre, language, year, ratingMin, provider, country, sortBy, searchQuery]
+    [type, genre, language, year, ratingMin, provider, country, originCountry, sortBy, searchQuery]
   );
 
   const { items, total } = useMemo(() => {
@@ -130,13 +142,16 @@ function BrowseContent() {
           if (!hasProvider) return false;
         }
 
+        // Origin country filter
+        if (originCountry !== 'all' && w.originCountry && w.originCountry !== originCountry) return false;
+
         return true;
       });
 
       return [...items, ...filteredWorldwide];
     }
     return items;
-  }, [items, searchQuery, worldwideResults, type, genre, language, year, ratingMin, provider, country]);
+  }, [items, searchQuery, worldwideResults, type, genre, language, year, ratingMin, provider, country, originCountry]);
 
   const handleReset = () => {
     setType('all');
@@ -145,6 +160,7 @@ function BrowseContent() {
     setYear('all');
     setRatingMin(0);
     setProvider('all');
+    setOriginCountry('all');
     setSortBy('bayesian');
     setSearchQuery('');
   };
@@ -244,14 +260,14 @@ function BrowseContent() {
       </div>
 
       {/* Advanced Filter Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3.5 glass-panel p-4 rounded-2xl border border-white/10 text-xs shadow-lg">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 glass-panel p-4 rounded-2xl border border-white/10 text-xs shadow-lg">
         {/* Genre */}
         <div>
           <label className="block text-zinc-400 font-bold mb-1.5">Genre</label>
           <select
             value={genre}
             onChange={(e) => setGenre(e.target.value)}
-            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold"
+            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold cursor-pointer"
           >
             <option value="all">All Genres</option>
             {ALL_GENRES.map((g) => (
@@ -268,10 +284,10 @@ function BrowseContent() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold"
+            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold cursor-pointer"
           >
             <option value="all">All Languages</option>
-            <option value="en">English (Hollywood)</option>
+            <option value="en">English (Hollywood/UK)</option>
             <option value="hi">Hindi (Bollywood)</option>
             <option value="te">Telugu (Tollywood)</option>
             <option value="ta">Tamil (Kollywood)</option>
@@ -282,19 +298,63 @@ function BrowseContent() {
             <option value="fr">French (Français)</option>
             <option value="de">German (Deutsch)</option>
             <option value="pt">Portuguese (Português)</option>
+            <option value="it">Italian (Italiano)</option>
           </select>
         </div>
 
-        {/* Platform */}
+        {/* Country of Origin (Cinema Heritage) */}
+        <div>
+          <label className="block text-zinc-400 font-bold mb-1.5 flex items-center justify-between">
+            <span>Origin Country</span>
+            <span className="text-[10px] text-cinema-accent font-black">Cinema</span>
+          </label>
+          <select
+            value={originCountry}
+            onChange={(e) => setOriginCountry(e.target.value)}
+            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold cursor-pointer"
+          >
+            <option value="all">All Origins (Global)</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Streaming Region (Where to Watch) */}
+        <div>
+          <label className="block text-zinc-400 font-bold mb-1.5 flex items-center justify-between">
+            <span>Watch Region</span>
+            <span className="text-[10px] text-cinema-gold font-black">Stream</span>
+          </label>
+          <select
+            value={country}
+            onChange={(e) => {
+              setCountry(e.target.value);
+              setSelectedCountry(e.target.value);
+              setProvider('all'); // Reset platform filter when country changes
+            }}
+            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold cursor-pointer"
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Streaming Platform (Dynamic based on Selected Country) */}
         <div>
           <label className="block text-zinc-400 font-bold mb-1.5">Platform</label>
           <select
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
-            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold"
+            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold cursor-pointer"
           >
-            <option value="all">Any Platform</option>
-            {STREAMING_PLATFORMS.map((p) => (
+            <option value="all">Any Platform ({country})</option>
+            {(COUNTRY_STREAMING_PLATFORMS[country] || STREAMING_PLATFORMS).map((p) => (
               <option key={p.id} value={p.name}>
                 {p.name}
               </option>
@@ -308,30 +368,11 @@ function BrowseContent() {
           <select
             value={ratingMin}
             onChange={(e) => setRatingMin(Number(e.target.value))}
-            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold"
+            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold cursor-pointer"
           >
             <option value={0}>All Ratings</option>
             <option value={4.0}>★ 4.0+ Stars (Top Rated)</option>
             <option value={4.5}>★ 4.5+ Stars (Masterpieces)</option>
-          </select>
-        </div>
-
-        {/* Country Selector */}
-        <div>
-          <label className="block text-zinc-400 font-bold mb-1.5">Region</label>
-          <select
-            value={country}
-            onChange={(e) => {
-              setCountry(e.target.value);
-              setSelectedCountry(e.target.value);
-            }}
-            className="w-full bg-cinema-elevated border border-white/10 text-white rounded-xl p-2.5 outline-none font-semibold"
-          >
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.flag} {c.name}
-              </option>
-            ))}
           </select>
         </div>
 
