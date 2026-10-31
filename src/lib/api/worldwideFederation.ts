@@ -45,9 +45,10 @@ export function normalizeCinemetaMeta(item: any, defaultType: 'movie' | 'tv' = '
   const year = item.year || item.releaseInfo || '';
   const releaseDate = parseSafeDate(item.released, year);
 
-  const rawRating = parseFloat(item.imdbRating || item.rating || '7.5');
-  const imdbScore = isNaN(rawRating) ? 7.5 : Number(rawRating.toFixed(1));
-  const votes = Math.floor(Math.random() * 50000) + 15000;
+  const rawRating = item.imdbRating || item.rating ? parseFloat(item.imdbRating || item.rating) : null;
+  const imdbScore = rawRating !== null && !isNaN(rawRating) ? Number(rawRating.toFixed(1)) : undefined;
+  const rawVotes = item.imdbVotes ? parseInt(String(item.imdbVotes).replace(/,/g, ''), 10) : 0;
+  const votes = !isNaN(rawVotes) && rawVotes > 0 ? rawVotes : (imdbScore ? 1000 : 0);
 
   // Trailer key extraction
   let trailerKey = item.trailers?.[0]?.source || item.trailerStreams?.[0]?.ytId;
@@ -116,12 +117,11 @@ export function normalizeCinemetaMeta(item: any, defaultType: 'movie' | 'tv' = '
     directors,
     trailerYoutubeKey: trailerKey,
     ratings: {
-      imdb: { score: imdbScore, votes },
-      tmdb: { score: imdbScore, votes: Math.floor(votes * 0.8) },
-      userCommunity: { score: Number((imdbScore / 2).toFixed(1)), votes: Math.floor(votes * 0.1) },
-      bayesianScore: calculateBayesianScore(votes, imdbScore),
+      imdb: imdbScore !== undefined ? { score: imdbScore, votes } : undefined,
+      userCommunity: { score: imdbScore ? Number((imdbScore / 2).toFixed(1)) : 4.0, votes: Math.floor(votes * 0.05) },
+      bayesianScore: imdbScore ? calculateBayesianScore(votes, imdbScore) : 5.0,
     },
-    popularity: 88.0 + Math.random() * 10,
+    popularity: isUpcoming ? 90.0 : 80.0,
     certification: isSeries ? 'TV-MA' : 'PG-13',
     availability: {
       IN: {
@@ -245,10 +245,11 @@ export async function searchWorldwideCatalog(query: string, typeFilter: string =
             cast: [],
             directors: [],
             ratings: {
-              imdb: { score: s.rating?.average || 8.0, votes: 20000 },
-              tmdb: { score: s.rating?.average || 8.0, votes: 15000 },
-              userCommunity: { score: 4.1, votes: 2000 },
-              bayesianScore: calculateBayesianScore(20000, s.rating?.average || 8.0),
+              userCommunity: {
+                score: s.rating?.average ? Number((s.rating.average / 2).toFixed(1)) : 4.0,
+                votes: 120,
+              },
+              bayesianScore: s.rating?.average ? Number(s.rating.average.toFixed(1)) : 7.0,
             },
             popularity: 85.0,
             availability: {

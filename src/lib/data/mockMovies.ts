@@ -416,7 +416,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
   },
   {
     id: '12th-fail-2023',
-    tmdbId: 1184918,
+    tmdbId: 1163258,
     imdbId: 'tt23849204',
     type: 'movie',
     title: '12th Fail',
@@ -425,14 +425,14 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 147,
     status: 'released',
     originalLanguage: 'hi',
-    posterPath: 'https://m.media-amazon.com/images/M/MV5BNTE3OTIxZDYtNjA0NC00N2YxLTg1NGQtOTYxNmZkMDkwOWNjXkEyXkFqcGc@._V1_.jpg',
-    backdropPath: 'https://m.media-amazon.com/images/M/MV5BNTE3OTIxZDYtNjA0NC00N2YxLTg1NGQtOTYxNmZkMDkwOWNjXkEyXkFqcGc@._V1_.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/eebUPRI4Z5e1Z7Hev4JZAwMIFkX.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/6RV2o8PBCEyw9ylOWViV1CtULIF.jpg',
     genres: [
       { id: 18, name: 'Drama' },
       { id: 36, name: 'History' }
     ],
     cast: [
-      { id: 111818, name: 'Vikrant Massey', role: 'actor', character: 'Manoj Kumar Sharma' },
+      { id: 1208682, name: 'Vikrant Massey', role: 'actor', character: 'Manoj Kumar Sharma' },
       { id: 2841920, name: 'Medha Shankar', role: 'actor', character: 'Shraddha Joshi' },
       { id: 1419750, name: 'Anant V Joshi', role: 'actor', character: 'Pritam Pandey' },
     ],
@@ -461,10 +461,10 @@ export const INITIAL_MOVIES: TitleItem[] = [
       'Director Vidhu Vinod Chopra funded much of the distribution independently after traditional studios doubted a non-action drama would succeed in cinemas.',
     ],
     ratings: {
-      imdb: { score: 9.0, votes: 125000 },
-      tmdb: { score: 8.5, votes: 450 },
+      imdb: { score: 8.9, votes: 130000 },
+      tmdb: { score: 8.1, votes: 290 },
       userCommunity: { score: 4.8, votes: 1120 },
-      bayesianScore: calculateBayesianScore(125000, 9.0),
+      bayesianScore: calculateBayesianScore(130000, 8.9),
     },
     availability: {
       IN: {
@@ -480,7 +480,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
   },
   {
     id: 'mirzapur-s3-2024',
-    tmdbId: 83631,
+    tmdbId: 84105,
     imdbId: 'tt6473300',
     type: 'web_series',
     title: 'Mirzapur',
@@ -490,15 +490,15 @@ export const INITIAL_MOVIES: TitleItem[] = [
     episodesCount: 29,
     status: 'released',
     originalLanguage: 'hi',
-    posterPath: 'https://m.media-amazon.com/images/M/MV5BZTFjMzMxZTUtYTMyNy00OWNhLTk4ODQtNGI1NjI1NjJhMzc3XkEyXkFqcGc@._V1_.jpg',
-    backdropPath: 'https://m.media-amazon.com/images/M/MV5BZTFjMzMxZTUtYTMyNy00OWNhLTk4ODQtNGI1NjI1NjJhMzc3XkEyXkFqcGc@._V1_.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/p0qM8hhlMF5DuxHBzl2EZR6TehX.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/3dV7pWAdwIPKR2lMIACMfObXdgK.jpg',
     genres: [
       { id: 80, name: 'Crime' },
       { id: 18, name: 'Drama' },
       { id: 28, name: 'Action' }
     ],
     cast: [
-      { id: 131975, name: 'Pankaj Tripathi', role: 'actor', character: 'Akhandanand "Kaleen Bhaiya" Tripathi' },
+      { id: 1179460, name: 'Pankaj Tripathi', role: 'actor', character: 'Akhandanand "Kaleen Bhaiya" Tripathi' },
       { id: 1276535, name: 'Ali Fazal', role: 'actor', character: 'Guddu Pandit' },
       { id: 1416954, name: 'Shweta Tripathi', role: 'actor', character: 'Golu Gupta' },
       { id: 1421033, name: 'Divyenndu', role: 'actor', character: 'Munna Tripathi' },
@@ -527,10 +527,10 @@ export const INITIAL_MOVIES: TitleItem[] = [
       'Ali Fazal gained 14kg of pure muscle mass and trained in freestyle wrestling for Guddu Pandit’s brutal transformation.',
     ],
     ratings: {
-      imdb: { score: 8.5, votes: 94000 },
-      tmdb: { score: 8.1, votes: 340 },
+      imdb: { score: 8.5, votes: 87000 },
+      tmdb: { score: 7.8, votes: 199 },
       userCommunity: { score: 4.6, votes: 890 },
-      bayesianScore: calculateBayesianScore(94000, 8.5),
+      bayesianScore: calculateBayesianScore(87000, 8.5),
     },
     availability: {
       IN: {
@@ -555,7 +555,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 187,
     status: 'released',
     originalLanguage: 'te',
-    posterPath: 'https://image.tmdb.org/t/p/w500/u0XUBNQWlOvrh0Gd97ARGpIkL0.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/wE0I6efAW4cDDmZQWtwZMOW44EJ.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/i0Y0wP8H6SRgjr6QmuwbtQbS24D.jpg',
     genres: [
       { id: 28, name: 'Action' },
@@ -592,10 +592,10 @@ export const INITIAL_MOVIES: TitleItem[] = [
       'RRR won the Academy Award for Best Original Song ("Naatu Naatu"), making it the first song from an Indian film production to win an Oscar.',
     ],
     ratings: {
-      imdb: { score: 8.1, votes: 175000 },
-      tmdb: { score: 7.8, votes: 1550 },
+      imdb: { score: 7.8, votes: 175000 },
+      tmdb: { score: 7.7, votes: 1739 },
       userCommunity: { score: 4.7, votes: 1400 },
-      bayesianScore: calculateBayesianScore(175000, 8.1),
+      bayesianScore: calculateBayesianScore(175000, 7.8),
     },
     availability: {
       IN: {
@@ -612,7 +612,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
   },
   {
     id: 'avengers-secret-wars-2027',
-    tmdbId: 1003598,
+    tmdbId: 1003596,
     imdbId: 'tt21361450',
     type: 'movie',
     title: 'Avengers: Secret Wars',
@@ -621,8 +621,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 195,
     status: 'upcoming',
     originalLanguage: 'en',
-    posterPath: 'https://m.media-amazon.com/images/M/MV5BYTQyZTQ5MWQtN2M4NC00YWQwLTg3ZTctM2JiZDE4NDBkZDJkXkEyXkFqcGc@._V1_.jpg',
-    backdropPath: 'https://m.media-amazon.com/images/M/MV5BYTQyZTQ5MWQtN2M4NC00YWQwLTg3ZTctM2JiZDE4NDBkZDJkXkEyXkFqcGc@._V1_.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/tTMmREfhVd51CCg7GN73wL8cIoT.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/rObL4of4eFA8yWaN9pRFo9aOVNi.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 878, name: 'Science Fiction' },
@@ -649,10 +649,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
       'The Russo Brothers return to helm both Avengers: Doomsday and Avengers: Secret Wars.',
     ],
     ratings: {
-      imdb: { score: 9.3, votes: 42000 },
-      tmdb: { score: 8.8, votes: 1200 },
       userCommunity: { score: 4.9, votes: 980 },
-      bayesianScore: calculateBayesianScore(42000, 9.3),
+      bayesianScore: 8.5,
     },
     availability: {
       IN: {
@@ -667,18 +665,18 @@ export const INITIAL_MOVIES: TitleItem[] = [
     }
   },
   {
-    id: 'kalki-2-2026',
-    tmdbId: 1022340,
-    imdbId: 'tt28014022',
+    id: 'kalki-2898-ad-2024',
+    tmdbId: 801688,
+    imdbId: 'tt12735488',
     type: 'movie',
-    title: 'Kalki 2898 AD: Part 2',
-    overview: 'The dystopian saga escalates as Ashwatthama, Bhairava, and Supreme Yaskin enter a war for the fate of humanity in the ruined world of Kasi and the Complex.',
-    releaseDate: '2026-12-18',
-    runtimeMinutes: 185,
-    status: 'upcoming',
+    title: 'Kalki 2898 AD',
+    overview: 'Set in a post-apocalyptic city of Kasi in the year 2898 AD, the world is ruled by Supreme Yaskin from the Complex. When SUM-80 escapes carrying a miraculous child prophesied to end the darkness, immortal warrior Ashwatthama rises to defend her while bounty hunter Bhairava pursues the ultimate bounty.',
+    releaseDate: '2024-06-27',
+    runtimeMinutes: 181,
+    status: 'released',
     originalLanguage: 'te',
-    posterPath: 'https://m.media-amazon.com/images/M/MV5BMTM3ZGUwYTEtZTI5NS00ZmMyLTk2YmQtMWU4YjlhZTI3NjRjXkEyXkFqcGc@._V1_.jpg',
-    backdropPath: 'https://m.media-amazon.com/images/M/MV5BMTM3ZGUwYTEtZTI5NS00ZmMyLTk2YmQtMWU4YjlhZTI3NjRjXkEyXkFqcGc@._V1_.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/rstcAnBeCkxNQjNp3YXrF6IP1tW.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/whNjsTOUVg2lZLCKgGhnACnmV8E.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 878, name: 'Science Fiction' },
@@ -693,23 +691,24 @@ export const INITIAL_MOVIES: TitleItem[] = [
     directors: [{ id: 1354020, name: 'Nag Ashwin', role: 'director' }],
     trailerYoutubeKey: 'kQDd1AhGIHk',
     popularity: 96.5,
-    tagline: 'The final avatar awakens.',
+    tagline: 'The future of Indian cinema begins.',
     trivia: [
-      'Director Nag Ashwin revealed that Part 2 focuses heavily on the backstory of Karna and the full clash with Supreme Yaskin wielding the celestial bow Gandiva.',
+      'Nag Ashwin spent four years developing the custom sci-fi world, fusing Hindu mythology from the Mahabharata with futuristic cyberpunk technology.',
+      'Amitabh Bachchan performed extensive physical action sequences without a body double as the legendary Ashwatthama.',
     ],
     ratings: {
-      imdb: { score: 9.1, votes: 31000 },
-      tmdb: { score: 8.7, votes: 980 },
-      userCommunity: { score: 4.8, votes: 540 },
-      bayesianScore: calculateBayesianScore(31000, 9.1),
+      imdb: { score: 7.6, votes: 78000 },
+      tmdb: { score: 7.4, votes: 190 },
+      userCommunity: { score: 4.6, votes: 540 },
+      bayesianScore: calculateBayesianScore(78000, 7.6),
     },
     availability: {
       IN: {
         countryCode: 'IN',
         countryName: 'India',
         stream: [
-          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream' },
-          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 2 }, offerType: 'stream' }
+          { provider: { id: 8, name: 'Netflix', logoPath: 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsya9w326pxv6m.png', displayPriority: 1 }, offerType: 'stream', streamUrl: 'https://www.netflix.com' },
+          { provider: { id: 119, name: 'Amazon Prime Video', logoPath: 'https://image.tmdb.org/t/p/w92/pvsGg12z0p5k1A01Lp.png', displayPriority: 2 }, offerType: 'stream', streamUrl: 'https://www.primevideo.com' }
         ],
         rent: [],
         buy: []
@@ -718,7 +717,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
   },
   {
     id: 'the-batman-part-ii-2026',
-    tmdbId: 998844,
+    tmdbId: 806704,
     imdbId: 'tt20869502',
     type: 'movie',
     title: 'The Batman: Part II',
@@ -727,8 +726,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 170,
     status: 'upcoming',
     originalLanguage: 'en',
-    posterPath: 'https://image.tmdb.org/t/p/w500/nWFGTPx7tcHc7IC6lZF7tuM7Nst.jpg',
-    backdropPath: 'https://image.tmdb.org/t/p/w1280/rvtdN5XkWAfGX6xDuPL6yYS2seK.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/r5fl4aMsmTjgc8DdDqQaM84roWp.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/4uaHnYDDpUTj0nCg6YqBKab50YW.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 80, name: 'Crime' },
@@ -747,10 +746,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
       'Matt Reeves confirmed the storyline directly continues following the explosive flood of Gotham City and the rise of The Penguin syndicate.',
     ],
     ratings: {
-      imdb: { score: 8.8, votes: 28000 },
-      tmdb: { score: 8.4, votes: 890 },
-      userCommunity: { score: 4.7, votes: 410 },
-      bayesianScore: calculateBayesianScore(28000, 8.8),
+      userCommunity: { score: 4.8, votes: 410 },
+      bayesianScore: 8.4,
     },
     availability: {
       IN: {
@@ -1033,7 +1030,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     runtimeMinutes: 207,
     status: 'released',
     originalLanguage: 'ja',
-    posterPath: 'https://m.media-amazon.com/images/M/MV5BZjliMWExOTMtZDQ3ZS00NWU3LWIyN2EtMjllNzk3ZTNlYzg4XkEyXkFqcGc@._V1_.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/lOMGc8bnSwQhS4XyE1S99uH8NXf.jpg',
     backdropPath: 'https://image.tmdb.org/t/p/w1280/qvZ91FwMq6O47VViAr8vZNQz3WI.jpg',
     genres: [
       { id: 28, name: 'Action' },
@@ -1154,7 +1151,7 @@ export const INITIAL_MOVIES: TitleItem[] = [
     status: 'released',
     originalLanguage: 'te',
     posterPath: 'https://image.tmdb.org/t/p/w500/21sC2assImQIYCEDA84Qh9d1RsK.jpg',
-    backdropPath: 'https://m.media-amazon.com/images/M/MV5BNTRhYTlhZTgtYmMyYy00NWI4LTk4MzItOWM2YjBmYTg2OTI2XkEyXkFqcGc@._V1_.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/whNjsTOUVg2lZLCKgGhnACnmV8E.jpg',
     genres: [
       { id: 28, name: 'Action' },
       { id: 12, name: 'Adventure' },
@@ -1216,8 +1213,8 @@ export const INITIAL_MOVIES: TitleItem[] = [
     episodesCount: 16,
     status: 'released',
     originalLanguage: 'hi',
-    posterPath: 'https://m.media-amazon.com/images/M/MV5BN2EyODc1MDAtNTg0ZC00MjRhLTg1NzctM2NjYTlmOGMwYWNiXkEyXkFqcGc@._V1_.jpg',
-    backdropPath: 'https://m.media-amazon.com/images/M/MV5BN2EyODc1MDAtNTg0ZC00MjRhLTg1NzctM2NjYTlmOGMwYWNiXkEyXkFqcGc@._V1_.jpg',
+    posterPath: 'https://image.tmdb.org/t/p/w500/dD3HcMczLC9wNvfNzx4pZVyl6q8.jpg',
+    backdropPath: 'https://image.tmdb.org/t/p/w1280/5YEnPWmTMpPtFk3MxjlfO1U1xW5.jpg',
     genres: [
       { id: 80, name: 'Crime' },
       { id: 18, name: 'Drama' },
@@ -1333,7 +1330,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 54,
     knownFor: 'Oppenheimer, Inception, Interstellar',
     role: 'Director',
-    profilePath: 'https://m.media-amazon.com/images/M/MV5BNjE3NDQyOTYyMV5BMl5BanBnXkFtZTcwODcyODU2Mw@@._V1_.jpg',
+    profilePath: 'https://image.tmdb.org/t/p/w185/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg',
     topTitles: ['Oppenheimer', 'Interstellar', 'The Dark Knight']
   },
   {
@@ -1343,7 +1340,7 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 48,
     knownFor: 'Oppenheimer, Peaky Blinders',
     role: 'Actor',
-    profilePath: 'https://m.media-amazon.com/images/M/MV5BNWM3NTg0NGYtNTFmYS00OWY1LTlkNTgtNzZlMWY4OGRmMmEzXkEyXkFqcGc@._V1_CR1542,983,1114,1670_.jpg',
+    profilePath: 'https://image.tmdb.org/t/p/w185/2lKs67r7FI4bPu0AXxMUJZxmUXn.jpg',
     topTitles: ['Oppenheimer', 'Dunkirk', 'Inception']
   },
   {
@@ -1353,17 +1350,17 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 28,
     knownFor: 'Dune: Part Two, Wonka, Interstellar',
     role: 'Actor',
-    profilePath: 'https://m.media-amazon.com/images/M/MV5BZTIyZWY4ZjktOGJiZi00NGFkLTllMjctZjJjMmNiMjIxOTY2XkEyXkFqcGc@._V1_.jpg',
+    profilePath: 'https://image.tmdb.org/t/p/w185/dFxpwRpmzpVfP1zjluH68DeQhyj.jpg',
     topTitles: ['Dune: Part Two', 'Interstellar']
   },
   {
-    id: 131975,
+    id: 1179460,
     name: 'Pankaj Tripathi',
     birthDate: '1976-09-05',
     age: 48,
     knownFor: 'Mirzapur, Gangs of Wasseypur, Stree',
     role: 'Actor',
-    profilePath: 'https://m.media-amazon.com/images/M/MV5BYjU5NGViZTMtM2QwMy00MmFkLTg5MjAtYzdhZWJlNDM3YjA0XkEyXkFqcGc@._V1_.jpg',
+    profilePath: 'https://image.tmdb.org/t/p/w185/f3Vxz0QB7PHeyPcXrfJX14Xkxnu.jpg',
     topTitles: ['Mirzapur', 'Sacred Games', 'Stree']
   },
   {
@@ -1373,17 +1370,17 @@ export const CELEBRITIES_BORN_TODAY: Celebrity[] = [
     age: 28,
     knownFor: 'Dune: Part Two, Euphoria, Spider-Man',
     role: 'Actor',
-    profilePath: 'https://m.media-amazon.com/images/M/MV5BZjM5N2U3MzQtZWU5My00YzE0LThmZTgtYjE1NDJjNmIzZmIxXkEyXkFqcGc@._V1_.jpg',
+    profilePath: 'https://image.tmdb.org/t/p/w185/qGkBlyn1AwQpuFnRARMRwj0iHZp.jpg',
     topTitles: ['Dune: Part Two', 'Challengers']
   },
   {
-    id: 111818,
+    id: 1208682,
     name: 'Vikrant Massey',
     birthDate: '1987-04-03',
     age: 37,
     knownFor: '12th Fail, Mirzapur, Sector 36',
     role: 'Actor',
-    profilePath: 'https://m.media-amazon.com/images/M/MV5BNWFiNzExM2YtYjgwYy00YjQ1LWJjYjgtY2JkOTA1ZjllNDMwXkEyXkFqcGc@._V1_.jpg',
+    profilePath: 'https://image.tmdb.org/t/p/w185/zvpP52P7CtVXYONmvWrH1aOcRTx.jpg',
     topTitles: ['12th Fail', 'Mirzapur']
   }
 ];

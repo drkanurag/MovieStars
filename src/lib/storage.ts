@@ -9,7 +9,7 @@ const DEFAULT_STATE: WatchlistState = {
   watchlist: ['oppenheimer-2023', 'avengers-secret-wars-2027'],
   watched: ['the-godfather-1972', 'interstellar-2014'],
   favorites: ['the-shawshank-redemption-1994', 'breaking-bad-2008'],
-  reminders: ['avengers-secret-wars-2027', 'kalki-2-2026'],
+  reminders: ['avengers-secret-wars-2027', 'the-batman-part-ii-2026'],
   userRatings: {
     'oppenheimer-2023': 4.5,
     'the-godfather-1972': 5.0,
