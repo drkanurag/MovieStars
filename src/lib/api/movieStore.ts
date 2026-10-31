@@ -192,6 +192,18 @@ export function searchCatalogAutocomplete(query: string, limit = 6) {
     .slice(0, limit);
 }
 
+export function getCatalogCounts(): { total: number; movies: number; tv: number; webSeries: number } {
+  let movies = 0;
+  let tv = 0;
+  let webSeries = 0;
+  for (const item of inMemoryCatalog) {
+    if (item.type === 'movie') movies++;
+    else if (item.type === 'tv') tv++;
+    else if (item.type === 'web_series') webSeries++;
+  }
+  return { total: inMemoryCatalog.length, movies, tv, webSeries };
+}
+
 export function appendOrUpdateTitle(title: TitleItem) {
   const index = inMemoryCatalog.findIndex((t) => t.id === title.id || t.tmdbId === title.tmdbId);
   if (index >= 0) {

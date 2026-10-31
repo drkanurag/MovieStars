@@ -1,8 +1,8 @@
 'use client';
 
-import React, { Suspense, useState, useMemo, useEffect } from 'react';
+import React, { Suspense, useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { filterAndSortTitles } from '@/lib/api/movieStore';
+import { filterAndSortTitles, getCatalogCounts } from '@/lib/api/movieStore';
 import {
   ALL_GENRES,
   COUNTRIES,
@@ -26,17 +26,29 @@ import {
   Globe,
   X,
   Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import { getSelectedCountry, setSelectedCountry } from '@/lib/storage';
 import { cn } from '@/lib/utils';
 
+const DEFAULT_ITEMS_PER_PAGE = 24;
+
 function BrowseContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const resultsGridRef = useRef<HTMLDivElement>(null);
 
-  const [type, setType] = useState<'all' | TitleType>(
-    (searchParams.get('type') as any) || 'all'
-  );
+  // Type: Default to 'movie' if none provided for separate distinct pages, or use query param
+  const initialType = (searchParams.get('type') as any) || 'movie';
+  const initialPage = parseInt(searchParams.get('page') || '1', 10);
+
+  const [type, setType] = useState<'all' | TitleType>(initialType);
+  const [currentPage, setCurrentPage] = useState<number>(initialPage > 0 ? initialPage : 1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(DEFAULT_ITEMS_PER_PAGE);
+
   const [genre, setGenre] = useState<string>(searchParams.get('genre') || 'all');
   const [language, setLanguage] = useState<string>(searchParams.get('lang') || 'all');
   const [year, setYear] = useState<string>(searchParams.get('year') || 'all');
@@ -52,8 +64,20 @@ function BrowseContent() {
   const [worldwideResults, setWorldwideResults] = useState<TitleItem[]>([]);
   const [isSearchingWorldwide, setIsSearchingWorldwide] = useState<boolean>(false);
 
+  const counts = useMemo(() => getCatalogCounts(), []);
+
+  // Sync params with URL state
   useEffect(() => {
-    document.title = 'Explore Movies & TV Series — Country-Wise Cinema & Streaming | MovieStars';
+    const typeParam = searchParams.get('type');
+    if (typeParam) {
+      setType(typeParam as any);
+    }
+
+    const pageParam = parseInt(searchParams.get('page') || '1', 10);
+    if (!isNaN(pageParam) && pageParam > 0) {
+      setCurrentPage(pageParam);
+    }
+
     const cParam = searchParams.get('country');
     if (cParam) {
       setCountry(cParam);
@@ -71,12 +95,20 @@ function BrowseContent() {
     if (prov) setProvider(prov);
     const genreParam = searchParams.get('genre');
     if (genreParam) setGenre(genreParam);
-    const typeParam = searchParams.get('type');
-    if (typeParam) setType(typeParam as any);
 
     // Initial background sync
     fetch('/api/sync').catch(() => {});
   }, [searchParams]);
+
+  // Update dynamic document title based on selected page type
+  useEffect(() => {
+    let titlePrefix = 'Explore Movies';
+    if (type === 'tv') titlePrefix = 'Explore TV Series';
+    else if (type === 'web_series') titlePrefix = 'Explore Web Series';
+    else if (type === 'all') titlePrefix = 'Explore Unified Catalog';
+
+    document.title = `${titlePrefix} (Page ${currentPage}) — Country-Wise Cinema & Streaming | MovieStars`;
+  }, [type, currentPage]);
 
   // Worldwide live federation effect when searching
   useEffect(() => {
@@ -119,7 +151,7 @@ function BrowseContent() {
     [type, genre, language, year, ratingMin, provider, country, originCountry, sortBy, searchQuery]
   );
 
-  const { items, total } = useMemo(() => {
+  const { items } = useMemo(() => {
     return filterAndSortTitles(filterOptions);
   }, [filterOptions]);
 
@@ -170,8 +202,38 @@ function BrowseContent() {
     return items;
   }, [items, searchQuery, worldwideResults, type, genre, language, year, ratingMin, provider, country, originCountry]);
 
+  // Pagination calculation
+  const totalItems = displayItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  // Ensure current page does not exceed totalPages
+  const activePage = Math.min(currentPage, totalPages);
+
+  const paginatedItems = useMemo(() => {
+    const startIndex = (activePage - 1) * itemsPerPage;
+    return displayItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [displayItems, activePage, itemsPerPage]);
+
+  const scrollToResults = () => {
+    if (resultsGridRef.current) {
+      resultsGridRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setCurrentPage(newPage);
+    scrollToResults();
+  };
+
+  const handleTypeChange = (newType: 'all' | TitleType) => {
+    setType(newType);
+    setCurrentPage(1);
+    router.push(`/browse?type=${newType}`);
+  };
+
   const handleReset = () => {
-    setType('all');
+    setType('movie');
     setGenre('all');
     setLanguage('all');
     setYear('all');
@@ -180,6 +242,8 @@ function BrowseContent() {
     setOriginCountry('all');
     setSortBy('bayesian');
     setSearchQuery('');
+    setCurrentPage(1);
+    router.push('/browse?type=movie');
   };
 
   const handleCountryPillClick = (code: string) => {
@@ -191,10 +255,51 @@ function BrowseContent() {
       setSelectedCountry(code);
       setProvider('all');
     }
+    setCurrentPage(1);
   };
 
   const selectedCountryConfig = originCountry !== 'all' ? getCountryByCode(originCountry) : null;
   const currentRegionConfig = getCountryByCode(country);
+
+  // Category navigation tabs
+  const categoryTabs = [
+    {
+      id: 'movie',
+      label: 'Feature Films',
+      name: 'Movies',
+      icon: 'movie',
+      count: counts.movies,
+      badge: '270+ Movies',
+      description: 'Cinema, blockbusters & award-winning films',
+    },
+    {
+      id: 'tv',
+      label: 'TV Series',
+      name: 'TV Shows',
+      icon: 'tv',
+      count: counts.tv,
+      badge: '600+ Series',
+      description: 'Binge-worthy multi-season television & anime',
+    },
+    {
+      id: 'web_series',
+      label: 'Web Series',
+      name: 'Web Series',
+      icon: 'play_circle',
+      count: counts.webSeries,
+      badge: '35+ Originals',
+      description: 'Streaming originals & limited miniseries',
+    },
+    {
+      id: 'all',
+      label: 'All Titles',
+      name: 'All Catalog',
+      icon: 'grid_view',
+      count: counts.total,
+      badge: '910+ Total',
+      description: 'Combined master catalog across all formats',
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -205,7 +310,13 @@ function BrowseContent() {
             Discovery Catalog
           </span>
           <h1 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-text-primary leading-none">
-            Explore Cinema &amp; Series
+            {type === 'movie'
+              ? 'Movies & Feature Films'
+              : type === 'tv'
+              ? 'TV Series & Television'
+              : type === 'web_series'
+              ? 'Web Series & Originals'
+              : 'Explore Cinema & Series'}
           </h1>
           <p className="font-body-sm text-body-sm text-text-secondary mt-1">
             Browse unified titles with Bayesian star ratings, country-based origin filtering, and streaming availability across 180+ territories.
@@ -221,14 +332,20 @@ function BrowseContent() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search titles, actors, directors..."
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder={`Search in ${type === 'movie' ? 'Movies' : type === 'tv' ? 'TV Series' : 'Catalog'}...`}
               className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-card border border-surface-border text-xs sm:text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-amber-gold focus:ring-1 focus:ring-amber-gold shadow-lg font-body-sm"
             />
             {searchQuery && (
               <button
                 type="button"
-                onClick={() => setSearchQuery('')}
+                onClick={() => {
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
               >
                 <span className="material-symbols-outlined text-base">close</span>
@@ -238,7 +355,52 @@ function BrowseContent() {
         </div>
       </div>
 
-      {/* 2. Country-Wise Cinema Filter Hub (Shifted from Home) */}
+      {/* 2. Top-Level Dedicated Category Pages Rail */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {categoryTabs.map((tab) => {
+          const isActive = type === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTypeChange(tab.id as any)}
+              className={cn(
+                'group relative flex flex-col p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer overflow-hidden shadow-lg',
+                isActive
+                  ? 'bg-amber-gold/15 border-amber-gold/60 shadow-amber-gold/10 ring-1 ring-amber-gold/50'
+                  : 'bg-surface-card border-surface-border hover:border-amber-gold/30 hover:bg-surface-elevated'
+              )}
+            >
+              <div className="flex items-center justify-between w-full mb-2">
+                <span
+                  className={cn(
+                    'material-symbols-outlined text-2xl p-2 rounded-xl transition-colors',
+                    isActive ? 'bg-amber-gold text-surface-void font-bold' : 'bg-surface-elevated text-text-muted group-hover:text-amber-gold'
+                  )}
+                >
+                  {tab.icon}
+                </span>
+                <span
+                  className={cn(
+                    'text-[10px] font-mono px-2 py-0.5 rounded-full font-bold',
+                    isActive ? 'bg-amber-gold text-surface-void' : 'bg-surface-elevated text-text-muted'
+                  )}
+                >
+                  {tab.badge}
+                </span>
+              </div>
+              <h3 className={cn('font-bold text-sm sm:text-base', isActive ? 'text-amber-gold' : 'text-text-primary group-hover:text-amber-gold')}>
+                {tab.name}
+              </h3>
+              <p className="text-[11px] text-text-muted line-clamp-1 mt-0.5">
+                {tab.description}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 3. Country-Wise Cinema Filter Hub */}
       <section className="bg-surface-card border border-surface-border rounded-xl p-4 sm:p-5 shadow-2xl space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-3">
           <div className="flex items-center gap-2.5">
@@ -248,64 +410,56 @@ function BrowseContent() {
             <div>
               <h2 className="text-xs sm:text-sm font-bold text-text-primary flex items-center gap-2">
                 <span>Filter by Country of Origin &amp; Heritage</span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-gold text-surface-void uppercase font-label-sm">
-                  12 Cinema Regions
+                <span className="text-[10px] bg-amber-gold/20 text-amber-gold px-1.5 py-0.2 rounded font-mono font-bold">
+                  12 Cinema Hubs
                 </span>
               </h2>
               <p className="text-[11px] text-text-muted">
-                Select a cinema territory to isolate regional masterpieces, local blockbusters, and localized streaming catalogs
+                Showing films and series produced natively in selected film industries
               </p>
             </div>
           </div>
 
-          {originCountry !== 'all' && (
-            <button
-              type="button"
-              onClick={() => handleCountryPillClick('all')}
-              className="text-xs text-amber-gold hover:underline flex items-center gap-1 font-semibold self-start sm:self-auto"
-            >
-              <span>Show All Global Cinema</span>
-              <span className="material-symbols-outlined text-xs">close</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="text-[11px] text-text-muted">Active:</span>
+            <span className="text-xs font-bold text-amber-gold font-mono bg-surface-elevated px-2 py-0.5 rounded border border-surface-border">
+              {originCountry === 'all' ? '🌐 All World Origins' : `${selectedCountryConfig?.flag} ${selectedCountryConfig?.name}`}
+            </span>
+          </div>
         </div>
 
-        {/* 12-Country Selector Pill Track */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {/* All Global Option */}
+        {/* 1-Click Country Selector Rail */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none pt-1">
           <button
             type="button"
             onClick={() => handleCountryPillClick('all')}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-all whitespace-nowrap shrink-0 border',
+              'px-3.5 py-2 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border',
               originCountry === 'all'
-                ? 'bg-amber-gold text-surface-void border-amber-gold glow-gold scale-105'
-                : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:bg-surface-border border-surface-border'
+                ? 'bg-amber-gold text-surface-void border-amber-gold glow-gold shadow-md'
+                : 'bg-surface-elevated text-text-secondary border-surface-border hover:text-text-primary hover:border-amber-gold/40'
             )}
           >
             <span>🌐</span>
-            <span className="font-label-sm">All World Cinema</span>
+            <span>All World</span>
           </button>
 
-          {/* 12 Specific Countries */}
           {COUNTRIES.map((c) => {
-            const isSelected = originCountry === c.code;
+            const isSelected = originCountry.toUpperCase() === c.code.toUpperCase();
             return (
               <button
                 key={c.code}
                 type="button"
                 onClick={() => handleCountryPillClick(c.code)}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold transition-all whitespace-nowrap shrink-0 border',
+                  'px-3 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 flex items-center gap-1.5 border',
                   isSelected
-                    ? 'bg-amber-gold text-surface-void border-amber-gold glow-gold scale-105'
-                    : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:bg-surface-border border-surface-border'
+                    ? 'bg-amber-gold text-surface-void border-amber-gold glow-gold shadow-md font-bold'
+                    : 'bg-surface-elevated text-text-secondary border-surface-border hover:text-text-primary hover:border-amber-gold/40'
                 )}
-                title={`${c.name} (${c.region})`}
               >
-                <span>{c.flag}</span>
-                <span className="font-label-sm">{c.name}</span>
-                <span className="text-[10px] opacity-75 font-mono">({c.code})</span>
+                <span className="text-sm">{c.flag}</span>
+                <span>{c.name}</span>
               </button>
             );
           })}
@@ -328,75 +482,7 @@ function BrowseContent() {
         )}
       </section>
 
-      {/* 3. Control Bar: Type Selector & View Toggles */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-surface-card p-3.5 rounded-xl border border-surface-border shadow-xl">
-        {/* Type Filter Buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { id: 'all', label: 'All Titles' },
-            { id: 'movie', label: 'Movies' },
-            { id: 'tv', label: 'TV Shows' },
-            { id: 'web_series', label: 'Web Series' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setType(item.id as any)}
-              className={cn(
-                'px-4 py-2 rounded text-xs font-bold transition-all shrink-0',
-                type === item.id
-                  ? 'bg-amber-gold text-surface-void glow-gold shadow-md font-label-md'
-                  : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:bg-surface-border border border-surface-border'
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
-        {/* View Mode & Sort Dropdown */}
-        <div className="flex items-center gap-3 text-xs">
-          {/* Grid vs List Toggles */}
-          <div className="hidden sm:flex items-center bg-surface-elevated p-1 rounded border border-surface-border">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'p-1.5 rounded transition-colors',
-                viewMode === 'grid' ? 'bg-amber-gold text-surface-void font-bold' : 'text-text-secondary hover:text-text-primary'
-              )}
-              title="Grid View"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                'p-1.5 rounded transition-colors',
-                viewMode === 'list' ? 'bg-amber-gold text-surface-void font-bold' : 'text-text-secondary hover:text-text-primary'
-              )}
-              title="List View"
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 text-text-secondary font-semibold">
-            <SlidersHorizontal className="w-4 h-4 text-cyber-cyan" />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-surface-elevated text-text-primary border border-surface-border rounded px-3 py-2 outline-none font-bold cursor-pointer hover:border-amber-gold/50 transition-colors"
-            >
-              <option value="bayesian">Bayesian Weighted Rating</option>
-              <option value="popularity">Popularity / Trending</option>
-              <option value="releaseDate">Release Date (Newest first)</option>
-              <option value="votes">Total Vote Count</option>
-              <option value="title">Alphabetical (A - Z)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Advanced Filter Row */}
+      {/* 4. Controls & Filters */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 bg-surface-card p-4 rounded-xl border border-surface-border text-xs shadow-lg">
         {/* Origin Country Filter Dropdown */}
         <div>
@@ -406,7 +492,10 @@ function BrowseContent() {
           </label>
           <select
             value={originCountry}
-            onChange={(e) => setOriginCountry(e.target.value)}
+            onChange={(e) => {
+              setOriginCountry(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full bg-surface-elevated border border-surface-border text-text-primary rounded p-2.5 outline-none font-semibold cursor-pointer hover:border-amber-gold/50 transition-colors"
           >
             <option value="all">All Origins (Global)</option>
@@ -430,6 +519,7 @@ function BrowseContent() {
               setCountry(e.target.value);
               setSelectedCountry(e.target.value);
               setProvider('all');
+              setCurrentPage(1);
             }}
             className="w-full bg-surface-elevated border border-surface-border text-text-primary rounded p-2.5 outline-none font-semibold cursor-pointer hover:border-cyber-cyan/50 transition-colors"
           >
@@ -441,12 +531,15 @@ function BrowseContent() {
           </select>
         </div>
 
-        {/* Streaming Platform (Dynamic based on Selected Watch Region) */}
+        {/* Streaming Platform */}
         <div>
           <label className="block text-text-secondary font-bold mb-1.5">Platform</label>
           <select
             value={provider}
-            onChange={(e) => setProvider(e.target.value)}
+            onChange={(e) => {
+              setProvider(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full bg-surface-elevated border border-surface-border text-text-primary rounded p-2.5 outline-none font-semibold cursor-pointer hover:border-amber-gold/50 transition-colors"
           >
             <option value="all">Any Platform ({country})</option>
@@ -463,7 +556,10 @@ function BrowseContent() {
           <label className="block text-text-secondary font-bold mb-1.5">Genre</label>
           <select
             value={genre}
-            onChange={(e) => setGenre(e.target.value)}
+            onChange={(e) => {
+              setGenre(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full bg-surface-elevated border border-surface-border text-text-primary rounded p-2.5 outline-none font-semibold cursor-pointer hover:border-amber-gold/50 transition-colors"
           >
             <option value="all">All Genres</option>
@@ -480,7 +576,10 @@ function BrowseContent() {
           <label className="block text-text-secondary font-bold mb-1.5">Language</label>
           <select
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) => {
+              setLanguage(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full bg-surface-elevated border border-surface-border text-text-primary rounded p-2.5 outline-none font-semibold cursor-pointer hover:border-amber-gold/50 transition-colors"
           >
             <option value="all">All Languages</option>
@@ -504,7 +603,10 @@ function BrowseContent() {
           <label className="block text-text-secondary font-bold mb-1.5">Minimum Stars</label>
           <select
             value={ratingMin}
-            onChange={(e) => setRatingMin(Number(e.target.value))}
+            onChange={(e) => {
+              setRatingMin(Number(e.target.value));
+              setCurrentPage(1);
+            }}
             className="w-full bg-surface-elevated border border-surface-border text-text-primary rounded p-2.5 outline-none font-semibold cursor-pointer hover:border-amber-gold/50 transition-colors"
           >
             <option value={0}>All Ratings</option>
@@ -525,98 +627,170 @@ function BrowseContent() {
         </div>
       </div>
 
-      {/* 5. Results Counter & Active Filter Pills */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary font-semibold">
-        <div className="flex items-center gap-2">
-          <span>
-            Showing <strong className="text-text-primary">{displayItems.length}</strong> {displayItems.length === 1 ? 'title' : 'titles'}
-          </span>
-          {originCountry !== 'all' && (
-            <span className="flex items-center gap-1 bg-amber-gold/15 text-amber-gold px-2 py-0.5 rounded font-mono text-[11px] border border-amber-gold/30">
-              Origin: {selectedCountryConfig?.flag} {selectedCountryConfig?.name}
-              <button
-                type="button"
-                onClick={() => setOriginCountry('all')}
-                className="hover:text-white ml-0.5"
-              >
-                ✕
-              </button>
+      {/* 5. Results Counter & Pagination Controls Bar */}
+      <div ref={resultsGridRef} className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-card p-4 rounded-xl border border-surface-border text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-text-secondary">
+              Showing <strong className="text-text-primary">{(activePage - 1) * itemsPerPage + 1} - {Math.min(activePage * itemsPerPage, totalItems)}</strong> of <strong className="text-amber-gold">{totalItems}</strong> {type === 'movie' ? 'movies' : type === 'tv' ? 'TV series' : 'titles'}
             </span>
-          )}
-          {provider !== 'all' && (
-            <span className="flex items-center gap-1 bg-cyber-cyan/15 text-cyber-cyan px-2 py-0.5 rounded font-mono text-[11px] border border-cyber-cyan/30">
-              Platform: {provider}
-              <button
-                type="button"
-                onClick={() => setProvider('all')}
-                className="hover:text-white ml-0.5"
-              >
-                ✕
-              </button>
+            <span className="text-text-muted">•</span>
+            <span className="text-text-muted">
+              Page <strong className="text-text-primary">{activePage}</strong> of <strong className="text-text-primary">{totalPages}</strong>
             </span>
-          )}
-          {genre !== 'all' && (
-            <span className="flex items-center gap-1 bg-surface-elevated text-text-primary px-2 py-0.5 rounded font-mono text-[11px] border border-surface-border">
-              Genre: {genre}
-              <button
-                type="button"
-                onClick={() => setGenre('all')}
-                className="hover:text-white ml-0.5"
-              >
-                ✕
-              </button>
-            </span>
-          )}
-          {isSearchingWorldwide && (
-            <span className="text-[11px] text-amber-gold flex items-center gap-1 animate-pulse">
-              • Searching 11.2M+ global cinema database...
-            </span>
-          )}
-        </div>
-        {sortBy === 'bayesian' && (
-          <span className="flex items-center gap-1.5 text-amber-gold">
-            <Sparkles className="w-3.5 h-3.5" />
-            Sorted by Bayesian Weighted Rating
-          </span>
-        )}
-      </div>
+          </div>
 
-      {/* 6. Grid / List View */}
-      {displayItems.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
-          {displayItems.map((movie, idx) => (
-            <MovieCard
-              key={movie.id}
-              movie={movie}
-              rank={sortBy === 'bayesian' ? idx + 1 : undefined}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 bg-surface-card rounded-xl border border-surface-border space-y-3">
-          <Film className="w-14 h-14 text-text-muted mx-auto" />
-          <h3 className="text-lg font-bold text-text-primary">No local titles match your filter criteria</h3>
-          <p className="text-xs text-text-muted max-w-sm mx-auto">
-            Try resetting your country or genre filters, or search across the complete worldwide catalog of 11.2M+ titles on our global search engine.
-          </p>
-          <div className="pt-2 flex items-center justify-center gap-3">
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 bg-surface-elevated hover:bg-surface-border text-text-primary rounded text-xs font-bold transition-colors border border-surface-border"
-            >
-              Reset Filters
-            </button>
-            {searchQuery && (
-              <a
-                href={`/search?q=${encodeURIComponent(searchQuery)}`}
-                className="px-5 py-2 bg-amber-gold hover:bg-amber-hover text-surface-void rounded text-xs font-bold glow-gold transition-colors"
+          <div className="flex items-center gap-4">
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2 text-text-secondary font-semibold">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-amber-gold" />
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value as any);
+                  setCurrentPage(1);
+                }}
+                className="bg-surface-elevated text-text-primary border border-surface-border rounded px-2.5 py-1.5 outline-none font-bold cursor-pointer hover:border-amber-gold/50 transition-colors text-xs"
               >
-                Search Global Database ↗
-              </a>
-            )}
+                <option value="bayesian">Bayesian Weighted Rating</option>
+                <option value="popularity">Popularity / Trending</option>
+                <option value="releaseDate">Release Date (Newest)</option>
+                <option value="votes">Total Vote Count</option>
+                <option value="title">Alphabetical (A - Z)</option>
+              </select>
+            </div>
+
+            {/* Per-Page Selector */}
+            <div className="flex items-center gap-1.5 text-text-muted">
+              <span>Per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-surface-elevated text-text-primary border border-surface-border rounded px-2 py-1 outline-none text-xs font-bold"
+              >
+                <option value={24}>24</option>
+                <option value={48}>48</option>
+                <option value={72}>72</option>
+              </select>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* 6. Grid View (Rendered in Instant-Loading Chunks of 24) */}
+        {paginatedItems.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
+            {paginatedItems.map((movie, idx) => (
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                rank={sortBy === 'bayesian' ? (activePage - 1) * itemsPerPage + idx + 1 : undefined}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-surface-card rounded-xl border border-surface-border space-y-3">
+            <Film className="w-14 h-14 text-text-muted mx-auto" />
+            <h3 className="text-lg font-bold text-text-primary">No titles match your filter criteria</h3>
+            <p className="text-xs text-text-muted max-w-sm mx-auto">
+              Try resetting your country, format, or genre filters to browse our complete collection.
+            </p>
+            <div className="pt-2 flex items-center justify-center gap-3">
+              <button
+                onClick={handleReset}
+                className="px-4 py-2 bg-surface-elevated hover:bg-surface-border text-text-primary rounded text-xs font-bold transition-colors border border-surface-border"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 7. Bottom Pagination Navigation */}
+        {totalPages > 1 && (
+          <div className="flex flex-wrap items-center justify-center sm:justify-between gap-4 pt-6 border-t border-surface-border bg-surface-card p-4 rounded-xl">
+            <div className="text-xs text-text-muted">
+              Showing page <strong className="text-text-primary">{activePage}</strong> of <strong className="text-text-primary">{totalPages}</strong> ({totalItems} total {type === 'movie' ? 'movies' : type === 'tv' ? 'TV series' : 'titles'})
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {/* First Page */}
+              <button
+                type="button"
+                onClick={() => handlePageChange(1)}
+                disabled={activePage === 1}
+                className="p-2 rounded-lg bg-surface-elevated border border-surface-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="First Page"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+
+              {/* Prev Page */}
+              <button
+                type="button"
+                onClick={() => handlePageChange(activePage - 1)}
+                disabled={activePage === 1}
+                className="px-3 py-1.5 rounded-lg bg-surface-elevated border border-surface-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-bold flex items-center gap-1"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Prev</span>
+              </button>
+
+              {/* Numeric Page Buttons */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - activePage) <= 2)
+                  .map((p, idx, arr) => {
+                    const prev = arr[idx - 1];
+                    const showEllipsis = prev && p - prev > 1;
+
+                    return (
+                      <React.Fragment key={p}>
+                        {showEllipsis && <span className="px-1 text-text-muted text-xs">...</span>}
+                        <button
+                          type="button"
+                          onClick={() => handlePageChange(p)}
+                          className={cn(
+                            'min-w-[32px] h-8 rounded-lg text-xs font-bold transition-all',
+                            activePage === p
+                              ? 'bg-amber-gold text-surface-void font-bold shadow-md shadow-amber-gold/20'
+                              : 'bg-surface-elevated text-text-secondary hover:text-text-primary border border-surface-border'
+                          )}
+                        >
+                          {p}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+              </div>
+
+              {/* Next Page */}
+              <button
+                type="button"
+                onClick={() => handlePageChange(activePage + 1)}
+                disabled={activePage === totalPages}
+                className="px-3 py-1.5 rounded-lg bg-surface-elevated border border-surface-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-bold flex items-center gap-1"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Last Page */}
+              <button
+                type="button"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={activePage === totalPages}
+                className="p-2 rounded-lg bg-surface-elevated border border-surface-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
